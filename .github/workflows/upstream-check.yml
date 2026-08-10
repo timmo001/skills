@@ -1,0 +1,63 @@
+name: Skill updates
+
+on:
+  schedule:
+    - cron: "0 14 * * *"
+  workflow_dispatch: {}
+
+concurrency:
+  group: skill-updates
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - uses: jdx/mise-action@7e36c90d9ab29c415a2384db3006f3ec8a8cc654 # v4.2.4
+        with:
+          cache: true
+      - name: Check upstream imports
+        run: python scripts/check_upstream.py --format json > skill-updates.json
+      - name: Open clean update pull requests
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          git config user.name 'skill-updates[bot]'
+          git config user.email 'skill-updates[bot]@users.noreply.github.com'
+          jq -r '.[] | select(.state == "update-available") | .name' skill-updates.json | while read -r skill; do
+            branch="skill-update/$skill"
+            git checkout -B "$branch" origin/main
+            python scripts/import_skill.py "$skill" --apply
+            python scripts/validate.py
+            python -m unittest discover -s scripts -p 'test_*.py'
+            mise exec npm:skills -- skills add . --list
+            git add -- "$skill" imports.json
+            git commit -m "Update skill: $skill"
+            git push --force-with-lease origin "$branch"
+            if url="$(gh pr list --head "$branch" --state open --json url --jq '.[0].url')" && [[ -n "$url" ]]; then
+              gh pr edit "$url" --title "Update skill: $skill"
+            else
+              gh pr create --base main --head "$branch" --title "Update skill: $skill" --body "Review the latest upstream snapshot for \`$skill\`."
+            fi
+          done
+          git checkout --detach origin/main
+      - name: Refresh dashboard issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python scripts/check_upstream.py --format markdown > skill-updates.md
+          marker='<!-- adapted-skill-updates -->'
+          number="$(gh issue list --state open --limit 100 --json number,body --jq "map(select(.body | contains(\"$marker\")))[0].number // empty")"
+          if [[ -n "$number" ]]; then
+            gh issue edit "$number" --title 'Skill updates' --body-file skill-updates.md
+          else
+            gh issue create --title 'Skill updates' --body-file skill-updates.md
+          fi

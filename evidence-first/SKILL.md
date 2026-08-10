@@ -18,7 +18,7 @@ Check uncertain claims. Follow clear choices.
    - otherwise use current official docs, source, specifications, first-party APIs, or maintainer records.
 6. When the owning evidence is outside the active repository, retrieve the primary source before answering or acting. Prefer an advertised local reference when it contains the owning docs or source; otherwise use the available documentation, source, API, or web-search tool. Loading this skill, planning to search, inspecting consumer configuration, or relying on supplied context does not satisfy that retrieval. If no owning source is accessible, say the claim could not be verified instead of filling the gap from memory.
 7. Briefly name the source in the answer. Link external sources; name the local file, test, or symbol for local evidence.
-8. If the evidence leaves one sensible path, continue. If it creates a real choice that changes the work, use the question tool and leave that choice with the user.
+8. If the evidence leaves one sensible path, continue. If it creates a real choice that changes the work, use the client's structured question capability when available, otherwise ask concisely in chat.
 9. Load `research` when the answer needs deeper external evidence, competing views, or several trusted sources.
 
 ## Evidence Rules

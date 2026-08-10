@@ -8,6 +8,8 @@ These skills use general engineering concepts and ordinary agent capabilities. T
 
 | Skill | Notes |
 | --- | --- |
+| `ask-questions-if-underspecified` | Uses structured questions when available and falls back to chat. |
+| `bro` | Reusable explicit-invocation response behaviour. |
 | `changeset-scope` | No repository-specific dependency. |
 | `chill` | Explicit-invocation workflow. |
 | `check-skill-updates` | Uses standard consumer updates and repository provenance comments. |
@@ -20,6 +22,8 @@ These skills use general engineering concepts and ordinary agent capabilities. T
 | `effect` | Requires Effect v4 in the target project. |
 | `effect-principles` | General engineering guidance. |
 | `effect-service-design` | Requires Effect in the target project. |
+| `evidence-first` | General evidence and decision guidance. |
+| `grilling` | General round-based decision protocol. |
 | `html` | General web platform guidance. |
 | `human-step-guide` | General workflow guidance. |
 | `improve-codebase-architecture` | General architecture workflow with a colocated report template. |
@@ -30,8 +34,11 @@ These skills use general engineering concepts and ordinary agent capabilities. T
 | `plan` | General planning workflow. |
 | `prototype` | General prototyping workflow. |
 | `remove-single-use-functions` | General code guidance. |
+| `research` | Capability-based primary-source research workflow. |
 | `staged-implementation` | General implementation sequencing. |
+| `to-questionnaire` | General channel-aware questionnaire drafting. |
 | `types-enforce-ts` | Requires TypeScript in the target project. |
+| `writing-dot-skills` | General Agent Skills authoring guidance. |
 | `writing-style` | General writing guidance. |
 
 ## Environment-Bound
@@ -64,20 +71,12 @@ These encode the current OpenCode, dotfiles, notes, or maintainer workflow. They
 | Skill | Portability work needed |
 | --- | --- |
 | `branch-context-consumer` | Decouple from BranchContextPlugin injection. |
-| `ask-questions-if-underspecified` | Generalise the explicit OpenCode `question` tool contract. |
-| `bro` | Separate explicit command routing from the reusable response behaviour. |
-| `dotfiles-stow` | Keep as a clearly personal dotfiles integration or move it to the owning repository. |
-| `evidence-first` | Describe interactive questions without relying on one tool name. |
 | `git-commit` | Separate general commit discipline from the `dot git-commit` gateway. |
 | `git-context` | Generalise injected context and OpenCode MCP names. |
-| `grilling` | Isolate OpenCode question-tool adaptation from the reusable round protocol. |
 | `handoff` | Abstract the Notes MCP vault and OpenCode tool names. |
 | `install-tool` | Separate general installation policy from personal package manifests and overlays. |
-| `notes-mcp` | Keep client-prefixed tool aliases out of the portable core. |
-| `research` | Generalise OpenCode-specific tool and subagent names. |
-| `to-questionnaire` | Generalise the explicit question-tool workflow. |
+| `notes-mcp` | Notes MCP server. |
 | `workflows-watch` | Decouple from OpenCode background tasks and the local workflow manifest tool. |
-| `writing-dot-skills` | Retarget repository paths, generated docs, stow, and OpenCode validation. |
 
 ## Follow-Up
 
@@ -86,6 +85,6 @@ Migrate one coherent family at a time:
 1. Split reusable behaviour from personal wrappers in git, notes, handoff, and installation skills.
 2. Replace runtime-specific tool names with capability descriptions plus small client adapters where needed.
 3. Add `compatibility` metadata to environment-bound skills after checking how each target client displays it.
-4. Audit licence provenance for every imported skill before applying any repository-wide licence to skill content.
-5. Add native Claude marketplace packaging only after the licence audit and portable-skill migration are complete.
-6. Build a repository-owned scheduled import checker before restoring automated upstream update pull requests; it must not call dotfiles' `dot` command.
+4. Keep imported skills as reviewed, committed snapshots; use `imports.json` as the maintenance metadata overlay.
+5. Use `scripts/import_skill.py` to fetch and compare upstream content before replacing a clean snapshot or reviewing an adapted one.
+6. Keep scheduled update branches review-only; normal consumer updates pull only committed skills revisions.

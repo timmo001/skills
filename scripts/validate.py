@@ -89,6 +89,8 @@ def main() -> int:
     skill_names = {path.name for path in skill_dirs}
     if not skill_dirs:
         failures.append("no top-level skills found")
+    if not (ROOT / "LICENSE").is_file():
+        failures.append("missing repository LICENSE")
 
     for skill_dir in skill_dirs:
         for error in validate_skill(skill_dir):
@@ -96,6 +98,7 @@ def main() -> int:
 
     try:
         catalog = load_json(ROOT / "skills.sh.json")
+        imports = load_json(ROOT / "imports.json").get("imports", {})
         catalog_names = [
             name
             for grouping in catalog.get("groupings", [])
@@ -123,6 +126,48 @@ def main() -> int:
         if extra_inventory:
             failures.append(
                 f"PORTABILITY.md: unknown skills: {', '.join(extra_inventory)}"
+            )
+        for name, metadata in imports.items():
+            skill_path = ROOT / name / "SKILL.md"
+            if not skill_path.is_file():
+                failures.append(f"imports.json: missing skill directory: {name}")
+                continue
+            text = skill_path.read_text(encoding="utf-8")
+            frontmatter_text = text.split("---", 2)[1]
+            expected = {
+                "origin": f"# origin: {metadata['origin']}",
+                "upstream SHA": f"# upstream-sha: {metadata['upstreamSha']}",
+            }
+            if metadata.get("license"):
+                expected["licence"] = f"license: {metadata['license']}"
+            for field, line in expected.items():
+                if line not in frontmatter_text.splitlines():
+                    failures.append(
+                        f"{name}: materialised {field} does not match imports.json"
+                    )
+            local_edits = metadata.get("localEdits", [])
+            materialised_edits = [
+                line.removeprefix("#   - ")
+                for line in frontmatter_text.splitlines()
+                if line.startswith("#   - ")
+            ]
+            if materialised_edits != local_edits:
+                failures.append(
+                    f"{name}: materialised local edits do not match imports.json"
+                )
+        materialised_imports = {
+            path.parent.name
+            for path in ROOT.glob("*/SKILL.md")
+            if re.search(
+                r"^# origin:",
+                path.read_text(encoding="utf-8").split("---", 2)[1],
+                re.MULTILINE,
+            )
+        }
+        missing_import_metadata = sorted(materialised_imports - set(imports))
+        if missing_import_metadata:
+            failures.append(
+                "imports.json: missing imports: " + ", ".join(missing_import_metadata)
             )
 
     except ValueError as error:

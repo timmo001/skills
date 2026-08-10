@@ -6,28 +6,35 @@ Some skills are broadly portable. Others intentionally depend on a particular to
 
 ## Install
 
+The repository toolchain pins the Skills CLI through mise. Install it before
+running maintenance commands:
+
+```bash
+mise install
+```
+
 List the available skills:
 
 ```bash
-npx skills@latest add timmo001/skills --list
+mise exec npm:skills -- skills add timmo001/skills --list
 ```
 
 Install selected skills for any supported agent:
 
 ```bash
-npx skills@latest add timmo001/skills
+mise exec npm:skills -- skills add timmo001/skills
 ```
 
 Install or update non-interactively:
 
 ```bash
-npx skills@latest add timmo001/skills --skill code-review --skill diagnose -g -y
-npx skills@latest update -g -y
+mise exec npm:skills -- skills add timmo001/skills --skill code-review --skill diagnose -g -y
+mise exec npm:skills -- skills update -g -y
 ```
 
-The [`skills`](https://github.com/vercel-labs/skills) CLI handles agent-specific locations for OpenCode, Claude Code, Codex, Cursor, and other Agent Skills clients. Local development should use `npx skills@latest add . --list`; generated agent mirrors are ignored and must not be kept inside this checkout.
+The [`skills`](https://github.com/vercel-labs/skills) CLI handles agent-specific locations for OpenCode, Claude Code, Codex, Cursor, and other Agent Skills clients. Commands use `mise exec npm:skills -- skills` to select the managed CLI unambiguously because other tools may bundle a path named `skills`. Generated agent mirrors are ignored and must not be kept inside this checkout.
 
-Claude Code is supported through the same cross-agent installer. A native Claude marketplace bundle is deferred until imported-skill licence provenance is complete; marketplace metadata must not become a second source of skill content.
+Claude Code is supported through the same cross-agent installer. This repository does not add client-specific marketplace packaging or duplicate canonical skill content.
 
 ## Layout
 
@@ -46,17 +53,24 @@ Claude Code is supported through the same cross-agent installer. A native Claude
 
 ```bash
 python scripts/validate.py
-npx skills@latest add . --list
+mise exec npm:skills -- skills add . --list
 ```
 
 The local validator checks the portable metadata contract, directory names, relative links, and catalog coverage. CI also verifies the expected installer-discovery count.
 
+Imports are checked daily against the latest commit touching their upstream path. Clean updates open one reviewable pull request per skill; adapted imports remain on the dashboard for manual review.
+
+Renovate manages the pinned mise tools and GitHub Actions. The scheduled import
+checker manages reviewed upstream skill revisions separately.
+
 ## Maintenance
 
 - Add new skills under `<name>/` at the repository root.
-- Record imported source provenance in `SKILL.md` comments without replacing upstream licence notices.
+- Keep imported content as reviewed snapshots; normal consumer updates never fetch mutable upstream skill content.
+- Maintain import provenance, reviewed SHA, licence, and local edits in `imports.json`.
+- Use `python scripts/import_skill.py <name>` to review a snapshot and `--apply` only for clean imports.
 - Keep `skills.sh.json` and `PORTABILITY.md` in sync.
-- Prefer `npx skills update` for installed copies. Scheduled upstream-import automation is deferred until this repository has its own updater that does not depend on dotfiles or `dot`.
+- Prefer repository revisions for installed copies. The scheduled checker opens clean update PRs and reports adapted imports for manual review.
 - Do not duplicate canonical skills into checked-in agent-specific directories.
 
 The current portability backlog is intentionally documented rather than mechanically rewriting all existing skills in one migration.

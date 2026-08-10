@@ -1,12 +1,13 @@
 ---
 name: improve-codebase-architecture
 description: Scan a codebase for deepening opportunities, present them as a visual HTML report, then grill through whichever one you pick.
+license: MIT
 # origin: https://github.com/mattpocock/skills/tree/main/skills/engineering/improve-codebase-architecture
 # upstream-sha: 697d4ce9742da558fd1ba6697c8e9775e2e302dd
 # local-edits:
-#   - SKILL.md: generalised CONTEXT.md/docs-adr references to the project's domain docs (repo uses no fixed CONTEXT.md/ADR layout)
-#   - SKILL.md: architecture vocabulary preserves established domain and framework terms while describing their architectural roles
-#   - HTML-REPORT.md: generalised the ADR callout to a recorded-decision callout
+#   - generalised fixed documentation layout references
+#   - preserve established domain and framework terms
+#   - generalised ADR callout
 ---
 
 # Improve Codebase Architecture

@@ -1,6 +1,7 @@
 ---
 name: notes-mcp
 description: Use the Notes MCP server to list, read, create, update, or delete repository notes safely. Use when working directly with note_list, note_read, note_write, or note_delete, including client-prefixed forms such as notes_note_write.
+license: Apache-2.0
 # origin: https://github.com/timmo001/notes/tree/main/.agents/skills/notes-mcp
 # upstream-sha: 1bc7685f3944634e520f705c794dcca4466be9fa
 ---

@@ -14,7 +14,9 @@
 - Use only Agent Skills frontmatter fields unless a vendor-specific extension is deliberately documented.
 - Keep supporting files within the skill and link to them relatively from `SKILL.md`.
 - Update `PORTABILITY.md` when a skill gains or loses runtime, tool, repository, or machine assumptions.
-- Do not add native marketplace packaging until imported-skill licence provenance has been audited.
+- Keep imports as reviewed committed snapshots. `imports.json` owns origin, reviewed SHA, licence, and local-edit metadata.
+- Materialise metadata with `scripts/import_skill.py --metadata-only`; fetch upstream review snapshots with the same script.
+- Do not add client-specific marketplace packaging or duplicate canonical skill content.
 
 ## Verification
 
@@ -22,5 +24,5 @@ Run before committing repository setup or skill metadata changes:
 
 ```bash
 python scripts/validate.py
-npx skills@latest add . --list
+mise exec npm:skills -- skills add . --list
 ```

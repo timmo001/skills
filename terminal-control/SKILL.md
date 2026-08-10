@@ -1,8 +1,9 @@
 ---
 name: terminal-control
 description: Drive and verify terminal applications with the termctrl CLI in a real PTY - read visible screens, run named live sessions, send typed keyboard input, wait for text, save evidence, record timelines, and export edited videos. Use when an agent must operate or test a TUI, REPL, interactive CLI, shell process, or OpenTUI application.
-# origin: https://github.com/anomalyco/terminal-control/tree/v0.4.1/skills/terminal-control
-# upstream-sha: 1d415836b220d6042952939e888a6764ef66ccc5
+license: MIT
+# origin: https://github.com/anomalyco/terminal-control/tree/main/skills/terminal-control
+# upstream-sha: cde267619a818f6aa7d5d9df63f92fc3da94032f
 ---
 
 # Terminal Control

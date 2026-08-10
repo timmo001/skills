@@ -1,16 +1,17 @@
 ---
 name: ask-questions-if-underspecified
 description: Ask minimal clarifying questions only when ambiguity materially changes implementation. Use for routine underspecification; do not use for user-requested light or full grilling, plan stress-testing, or broad design interviews.
+license: CC-BY-SA-4.0
 # origin: https://github.com/trailofbits/skills/tree/main/plugins/ask-questions-if-underspecified/skills/ask-questions-if-underspecified
 # upstream-sha: d5fe2e6a7896236c3102fd5477e833623ad70298
 # local-edits:
 #   - description rewritten for brevity and narrowed away from light/full grill-style questioning
-#   - body condensed from detailed template-based process to concise OpenCode workflow
-#   - added OpenCode-specific rules (question tool, recommended tags, light/full grilling routing)
+#   - body condensed from detailed template-based process to a concise cross-client workflow
+#   - added recommended-choice ordering and light/full grilling routing
 #   - removed verbose question templates and reply format examples
 ---
 
-# Ask Questions If Underspecified (OpenCode)
+# Ask Questions If Underspecified
 
 Use this skill when a request has multiple plausible implementations and picking the wrong one would cause rework, risk, or incorrect outcomes. This skill is intentionally narrow: it should unblock work with the fewest questions possible.
 
@@ -27,10 +28,10 @@ Use this skill when a request has multiple plausible implementations and picking
 - Repo conventions provide a safe default and ambiguity is low impact
 - The user wants light or full grilling or plan stress-testing; use `grilling` or `/grill` instead
 
-## OpenCode-Specific Rules
+## Rules
 
 1. Ask the minimum needed to unblock work (prefer one targeted question).
-2. Use the `question` tool for user questions.
+2. Use the client's structured question capability when available; otherwise ask one concise question in chat.
 3. Put recommended/default choices first and tag them with `(Recommended)`.
 4. Do all non-blocked, low-risk discovery first.
 5. Until must-have answers arrive, do not edit files or run state-changing commands.
@@ -62,4 +63,4 @@ Use this skill when a request has multiple plausible implementations and picking
 - Running a light or full grilling session under this skill instead of `/grill`
 - Asking permission for routine safe steps
 - Blocking on nice-to-know details that can use project defaults
-- Asking users to reply with numbered text when the `question` tool can capture choices
+- Asking users to reply with numbered text when the client can capture structured choices

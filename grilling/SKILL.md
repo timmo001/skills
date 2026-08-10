@@ -1,11 +1,12 @@
 ---
 name: grilling
 description: Grill the user about a plan, decision, or idea in dependency-ready rounds. Use when the user wants to stress-test their thinking or uses a grill trigger phrase.
+license: MIT
 # origin: https://github.com/mattpocock/skills/tree/main/skills/productivity/grilling
 # upstream-sha: bfdaef8e989a5c81160e74bc5043bd434da49cac
 # local-edits:
-#   - preserve Light/Full intensity, materiality gates, planning-only posture, stopping rules, and the final decision summary
-#   - adapt fact-finding and delegation to OpenCode tools while using upstream round-based chat formatting
+#   - preserve Light/Full intensity and materiality rules
+#   - adapt fact-finding and delegation to available client capabilities
 ---
 
 # Grilling

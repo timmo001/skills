@@ -6,6 +6,8 @@
       "title": "Portable",
       "description": "General engineering and writing skills that work across Agent Skills clients.",
       "skills": [
+        "ask-questions-if-underspecified",
+        "bro",
         "changeset-scope",
         "chill",
         "check-skill-updates",
@@ -18,6 +20,8 @@
         "effect",
         "effect-principles",
         "effect-service-design",
+        "evidence-first",
+        "grilling",
         "html",
         "human-step-guide",
         "improve-codebase-architecture",
@@ -28,8 +32,11 @@
         "plan",
         "prototype",
         "remove-single-use-functions",
+        "research",
         "staged-implementation",
+        "to-questionnaire",
         "types-enforce-ts",
+        "writing-dot-skills",
         "writing-style"
       ]
     },
@@ -60,20 +67,12 @@
       "description": "Skills coupled to the current OpenCode, dotfiles, notes, or maintainer workflow.",
       "skills": [
         "branch-context-consumer",
-        "ask-questions-if-underspecified",
-        "bro",
-        "dotfiles-stow",
-        "evidence-first",
         "git-commit",
         "git-context",
-        "grilling",
         "handoff",
         "install-tool",
         "notes-mcp",
-        "research",
-        "to-questionnaire",
-        "workflows-watch",
-        "writing-dot-skills"
+        "workflows-watch"
       ]
     }
   ]

@@ -1,6 +1,7 @@
 ---
 name: ctx-agent-history-search
 description: Use ctx to search local coding-agent history before acting. Use when prior agent sessions may contain relevant insights, decisions, attempts, or transcript context.
+license: Apache-2.0
 # origin: https://github.com/ctxrs/ctx/tree/main/skills/ctx-agent-history-search
 # upstream-sha: b8a95930e33f0d300ebf33eca0e5ff17af00cc67
 ---

@@ -1,6 +1,7 @@
 ---
 name: effect-service-design
 description: Design Effect services. Use when designing a new Effect service module or auditing an existing codebase for service, Layer, and composition improvements.
+license: MIT
 # origin: https://github.com/dmmulroy/skills/tree/main/effect-service-design
 # upstream-sha: 8603380821fee6a77c82639f364ce8fe4f5a92be
 ---

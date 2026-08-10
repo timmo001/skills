@@ -1,6 +1,7 @@
 ---
 name: hunk-review
 description: Interacts with live Hunk diff review sessions via CLI. Inspects review focus, navigates files and hunks, reloads session contents, and adds inline review comments. Use when the user has a Hunk session running or wants to review diffs interactively.
+license: MIT
 # origin: https://github.com/modem-dev/hunk/tree/main/skills/hunk-review
 # upstream-sha: 31fc677bd44678f3e7a473ba8596a18d2c336c11
 ---

@@ -28,23 +28,22 @@ External skill repos are often written for a specific agent framework (e.g. Clau
 
 Use when the external skill is useful as-is and does not overlap with an existing local skill.
 
-1. Fetch the raw SKILL.md and any reference files from the source. Fetch each file's full contents verbatim with `gh api repos/<owner>/<repo>/contents/<path>` or the raw `githubusercontent` URL via `webfetch`; use `grep` only to locate paths, since it returns ranked snippets, not complete files.
-2. Write them verbatim into top-level `<name>/`. Do not rewrite content by hand -- copy the upstream text exactly, then make targeted edits. This ensures diffs against upstream stay minimal and reviewable.
-3. Add `# origin:` and `# upstream-sha:` comments inside the frontmatter. The origin is the source tree URL; the SHA is the latest upstream commit that touched the skill. Remove fields outside the Agent Skills specification unless a documented client extension is deliberate.
-4. Diff each local file against the upstream original to verify the only changes are the frontmatter adjustment and any framework-specific cleanup.
-5. Add the skill to `skills.sh.json` and `PORTABILITY.md`. Native marketplace packaging remains deferred until licence provenance is complete.
-6. Run `python scripts/validate.py` and `npx skills@latest add . --list`.
+1. Add the skill's origin, reviewed SHA, licence, and empty `localEdits` list to `imports.json`.
+2. Run `python scripts/import_skill.py <name> --apply`. The script uses the Vercel Skills CLI to copy the upstream snapshot into temporary review space, overlays repository metadata, then replaces the tracked directory.
+3. Add the skill to `skills.sh.json` and `PORTABILITY.md`.
+4. Review the complete generated diff, including scripts and supporting files.
+5. Run `python scripts/validate.py` and `mise exec npm:skills -- skills add . --list`.
 
 ### Path 2: Adaptation
 
 Use when the external skill overlaps with or extends an existing local skill.
 
-1. Fetch the external SKILL.md and any reference files. Fetch full contents verbatim with `gh api repos/<owner>/<repo>/contents/<path>` or the raw `githubusercontent` URL via `webfetch`; `grep` finds paths but returns snippets, not complete files.
-2. For new reference files being added to an existing skill, write the upstream content verbatim first, then make targeted edits. Do not rewrite files from scratch -- this guarantees diffs against upstream are minimal and reviewable.
+1. Add or update the `imports.json` entry with the origin, reviewed SHA, licence, and intended `localEdits` declarations.
+2. Run `python scripts/import_skill.py <name>` without `--apply` to generate the complete upstream comparison without replacing the tracked skill.
 3. Compare against the existing local skill, identifying gaps and conflicts.
 4. Present the comparison: what the external skill adds, what overlaps, and what conflicts with existing rules.
 5. Wait for the user to decide which additions to make.
-6. Apply the agreed changes to the existing local skill.
+6. Apply the agreed changes to the existing local skill, update `imports.json.upstreamSha`, then run `python scripts/import_skill.py <name> --metadata-only`.
 
 ## Frontmatter Format
 
@@ -59,7 +58,7 @@ description: One or two sentences. First sentence says what. Second says when to
 
 Portable frontmatter fields are `name`, `description`, `license`, `compatibility`, `metadata`, and `allowed-tools`. Do not rely on one client's tolerance for unknown fields.
 
-The `# upstream-sha:` line records the upstream revision reviewed during import. Update it only after comparing the complete upstream skill directory and applying or deliberately rejecting its changes.
+`imports.json` is the maintenance source for origin, reviewed SHA, licence, and local edits. The script materialises those fields into `SKILL.md` so each standalone skill remains self-describing.
 
 If the import adapts body content beyond frontmatter, add a `# local-edits:` block documenting the differences from upstream. This prevents a later review from treating intentional adaptations as drift. List what differs, not a changelog:
 

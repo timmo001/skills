@@ -1,8 +1,11 @@
 ---
 name: browser-control
 description: Control the user's existing Chromium-family browser through the Browser Control extension and local relay. Use when asked to automate, test, inspect, or drive the visible browser with Browser Control, especially in this repo or once the extension is installed.
+license: MIT
 # origin: https://github.com/anomalyco/browser-control/tree/main/skills/browser-control
 # upstream-sha: 05b068dec4cacdf91980d5123de366019ff92f8a
+# local-edits:
+#   - SKILL.md: description expanded to cover visible browser automation and local relay usage
 ---
 
 # Browser Control
