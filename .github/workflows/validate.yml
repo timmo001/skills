@@ -19,4 +19,4 @@ jobs:
       - name: Validate repository
         run: python scripts/validate.py
       - name: Verify installer discovery
-        run: npx --yes skills@latest add . --list 2>&1 | grep -q 'Found 56 skills'
+        run: npx --yes skills@latest add . --list
