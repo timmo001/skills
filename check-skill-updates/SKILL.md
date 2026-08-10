@@ -34,7 +34,7 @@ For each tracked import:
 1. Run `python scripts/check_upstream.py` to compare each overlay entry with the current upstream path commit.
 2. Run `python scripts/import_skill.py <name>` to let the Vercel Skills CLI materialise the complete candidate snapshot in temporary review space.
 3. Compare the candidate with the committed directory, accounting for `imports.json.localEdits`.
-4. Report whether the import is unchanged, has a clean update, needs a manual merge, or cannot be checked.
+4. Report whether the import is unchanged, needs manual review, or cannot be checked.
 5. Apply an update only when the user requested it. Preserve provenance, local adaptations, licence material, and files intentionally owned by this repository.
 6. Update `imports.json.upstreamSha` after the comparison is complete, including when upstream changed but all differences were deliberately rejected, then run `--metadata-only`.
 7. Run `python scripts/validate.py` and `mise exec npm:skills -- skills add . --list`.
@@ -44,6 +44,7 @@ Use the `import-external-skill` adaptation workflow when upstream and local chan
 ## Safety
 
 - Never replace a locally adapted skill wholesale.
+- Never distribute an unchanged upstream skill. Keep its review snapshot non-discoverable under `upstream/` and install it from its owning repository.
 - Never infer that an absent upstream file should be deleted when `# local-edits:` identifies local-only material.
 - Treat imported scripts as executable code: review changes before running them.
 - Do not commit or push without explicit user authorisation.

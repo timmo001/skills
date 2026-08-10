@@ -19,9 +19,7 @@ These skills use general engineering concepts and ordinary agent capabilities. T
 | `css-motion-systems` | Web platform guidance with colocated references. |
 | `diagnose` | General diagnosis workflow with optional client metadata. |
 | `domain-modeling` | General modelling workflow. |
-| `effect` | Requires Effect v4 in the target project. |
 | `effect-principles` | General engineering guidance. |
-| `effect-service-design` | Requires Effect in the target project. |
 | `evidence-first` | General evidence and decision guidance. |
 | `grilling` | General round-based decision protocol. |
 | `html` | General web platform guidance. |
@@ -30,9 +28,7 @@ These skills use general engineering concepts and ordinary agent capabilities. T
 | `import-external-skill` | Uses the Agent Skills format and repository metadata. |
 | `lit-rendering` | Requires Lit in the target project. |
 | `maintain-docs` | Uses ordinary repository and documentation tools. |
-| `motion-choreography-patterns` | Web platform guidance with colocated references. |
 | `plan` | General planning workflow. |
-| `prototype` | General prototyping workflow. |
 | `remove-single-use-functions` | General code guidance. |
 | `research` | Capability-based primary-source research workflow. |
 | `staged-implementation` | General implementation sequencing. |
@@ -49,20 +45,15 @@ These are agent-agnostic in format, but useful only when their named tool, servi
 | --- | --- |
 | `agentic-workflows` | GitHub `gh aw` extension and Agentic Workflows. |
 | `browser-control` | Browser Control relay, extension, and CLI or MCP tools. |
-| `ctx-agent-history-search` | `ctx` CLI and indexed local agent history. |
 | `gh-stack` | GitHub `gh stack` extension. |
-| `herdr` | A Herdr-managed terminal session. |
 | `home-assistant-frontend` | Home Assistant frontend checkout and its local guidance. |
 | `home-assistant-lazy-context` | Home Assistant frontend source and conventions. |
 | `home-assistant-list-components` | Home Assistant frontend source and components. |
 | `home-assistant-lit-rendering` | Home Assistant frontend and Lit. |
-| `hunk-review` | A running Hunk review session and CLI. |
-| `opentui` | OpenTUI project or dependencies. |
 | `pitchfork-dev-servers` | Pitchfork and repository-provided server configuration. |
 | `pkexec-root` | Linux, `pkexec`, and the configured root helper. |
 | `safe-process-signals` | POSIX process tools. |
 | `shared-workflows` | The `timmo001/workflows` conventions. |
-| `terminal-control` | `termctrl` and a real PTY. |
 
 ## Workflow-Bound
 
@@ -75,7 +66,6 @@ These encode the current OpenCode, dotfiles, notes, or maintainer workflow. They
 | `git-context` | Generalise injected context and OpenCode MCP names. |
 | `handoff` | Abstract the Notes MCP vault and OpenCode tool names. |
 | `install-tool` | Separate general installation policy from personal package manifests and overlays. |
-| `notes-mcp` | Notes MCP server. |
 | `workflows-watch` | Decouple from OpenCode background tasks and the local workflow manifest tool. |
 
 ## Follow-Up
@@ -85,6 +75,6 @@ Migrate one coherent family at a time:
 1. Split reusable behaviour from personal wrappers in git, notes, handoff, and installation skills.
 2. Replace runtime-specific tool names with capability descriptions plus small client adapters where needed.
 3. Add `compatibility` metadata to environment-bound skills after checking how each target client displays it.
-4. Keep imported skills as reviewed, committed snapshots; use `imports.json` as the maintenance metadata overlay.
-5. Use `scripts/import_skill.py` to fetch and compare upstream content before replacing a clean snapshot or reviewing an adapted one.
-6. Keep scheduled update branches review-only; normal consumer updates pull only committed skills revisions.
+4. Distribute imported skills only when they contain documented local edits; keep unchanged review snapshots under `upstream/` and install them from their owning repository.
+5. Use `imports.json` as the maintenance metadata overlay for adapted imports.
+6. Use `scripts/import_skill.py` to fetch and compare upstream content before manually reviewing an adapted skill.

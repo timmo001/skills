@@ -49,6 +49,8 @@ Claude Code is supported through the same cross-agent installer. This repository
 
 `SKILL.md` is the source of truth. Keep supporting files one link away from it and use relative paths within a skill.
 
+Unchanged upstream snapshots are committed under [`upstream/`](./upstream/README.md) for review and provenance. Their root files are named `UPSTREAM_SKILL.md`, so the Skills CLI does not offer them. Install those skills from the official sources listed there.
+
 ## Validate
 
 ```bash
@@ -58,7 +60,7 @@ mise exec npm:skills -- skills add . --list
 
 The local validator checks the portable metadata contract, directory names, relative links, and catalog coverage. CI also verifies the expected installer-discovery count.
 
-Imports are checked daily against the latest commit touching their upstream path. Clean updates open one reviewable pull request per skill; adapted imports remain on the dashboard for manual review.
+Adapted imports are checked daily against the latest commit touching their upstream path and reported on a dashboard for manual review.
 
 Renovate manages the pinned mise tools and GitHub Actions. The scheduled import
 checker manages reviewed upstream skill revisions separately.
@@ -66,11 +68,11 @@ checker manages reviewed upstream skill revisions separately.
 ## Maintenance
 
 - Add new skills under `<name>/` at the repository root.
-- Keep imported content as reviewed snapshots; normal consumer updates never fetch mutable upstream skill content.
-- Maintain import provenance, reviewed SHA, licence, and local edits in `imports.json`.
-- Use `python scripts/import_skill.py <name>` to review a snapshot and `--apply` only for clean imports.
+- Distribute imported skills only when this repository contains substantive local edits. Keep unchanged snapshots under `upstream/` and install them from their owning repository.
+- Maintain import provenance, reviewed SHA, licence, local edits, and distribution mode in `imports.json`.
+- Use `python scripts/import_skill.py <name>` to generate an upstream comparison, then apply reviewed changes manually.
 - Keep `skills.sh.json` and `PORTABILITY.md` in sync.
-- Prefer repository revisions for installed copies. The scheduled checker opens clean update PRs and reports adapted imports for manual review.
+- Prefer repository revisions for installed copies. The scheduled checker reports adapted imports for manual review.
 - Do not duplicate canonical skills into checked-in agent-specific directories.
 
 The current portability backlog is intentionally documented rather than mechanically rewriting all existing skills in one migration.

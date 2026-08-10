@@ -15,31 +15,19 @@ Import skills from external repositories into top-level `<name>/` directories, p
 
 ## Agent-Specific Repos
 
-External skill repos are often written for a specific agent framework (e.g. Claude Code, Codex, Cursor). Skills from these repos may need adaptation even for a "direct import":
+External skill repos are often written for a specific agent framework (e.g. Claude Code, Codex, Cursor). This repository distributes an import only when it needs substantive local adaptation:
 
 - Keep only Agent Skills frontmatter fields. `allowed-tools` is portable; remove framework-specific fields such as `disable-model-invocation` and `argument-hint`.
 - Replace framework-specific tool names, hook mechanisms, or subagent patterns with capability-based instructions when that preserves the workflow.
 - Keep an intentional environment dependency when abstraction would make the instructions less truthful, then classify it in `PORTABILITY.md`.
-- If the skill body is portable as-is, treat it as a direct import. If the body needs rewriting, treat it as an adaptation and document the changes in `# local-edits:`.
+- If the skill is useful as-is, retain any review snapshot under `upstream/<name>/UPSTREAM_SKILL.md` and install it from its owning repository. Never expose that snapshot through the local Skills CLI catalogue.
 
-## Two Paths
-
-### Path 1: Direct Import
-
-Use when the external skill is useful as-is and does not overlap with an existing local skill.
-
-1. Add the skill's origin, reviewed SHA, licence, and empty `localEdits` list to `imports.json`.
-2. Run `python scripts/import_skill.py <name> --apply`. The script uses the Vercel Skills CLI to copy the upstream snapshot into temporary review space, overlays repository metadata, then replaces the tracked directory.
-3. Add the skill to `skills.sh.json` and `PORTABILITY.md`.
-4. Review the complete generated diff, including scripts and supporting files.
-5. Run `python scripts/validate.py` and `mise exec npm:skills -- skills add . --list`.
-
-### Path 2: Adaptation
+## Adaptation
 
 Use when the external skill overlaps with or extends an existing local skill.
 
-1. Add or update the `imports.json` entry with the origin, reviewed SHA, licence, and intended `localEdits` declarations.
-2. Run `python scripts/import_skill.py <name>` without `--apply` to generate the complete upstream comparison without replacing the tracked skill.
+1. Add or update the `imports.json` entry with the origin, reviewed SHA, licence, and non-empty `localEdits` declarations.
+2. Run `python scripts/import_skill.py <name>` to generate the complete upstream comparison without replacing the tracked skill.
 3. Compare against the existing local skill, identifying gaps and conflicts.
 4. Present the comparison: what the external skill adds, what overlaps, and what conflicts with existing rules.
 5. Wait for the user to decide which additions to make.

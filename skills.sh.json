@@ -17,9 +17,7 @@
         "css-motion-systems",
         "diagnose",
         "domain-modeling",
-        "effect",
         "effect-principles",
-        "effect-service-design",
         "evidence-first",
         "grilling",
         "html",
@@ -28,9 +26,7 @@
         "import-external-skill",
         "lit-rendering",
         "maintain-docs",
-        "motion-choreography-patterns",
         "plan",
-        "prototype",
         "remove-single-use-functions",
         "research",
         "staged-implementation",
@@ -46,20 +42,15 @@
       "skills": [
         "agentic-workflows",
         "browser-control",
-        "ctx-agent-history-search",
         "gh-stack",
-        "herdr",
         "home-assistant-frontend",
         "home-assistant-lazy-context",
         "home-assistant-list-components",
         "home-assistant-lit-rendering",
-        "hunk-review",
-        "opentui",
         "pitchfork-dev-servers",
         "pkexec-root",
         "safe-process-signals",
-        "shared-workflows",
-        "terminal-control"
+        "shared-workflows"
       ]
     },
     {
@@ -71,7 +62,6 @@
         "git-context",
         "handoff",
         "install-tool",
-        "notes-mcp",
         "workflows-watch"
       ]
     }

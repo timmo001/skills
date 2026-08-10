@@ -10,9 +10,8 @@ concurrency:
   cancel-in-progress: false
 
 permissions:
-  contents: write
+  contents: read
   issues: write
-  pull-requests: write
 
 jobs:
   check:
@@ -26,29 +25,6 @@ jobs:
           cache: true
       - name: Check upstream imports
         run: python scripts/check_upstream.py --format json > skill-updates.json
-      - name: Open clean update pull requests
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          git config user.name 'skill-updates[bot]'
-          git config user.email 'skill-updates[bot]@users.noreply.github.com'
-          jq -r '.[] | select(.state == "update-available") | .name' skill-updates.json | while read -r skill; do
-            branch="skill-update/$skill"
-            git checkout -B "$branch" origin/main
-            python scripts/import_skill.py "$skill" --apply
-            python scripts/validate.py
-            python -m unittest discover -s scripts -p 'test_*.py'
-            mise exec npm:skills -- skills add . --list
-            git add -- "$skill" imports.json
-            git commit -m "Update skill: $skill"
-            git push --force-with-lease origin "$branch"
-            if url="$(gh pr list --head "$branch" --state open --json url --jq '.[0].url')" && [[ -n "$url" ]]; then
-              gh pr edit "$url" --title "Update skill: $skill"
-            else
-              gh pr create --base main --head "$branch" --title "Update skill: $skill" --body "Review the latest upstream snapshot for \`$skill\`."
-            fi
-          done
-          git checkout --detach origin/main
       - name: Refresh dashboard issue
         env:
           GH_TOKEN: ${{ github.token }}

@@ -128,6 +128,31 @@ def main() -> int:
                 f"PORTABILITY.md: unknown skills: {', '.join(extra_inventory)}"
             )
         for name, metadata in imports.items():
+            local_edits = metadata.get("localEdits")
+            if metadata.get("distribution") == "official-source":
+                if local_edits != []:
+                    failures.append(
+                        f"imports.json: {name} official-source import must not declare local edits"
+                    )
+                snapshot = ROOT / "upstream" / name / "UPSTREAM_SKILL.md"
+                if not snapshot.is_file():
+                    failures.append(f"imports.json: missing upstream snapshot: {name}")
+                if (ROOT / "upstream" / name / "SKILL.md").exists():
+                    failures.append(
+                        f"imports.json: {name} upstream snapshot is discoverable"
+                    )
+                continue
+            if (
+                not isinstance(local_edits, list)
+                or not local_edits
+                or not all(
+                    isinstance(edit, str) and edit.strip() for edit in local_edits
+                )
+            ):
+                failures.append(
+                    f"imports.json: {name} distributed import must declare local edits"
+                )
+                continue
             skill_path = ROOT / name / "SKILL.md"
             if not skill_path.is_file():
                 failures.append(f"imports.json: missing skill directory: {name}")
@@ -145,7 +170,6 @@ def main() -> int:
                     failures.append(
                         f"{name}: materialised {field} does not match imports.json"
                     )
-            local_edits = metadata.get("localEdits", [])
             materialised_edits = [
                 line.removeprefix("#   - ")
                 for line in frontmatter_text.splitlines()

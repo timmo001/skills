@@ -99,10 +99,8 @@ def check_imports(root: Path = ROOT) -> list[ImportStatus]:
             upstream_sha = latest_path_sha(*parsed, token)
             if upstream_sha == stored_sha:
                 state = "up-to-date"
-            elif metadata.get("localEdits"):
-                state = "manual-review"
             else:
-                state = "update-available"
+                state = "manual-review"
             statuses.append(
                 ImportStatus(
                     name,
@@ -131,7 +129,7 @@ def render_markdown(statuses: list[ImportStatus]) -> str:
     lines = [
         "<!-- adapted-skill-updates -->",
         "",
-        "Retained adapted skills whose upstream source needs attention.",
+        "Tracked skills whose upstream source needs attention.",
         "",
         "## Manual review",
         "",
@@ -154,17 +152,10 @@ def render_markdown(statuses: list[ImportStatus]) -> str:
             lines.append(f"- **{status.name}**: {status.reason}")
     else:
         lines.append("None.")
-    clean = [status for status in attention if status.state == "update-available"]
-    lines.extend(["", "## Clean updates", ""])
-    if clean:
-        for status in clean:
-            lines.append(f"- **{status.name}**: update PR required")
-    else:
-        lines.append("None.")
     lines.extend(
         [
             "",
-            f"Checked {len(statuses)} adapted imports; {len(attention)} need attention.",
+            f"Checked {len(statuses)} imports; {len(attention)} need attention.",
             "",
         ]
     )

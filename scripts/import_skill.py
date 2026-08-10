@@ -21,7 +21,23 @@ def load_import(name: str) -> dict:
     imports = json.loads(IMPORTS.read_text(encoding="utf-8"))["imports"]
     if name not in imports:
         raise SystemExit(f"unknown imported skill: {name}")
-    return imports[name]
+    metadata = imports[name]
+    if metadata.get("distribution") == "official-source":
+        return metadata
+    local_edits = metadata.get("localEdits")
+    if (
+        not isinstance(local_edits, list)
+        or not local_edits
+        or not all(isinstance(edit, str) and edit.strip() for edit in local_edits)
+    ):
+        raise SystemExit(f"{name}: imported skills must declare local edits")
+    return metadata
+
+
+def tracked_skill_path(name: str, metadata: dict) -> Path:
+    if metadata.get("distribution") == "official-source":
+        return ROOT / "upstream" / name / "UPSTREAM_SKILL.md"
+    return ROOT / name / "SKILL.md"
 
 
 def frontmatter_lines(path: Path) -> tuple[list[str], list[str]]:
@@ -147,7 +163,6 @@ def update_reviewed_sha(name: str, sha: str) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("name")
-    parser.add_argument("--apply", action="store_true")
     parser.add_argument("--metadata-only", action="store_true")
     parser.add_argument("--reviewed-sha")
     args = parser.parse_args()
@@ -158,28 +173,20 @@ def main() -> int:
         update_reviewed_sha(args.name, args.reviewed_sha)
         metadata = load_import(args.name)
     if args.metadata_only:
-        materialise_metadata(ROOT / args.name / "SKILL.md", args.name, metadata)
+        materialise_metadata(
+            tracked_skill_path(args.name, metadata), args.name, metadata
+        )
         return 0
     with tempfile.TemporaryDirectory(prefix=f"skill-review-{args.name}-") as temp:
         snapshot = Path(temp) / args.name
         upstream_sha = fetch_snapshot(args.name, metadata, snapshot)
         review_metadata = {**metadata, "upstreamSha": upstream_sha}
         materialise_metadata(snapshot / "SKILL.md", args.name, review_metadata)
-        target = ROOT / args.name
-        if metadata["localEdits"] and args.apply:
-            raise SystemExit(
-                f"{args.name}: has local edits; review the generated snapshot before applying"
-            )
-        if args.apply:
-            if target.exists():
-                shutil.rmtree(target)
-            shutil.copytree(snapshot, target)
-            update_reviewed_sha(args.name, upstream_sha)
-        else:
-            subprocess.run(
-                ["diff", "--recursive", "--unified", str(target), str(snapshot)],
-                check=False,
-            )
+        target = tracked_skill_path(args.name, metadata).parent
+        subprocess.run(
+            ["diff", "--recursive", "--unified", str(target), str(snapshot)],
+            check=False,
+        )
     return 0
 
 

@@ -4,10 +4,44 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from import_skill import materialise_metadata
+from import_skill import load_import, materialise_metadata
 
 
 class ImportSkillTest(unittest.TestCase):
+    def test_rejects_distributed_import_without_local_edits(self) -> None:
+        import import_skill
+
+        with tempfile.TemporaryDirectory() as temp:
+            imports = Path(temp) / "imports.json"
+            imports.write_text(
+                '{"imports":{"example":{"localEdits":[]}}}', encoding="utf-8"
+            )
+            original = import_skill.IMPORTS
+            import_skill.IMPORTS = imports
+            try:
+                with self.assertRaisesRegex(SystemExit, "must declare local edits"):
+                    load_import("example")
+            finally:
+                import_skill.IMPORTS = original
+
+    def test_accepts_official_source_import_without_local_edits(self) -> None:
+        import import_skill
+
+        with tempfile.TemporaryDirectory() as temp:
+            imports = Path(temp) / "imports.json"
+            imports.write_text(
+                '{"imports":{"example":{"localEdits":[],"distribution":"official-source"}}}',
+                encoding="utf-8",
+            )
+            original = import_skill.IMPORTS
+            import_skill.IMPORTS = imports
+            try:
+                self.assertEqual(
+                    load_import("example")["distribution"], "official-source"
+                )
+            finally:
+                import_skill.IMPORTS = original
+
     def test_materialises_overlay_without_changing_body(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "SKILL.md"
