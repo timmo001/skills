@@ -1,0 +1,80 @@
+{
+  "$schema": "https://skills.sh/schemas/skills.sh.schema.json",
+  "notGrouped": "bottom",
+  "groupings": [
+    {
+      "title": "Portable",
+      "description": "General engineering and writing skills that work across Agent Skills clients.",
+      "skills": [
+        "changeset-scope",
+        "chill",
+        "check-skill-updates",
+        "cleanup-unnecessary-variables",
+        "code-review",
+        "codebase-design",
+        "css-motion-systems",
+        "diagnose",
+        "domain-modeling",
+        "effect",
+        "effect-principles",
+        "effect-service-design",
+        "html",
+        "human-step-guide",
+        "improve-codebase-architecture",
+        "import-external-skill",
+        "lit-rendering",
+        "maintain-docs",
+        "motion-choreography-patterns",
+        "plan",
+        "prototype",
+        "remove-single-use-functions",
+        "staged-implementation",
+        "types-enforce-ts",
+        "writing-style"
+      ]
+    },
+    {
+      "title": "Environment-bound",
+      "description": "Skills for named tools, services, and target repositories.",
+      "skills": [
+        "agentic-workflows",
+        "browser-control",
+        "ctx-agent-history-search",
+        "gh-stack",
+        "herdr",
+        "home-assistant-frontend",
+        "home-assistant-lazy-context",
+        "home-assistant-list-components",
+        "home-assistant-lit-rendering",
+        "hunk-review",
+        "opentui",
+        "pitchfork-dev-servers",
+        "pkexec-root",
+        "safe-process-signals",
+        "shared-workflows",
+        "terminal-control"
+      ]
+    },
+    {
+      "title": "Workflow-bound",
+      "description": "Skills coupled to the current OpenCode, dotfiles, notes, or maintainer workflow.",
+      "skills": [
+        "branch-context-consumer",
+        "ask-questions-if-underspecified",
+        "bro",
+        "dotfiles-stow",
+        "evidence-first",
+        "git-commit",
+        "git-context",
+        "grilling",
+        "handoff",
+        "install-tool",
+        "notes-mcp",
+        "research",
+        "to-questionnaire",
+        "workflows-watch",
+        "writing-dot-skills"
+      ]
+    }
+  ]
+}

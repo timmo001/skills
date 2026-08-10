@@ -1,0 +1,6 @@
+.cursor/
+.agents/
+.opencode/
+.claude/skills/
+__pycache__/
+*.pyc
