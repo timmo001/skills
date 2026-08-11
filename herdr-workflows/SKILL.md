@@ -36,6 +36,11 @@ this workflow only decides when removal is safe.
    current agent runs inside that checkout, use an existing host workspace or
    open the host checkout with Herdr, then coordinate from that host workspace.
    Do not remove the checkout containing the coordinator's running process.
+4. Give the host-side coordinator compacted knowledge from the linked-worktree
+   session: the user's intent, reviewed scope, material decisions, current Git
+   and preservation state, validation evidence, and any further requested work.
+   Do not rely on the host coordinator reconstructing that context from files or
+   terminal output.
 
 ### Preserve The Reviewed State
 
