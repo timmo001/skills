@@ -107,9 +107,7 @@ One larger card. Candidate name, one sentence on why, anchor link to its card. T
 
 Plain English, concise — but the architectural nouns and verbs come straight from the `/codebase-design` skill. Concision is not an excuse to drift.
 
-**Use exactly:** module, interface, implementation, depth, deep, shallow, seam, adapter, leverage, locality.
-
-**Never substitute:** component, service, unit (for module) · API, signature (for interface) · boundary (for seam) · layer, wrapper (for module, when you mean module).
+Use **module**, **interface**, **implementation**, **depth**, **deep**, **shallow**, **seam**, **adapter**, **leverage**, and **locality** for architectural roles. Preserve established project and framework terms such as component, service, API, signature, boundary, layer, and wrapper; explain their architectural role when it helps, for example: "The Order service is a shallow module."
 
 **Phrasings that fit the style:**
 

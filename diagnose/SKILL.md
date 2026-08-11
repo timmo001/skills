@@ -3,15 +3,22 @@ name: diagnose
 description: Disciplined workflow for diagnosing bugs - hard bugs, regressions, flaky behavior, and performance issues. Use when behavior is broken, failing, intermittent, or slower than expected and the agent needs a reproducible feedback loop before fixing.
 license: MIT
 # origin: https://github.com/mattpocock/skills/tree/main/skills/engineering/diagnosing-bugs
-# upstream-sha: 697d4ce9742da558fd1ba6697c8e9775e2e302dd
+# upstream-sha: bda79a3c3ca23d19d9ca483808580b5b4cc3d8e2
 # local-edits:
 #   - SKILL.md: local name retained after upstream rename, condensed body, rewritten description, OpenCode tool guidance, no test-first workflow
-#   - hitl-loop.template.sh: verbatim from upstream
+#   - hitl-loop.template.sh: retained upstream capture-safety warning
 ---
 
 # Diagnose
 
 Use this skill for debugging work where ad-hoc inspection is likely to miss the cause.
+
+## Redaction
+
+- Redact secrets from commands, output, logs, traces, and captured artefacts shown to the agent.
+- Prefer passing credentials through environment variables rather than command arguments.
+- Quote only the signal-bearing lines from authenticated artefacts.
+- If redaction removes evidence needed to diagnose the bug, ask the user for a safe way to inspect it.
 
 ## When to Use
 

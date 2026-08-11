@@ -3,12 +3,13 @@ name: ask-questions-if-underspecified
 description: Ask minimal clarifying questions only when ambiguity materially changes implementation. Use for routine underspecification; do not use for user-requested light or full grilling, plan stress-testing, or broad design interviews.
 license: CC-BY-SA-4.0
 # origin: https://github.com/trailofbits/skills/tree/main/plugins/ask-questions-if-underspecified/skills/ask-questions-if-underspecified
-# upstream-sha: d5fe2e6a7896236c3102fd5477e833623ad70298
+# upstream-sha: 3742e65294dfccc78f0e8c730a4290850cc54691
 # local-edits:
 #   - description rewritten for brevity and narrowed away from light/full grill-style questioning
 #   - body condensed from detailed template-based process to a concise cross-client workflow
 #   - added recommended-choice ordering and light/full grilling routing
 #   - removed verbose question templates and reply format examples
+#   - retained the concise cross-client skill after its Claude-specific upstream was deleted
 ---
 
 # Ask Questions If Underspecified

@@ -3,9 +3,9 @@ name: gh-stack
 description: Manage stacked branches and pull requests with GitHub's `gh stack` extension. Use when work involves stacked PRs, dependent branches, stack creation, navigation, submission, synchronisation, rebasing, restructuring, linking, or merging.
 license: MIT
 # origin: https://github.com/github/gh-stack/tree/main/skills/gh-stack
-# upstream-sha: 68ce60c76096c1aecdc19a8af6fa7e89d31ebc2b
+# upstream-sha: 14fc42ed9b6c376a53b2f999f138d3bd26dac546
 # local-edits:
-#   - SKILL.md: condensed upstream reference and replaced mutation instructions with local authorisation rules
+#   - SKILL.md: condensed upstream reference and replaced mutation instructions with local authorisation rules; upstream reference files intentionally omitted
 ---
 
 # GitHub Stacks
@@ -44,6 +44,7 @@ after the user explicitly requests a commit or push.
 Avoid commands that open prompts or TUIs:
 
 - Use `gh stack view --json`, never bare `view` or `view --short`.
+- Treat `view` as best-effort PR-state refresh as well as inspection.
 - Give branch names to `init` and `add`.
 - Give a stack number, PR number, PR URL, or branch to `checkout`.
 - Do not run interactive `modify`. Explain the intended structure and use the
@@ -84,10 +85,17 @@ public preview.
 another tool or when the user explicitly wants remote-only linking. Use
 `init`/`submit` for a locally managed stack.
 
+For numeric checkout targets, resolution is stack number, then PR number, then
+branch name. Prefer an explicit PR URL or branch when a number could be
+ambiguous.
+
 ## Build A Stack
 
-1. Plan one coherent story in dependency order. Foundational changes belong
-   below their consumers; unrelated work belongs in another stack.
+1. Plan one coherent story in dependency order before implementing it, and
+   create the stack first when the work is already known to need layers.
+   Foundational changes belong below their consumers; unrelated work belongs in
+   another stack. Prefer `<topic>/<concern>` branch names unless repository
+   conventions differ.
 2. Confirm the worktree and branch context, then initialise with explicit
    branch names:
 
@@ -113,6 +121,10 @@ another tool or when the user explicitly wants remote-only linking. Use
 
 New PRs created with `--auto` default to draft unless `--open` is supplied.
 Do not use `--open` unless the user asks to mark them ready for review.
+`init` also enables Git rerere for the repository. Do not make additional Git
+configuration changes without authorisation. If every PR in the submitted
+stack has already merged, submission creates a new stack for remaining
+branches.
 
 ## Fix A Lower Layer
 

@@ -3,9 +3,10 @@ name: codebase-design
 description: Shared vocabulary for designing deep modules. Use when the user wants to design or improve a module's interface, find deepening opportunities, decide where a seam goes, make code more testable or AI-navigable, or when another skill needs the deep-module vocabulary.
 license: MIT
 # origin: https://github.com/mattpocock/skills/tree/main/skills/engineering/codebase-design
-# upstream-sha: 697d4ce9742da558fd1ba6697c8e9775e2e302dd
+# upstream-sha: c0d69015e0cc8b66715beb3f93f9e53256e20f30
 # local-edits:
 #   - SKILL.md: architectural vocabulary made additive so established domain and framework terms remain intact
+#   - DESIGN-IT-TWICE.md: generalised fixed domain-document references
 ---
 
 # Codebase Design

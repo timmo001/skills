@@ -3,11 +3,12 @@ name: improve-codebase-architecture
 description: Scan a codebase for deepening opportunities, present them as a visual HTML report, then grill through whichever one you pick.
 license: MIT
 # origin: https://github.com/mattpocock/skills/tree/main/skills/engineering/improve-codebase-architecture
-# upstream-sha: 697d4ce9742da558fd1ba6697c8e9775e2e302dd
+# upstream-sha: c0d69015e0cc8b66715beb3f93f9e53256e20f30
 # local-edits:
 #   - generalised fixed documentation layout references
 #   - preserve established domain and framework terms
 #   - generalised ADR callout
+#   - HTML-REPORT.md: made architecture vocabulary additive to project terminology
 ---
 
 # Improve Codebase Architecture
@@ -30,7 +31,7 @@ This command is _informed_ by the project's domain model and built on a shared d
 
 If the project keeps a domain glossary, domain docs, or recorded design decisions, read the ones covering the area you're touching first.
 
-Then use the Agent tool with `subagent_type=Explore` to walk the codebase. Don't follow rigid heuristics — explore organically and note where you experience friction:
+Then spawn a sub-agent to walk the codebase. Don't follow rigid heuristics — explore organically and note where you experience friction:
 
 - Where does understanding one concept require bouncing between many small modules?
 - Where are modules **shallow** — interface nearly as complex as the implementation?
