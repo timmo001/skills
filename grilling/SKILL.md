@@ -7,6 +7,7 @@ license: MIT
 # local-edits:
 #   - preserve Light/Full intensity and materiality rules
 #   - adapt fact-finding and delegation to available client capabilities
+#   - cap question-tool rounds at five questions
 ---
 
 # Grilling
@@ -16,7 +17,7 @@ Interview the user until you reach a shared understanding. Map the subject as a 
 ## Rules
 
 1. Work the tree in **rounds**. The **frontier** is every material decision whose prerequisites are settled: the questions you can ask now without guessing at an unanswered dependency.
-2. Ask the whole frontier in one round. Number every question and give a recommended answer. A question that depends on another question in the current round belongs to a later round.
+2. Ask up to five frontier questions in one round, matching the question tool's limit. If more than five decisions are ready, ask the five highest-leverage questions and carry the rest into later rounds. Number every question and give a recommended answer. A question that depends on another question in the current round belongs to a later round.
 3. Treat explicit user direction and prior answers as settled. Do not ask the user to repeat or confirm them.
 4. Finding facts is the agent's job. Use read-only tools or allowed read-only subagents for facts available from the environment. A running investigation is an unsettled prerequisite, so ask the rest of the frontier without blocking on it.
 5. Decisions remain with the user. Never silently settle an unresolved choice that could materially change scope, visible behaviour, acceptance criteria, safety, data, compatibility, cost, or an irreversible action.
