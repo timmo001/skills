@@ -31,6 +31,8 @@ These skills use general engineering concepts and ordinary agent capabilities. T
 | `plan` | General planning workflow. |
 | `remove-single-use-functions` | General code guidance. |
 | `research` | Capability-based primary-source research workflow. |
+| `prototype` | Uses the target repository's existing runtime and UI conventions. |
+| `show-me` | Uses ordinary text diagrams and an optional HTML artefact. |
 | `staged-implementation` | General implementation sequencing. |
 | `to-questionnaire` | General channel-aware questionnaire drafting. |
 | `types-enforce-ts` | Requires TypeScript in the target project. |

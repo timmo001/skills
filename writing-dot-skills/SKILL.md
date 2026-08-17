@@ -14,6 +14,7 @@ Lineage: adapted from mattpocock's `writing-great-skills` and trailofbits' desig
 - The agent selects the skill correctly from its description alone.
 - `SKILL.md` stays short and practical.
 - Supporting files earn their place by cutting repeated complexity.
+- Every instruction changes behaviour enough to justify its attention cost.
 
 ## Workflow
 
@@ -25,6 +26,7 @@ Lineage: adapted from mattpocock's `writing-great-skills` and trailofbits' desig
    - Cover what the skill does and when to use it, and front-load the literal words, filenames, or request shapes that should trigger it.
    - Make it distinct from neighbouring skills so auto-selection is reliable, and gate with "Use ONLY when..." if it should stay quiet on adjacent topics.
    - Keep portable frontmatter to the Agent Skills specification unless a documented client extension is deliberate.
+   - Treat the description as a context pointer: name both the material it exposes and each distinct branch that should load it. Collapse synonyms that describe the same branch.
 3. Draft the body.
    - Start with the minimum workflow that does the task well. Prefer direct rules and checklists over theory. Keep examples concrete and local.
    - Match instruction freedom to how fragile the task is:
@@ -33,11 +35,13 @@ Lineage: adapted from mattpocock's `writing-great-skills` and trailofbits' desig
      - High freedom (heuristics) for exploratory work like review or analysis.
    - Number multi-step phases so execution order is reliable.
    - End each step with a checkable completion condition. Prefer exhaustive bounds such as "every changed consumer accounted for" over vague bounds such as "understanding reached".
+   - Keep definitions, rules, and caveats for one concept together so reading one part brings the relevant neighbours with it.
 4. Decide whether to split.
    - Keep `SKILL.md` self-contained by default.
    - Move detail into `references/` only when it is large, rarely needed, or a separate domain.
    - Keep every supporting file one hop from `SKILL.md`. No reference chains.
    - Put material every branch needs in the main file. Move branch-specific detail behind a context pointer that says both what it exposes and when that branch should load it.
+   - Split by sequence only when seeing later steps is likely to rush the current one; otherwise keep the workflow together.
 5. Decide whether to add scripts.
    - Add a script only for a deterministic operation the agent should not re-derive each run: validation, a fixed multi-step command, helper logic.
    - Document when to run the script instead of generating code freehand.
@@ -45,6 +49,11 @@ Lineage: adapted from mattpocock's `writing-great-skills` and trailofbits' desig
    - Keep the canonical skill in the repository's declared skill root; do not create client-specific copies unless packaging requires them.
    - If the skill changes a convention, update the owning repository guidance and generated catalogue from their documented sources.
    - Validate with the repository's skill validator and confirm the target client discovers it.
+7. Prune the result.
+   - Remove duplicated meanings and keep each rule in one authoritative place.
+   - Leave cheap facts in authoritative config, scripts, directory layout, or `--help`; document only conventions, reasons, and non-obvious traps the environment cannot reveal.
+   - Delete stale, irrelevant, or default behaviour that does not change how the target agent acts.
+   - Re-read descriptions and reference pointers last because their text consumes attention whenever it is visible.
 
 ## Quality checks
 
@@ -62,6 +71,9 @@ General checks:
 - The skill matches current local tooling, paths, and names.
 - No stale upstream or tool-specific instructions remain after adapting.
 - Scripts, config, directory layout, and `--help` output remain authoritative. Repeat them only when the lookup is expensive; document the convention, reason, or gotcha the environment cannot reveal instead.
+- Each completion condition is observable and demanding enough to prevent premature completion.
+- Each pointer names the branch that should follow it, and each referenced file is reachable in one hop.
+- Removing any instruction would materially weaken selection, execution, safety, or verification.
 
 ## Anti-patterns
 
@@ -70,3 +82,6 @@ General checks:
 - Reference chains, where one supporting file points to another. Keep everything one hop from `SKILL.md`.
 - Instructions that assume a tool without naming it.
 - Unnumbered steps in a multi-step workflow, so the order is ambiguous.
+- Restating facts that an agent can retrieve cheaply from the repository or tool itself.
+- Repeating an instruction for emphasis instead of sharpening its single authoritative wording.
+- Negative instructions without a positive target behaviour, except where a hard guardrail genuinely requires both.
