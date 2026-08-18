@@ -38,6 +38,7 @@ For each tracked import:
 5. Apply an update only when the user requested it. Preserve provenance, local adaptations, licence material, and files intentionally owned by this repository.
 6. Update `imports.json.upstreamSha` after the comparison is complete, including when upstream changed but all differences were deliberately rejected, then run `--metadata-only`.
 7. Run `python scripts/validate.py` and `mise exec npm:skills -- skills add . --list`.
+8. Run `dot skill-check --skill <name>` for each reviewed adapted import.
 
 Use the `import-external-skill` adaptation workflow when upstream and local changes overlap.
 

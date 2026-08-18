@@ -70,7 +70,7 @@ checker manages reviewed upstream skill revisions separately.
 - Add new skills under `<name>/` at the repository root.
 - Distribute imported skills only when this repository contains substantive local edits. An explicit `wholesale` import is the exception and must remain byte-for-byte upstream. Keep other unchanged snapshots under `upstream/` and install them from their owning repository.
 - Maintain import provenance, reviewed SHA, licence, local edits, and distribution mode in `imports.json`.
-- Use `python scripts/import_skill.py <name>` to generate an upstream comparison, then apply reviewed changes manually.
+- Use `python scripts/import_skill.py <name>` to generate an upstream comparison, then apply reviewed changes manually. The importer rejects an adapted skill that exactly matches every file in its source and prints the standard reimport command instead.
 - Keep `skills.sh.json` and `PORTABILITY.md` in sync.
 - Prefer repository revisions for installed copies. The scheduled checker reports adapted imports for manual review.
 - Do not duplicate canonical skills into checked-in agent-specific directories.

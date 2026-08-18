@@ -9,6 +9,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 from pathlib import Path
 
@@ -160,6 +161,37 @@ def update_reviewed_sha(name: str, sha: str) -> None:
     IMPORTS.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
 
 
+def comparable_skill_content(path: Path) -> str:
+    lines = path.read_text(encoding="utf-8").splitlines()
+    return "\n".join(
+        line
+        for line in lines
+        if not line.startswith(("# origin:", "# upstream-sha:", "#   - "))
+        and line != "# local-edits:"
+    )
+
+
+def comparable_file(path: Path, relative_path: Path) -> bytes:
+    if relative_path.name == "SKILL.md":
+        return comparable_skill_content(path).encode()
+    return path.read_bytes()
+
+
+def skill_directories_match(local: Path, upstream: Path) -> bool:
+    local_files = sorted(
+        path.relative_to(local) for path in local.rglob("*") if path.is_file()
+    )
+    upstream_files = sorted(
+        path.relative_to(upstream) for path in upstream.rglob("*") if path.is_file()
+    )
+    if local_files != upstream_files:
+        return False
+    return all(
+        comparable_file(local / path, path) == comparable_file(upstream / path, path)
+        for path in local_files
+    )
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("name")
@@ -186,6 +218,14 @@ def main() -> int:
             review_metadata = {**metadata, "upstreamSha": upstream_sha}
             materialise_metadata(snapshot / "SKILL.md", args.name, review_metadata)
         target = tracked_skill_path(args.name, metadata).parent
+        if metadata.get("localEdits") and skill_directories_match(target, snapshot):
+            origin = metadata["origin"]
+            print(
+                f"{args.name}: adapted import exactly matches its source; "
+                f"reimport with: mise exec npm:skills -- skills add '{origin}' --global",
+                file=sys.stderr,
+            )
+            return 1
         subprocess.run(
             ["diff", "--recursive", "--unified", str(target), str(snapshot)],
             check=False,

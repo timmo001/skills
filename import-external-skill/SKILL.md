@@ -32,6 +32,7 @@ Use when the external skill overlaps with or extends an existing local skill.
 4. Present the comparison: what the external skill adds, what overlaps, and what conflicts with existing rules.
 5. Wait for the user to decide which additions to make.
 6. Apply the agreed changes to the existing local skill, update `imports.json.upstreamSha`, then run `python scripts/import_skill.py <name> --metadata-only`.
+7. Run `dot skill-check --skill <name>` to confirm the adapted import still differs from its complete source.
 
 ## Frontmatter Format
 
