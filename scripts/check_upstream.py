@@ -99,8 +99,10 @@ def check_imports(root: Path = ROOT) -> list[ImportStatus]:
             upstream_sha = latest_path_sha(*parsed, token)
             if upstream_sha == stored_sha:
                 state = "up-to-date"
-            else:
+            elif metadata.get("localEdits"):
                 state = "manual-review"
+            else:
+                state = "update-available"
             statuses.append(
                 ImportStatus(
                     name,
@@ -137,6 +139,18 @@ def render_markdown(statuses: list[ImportStatus]) -> str:
     reviews = [status for status in attention if status.state == "manual-review"]
     if reviews:
         for status in reviews:
+            lines.extend(
+                [
+                    f"- **{status.name}**: `{status.stored_sha or 'unknown'}` -> `{status.upstream_sha}`",
+                    f"  - {status.origin}",
+                ]
+            )
+    else:
+        lines.append("None.")
+    updates = [status for status in attention if status.state == "update-available"]
+    lines.extend(["", "## Upstream updates", ""])
+    if updates:
+        for status in updates:
             lines.extend(
                 [
                     f"- **{status.name}**: `{status.stored_sha or 'unknown'}` -> `{status.upstream_sha}`",

@@ -1,9 +1,13 @@
 from __future__ import annotations
 
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
+from unittest.mock import patch
 
 from check_upstream import (
     ImportStatus,
+    check_imports,
     frontmatter_comment,
     parse_origin,
     render_markdown,
@@ -11,6 +15,24 @@ from check_upstream import (
 
 
 class CheckUpstreamTest(unittest.TestCase):
+    def test_only_adapted_changes_require_manual_review(self) -> None:
+        with TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "imports.json").write_text(
+                '{"imports":{'
+                '"adapted":{"origin":"https://github.com/org/repo/tree/main/adapted","upstreamSha":"old","localEdits":["adapted"]},'
+                '"official":{"origin":"https://github.com/org/repo/tree/main/official","upstreamSha":"old","localEdits":[],"distribution":"official-source"}'
+                '}}',
+                encoding="utf-8",
+            )
+            with patch("check_upstream.latest_path_sha", return_value="a" * 40):
+                statuses = check_imports(root)
+
+        self.assertEqual(
+            {status.name: status.state for status in statuses},
+            {"adapted": "manual-review", "official": "update-available"},
+        )
+
     def test_reads_frontmatter_comments_only(self) -> None:
         text = "---\n# origin: https://github.com/org/repo/tree/main/skill\n---\n# origin: ignored\n"
         self.assertEqual(
@@ -38,11 +60,15 @@ class CheckUpstreamTest(unittest.TestCase):
                     "changed", "https://example.test", "a", "b", "manual-review"
                 ),
                 ImportStatus(
+                    "upstream", "https://example.test", "a", "b", "update-available"
+                ),
+                ImportStatus(
                     "broken", "https://example.test", "a", None, "error", "failed"
                 ),
             ]
         )
         self.assertIn("**changed**", output)
+        self.assertIn("## Upstream updates\n\n- **upstream**", output)
         self.assertIn("**broken**: failed", output)
 
 
