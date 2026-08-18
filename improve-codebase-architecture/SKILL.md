@@ -3,7 +3,7 @@ name: improve-codebase-architecture
 description: Scan a codebase for deepening opportunities, present them as a visual HTML report, then grill through whichever one you pick.
 license: MIT
 # origin: https://github.com/mattpocock/skills/tree/main/skills/engineering/improve-codebase-architecture
-# upstream-sha: c0d69015e0cc8b66715beb3f93f9e53256e20f30
+# upstream-sha: fcf0071560d32913c9d4f820e0d7ca467c881619
 # local-edits:
 #   - generalised fixed documentation layout references
 #   - preserve established domain and framework terms
