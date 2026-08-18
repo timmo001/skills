@@ -75,6 +75,28 @@ def latest_path_sha(
     return sha
 
 
+def upstream_path_exists(
+    owner: str, repo: str, branch: str, path: str, token: str | None
+) -> bool:
+    encoded_path = urllib.parse.quote(path, safe="/")
+    query = urllib.parse.urlencode({"ref": branch})
+    request = urllib.request.Request(
+        f"https://api.github.com/repos/{owner}/{repo}/contents/{encoded_path}?{query}",
+        headers={
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+            **({"Authorization": f"Bearer {token}"} if token else {}),
+        },
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=30):
+            return True
+    except urllib.error.HTTPError as error:
+        if error.code == 404:
+            return False
+        raise
+
+
 def check_imports(root: Path = ROOT) -> list[ImportStatus]:
     token = os.environ.get("GH_TOKEN") or os.environ.get("GITHUB_TOKEN")
     statuses: list[ImportStatus] = []
@@ -99,10 +121,16 @@ def check_imports(root: Path = ROOT) -> list[ImportStatus]:
             upstream_sha = latest_path_sha(*parsed, token)
             if upstream_sha == stored_sha:
                 state = "up-to-date"
+                reason = None
+            elif not upstream_path_exists(*parsed, token):
+                state = "error"
+                reason = "upstream path no longer exists"
             elif metadata.get("localEdits"):
                 state = "manual-review"
+                reason = None
             else:
                 state = "update-available"
+                reason = None
             statuses.append(
                 ImportStatus(
                     name,
@@ -110,6 +138,7 @@ def check_imports(root: Path = ROOT) -> list[ImportStatus]:
                     stored_sha,
                     upstream_sha,
                     state,
+                    reason,
                 )
             )
         except (OSError, ValueError, urllib.error.HTTPError) as error:

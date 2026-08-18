@@ -25,13 +25,34 @@ class CheckUpstreamTest(unittest.TestCase):
                 '}}',
                 encoding="utf-8",
             )
-            with patch("check_upstream.latest_path_sha", return_value="a" * 40):
+            with (
+                patch("check_upstream.latest_path_sha", return_value="a" * 40),
+                patch("check_upstream.upstream_path_exists", return_value=True),
+            ):
                 statuses = check_imports(root)
 
         self.assertEqual(
             {status.name: status.state for status in statuses},
             {"adapted": "manual-review", "official": "update-available"},
         )
+
+    def test_deleted_upstream_path_is_a_problem(self) -> None:
+        with TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "imports.json").write_text(
+                '{"imports":{"deleted":{'
+                '"origin":"https://github.com/org/repo/tree/main/deleted",'
+                '"upstreamSha":"old","localEdits":[],"distribution":"official-source"}}}',
+                encoding="utf-8",
+            )
+            with (
+                patch("check_upstream.latest_path_sha", return_value="a" * 40),
+                patch("check_upstream.upstream_path_exists", return_value=False),
+            ):
+                status = check_imports(root)[0]
+
+        self.assertEqual(status.state, "error")
+        self.assertEqual(status.reason, "upstream path no longer exists")
 
     def test_reads_frontmatter_comments_only(self) -> None:
         text = "---\n# origin: https://github.com/org/repo/tree/main/skill\n---\n# origin: ignored\n"
