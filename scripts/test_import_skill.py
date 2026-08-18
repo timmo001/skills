@@ -42,6 +42,22 @@ class ImportSkillTest(unittest.TestCase):
             finally:
                 import_skill.IMPORTS = original
 
+    def test_accepts_wholesale_import_without_local_edits(self) -> None:
+        import import_skill
+
+        with tempfile.TemporaryDirectory() as temp:
+            imports = Path(temp) / "imports.json"
+            imports.write_text(
+                '{"imports":{"example":{"localEdits":[],"distribution":"wholesale"}}}',
+                encoding="utf-8",
+            )
+            original = import_skill.IMPORTS
+            import_skill.IMPORTS = imports
+            try:
+                self.assertEqual(load_import("example")["distribution"], "wholesale")
+            finally:
+                import_skill.IMPORTS = original
+
     def test_materialises_overlay_without_changing_body(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "SKILL.md"

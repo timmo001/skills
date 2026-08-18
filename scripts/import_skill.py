@@ -22,7 +22,7 @@ def load_import(name: str) -> dict:
     if name not in imports:
         raise SystemExit(f"unknown imported skill: {name}")
     metadata = imports[name]
-    if metadata.get("distribution") == "official-source":
+    if metadata.get("distribution") in {"official-source", "wholesale"}:
         return metadata
     local_edits = metadata.get("localEdits")
     if (
@@ -173,6 +173,8 @@ def main() -> int:
         update_reviewed_sha(args.name, args.reviewed_sha)
         metadata = load_import(args.name)
     if args.metadata_only:
+        if metadata.get("distribution") == "wholesale":
+            return 0
         materialise_metadata(
             tracked_skill_path(args.name, metadata), args.name, metadata
         )
@@ -180,8 +182,9 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix=f"skill-review-{args.name}-") as temp:
         snapshot = Path(temp) / args.name
         upstream_sha = fetch_snapshot(args.name, metadata, snapshot)
-        review_metadata = {**metadata, "upstreamSha": upstream_sha}
-        materialise_metadata(snapshot / "SKILL.md", args.name, review_metadata)
+        if metadata.get("distribution") != "wholesale":
+            review_metadata = {**metadata, "upstreamSha": upstream_sha}
+            materialise_metadata(snapshot / "SKILL.md", args.name, review_metadata)
         target = tracked_skill_path(args.name, metadata).parent
         subprocess.run(
             ["diff", "--recursive", "--unified", str(target), str(snapshot)],

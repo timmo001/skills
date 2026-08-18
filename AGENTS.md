@@ -14,7 +14,7 @@
 - Use only Agent Skills frontmatter fields unless a vendor-specific extension is deliberately documented.
 - Keep supporting files within the skill and link to them relatively from `SKILL.md`.
 - Update `PORTABILITY.md` when a skill gains or loses runtime, tool, repository, or machine assumptions.
-- Distribute imported skills only when they contain documented local edits. Install unchanged skills from their owning repository instead.
+- Distribute imported skills only when they contain documented local edits, except for an explicit `wholesale` import requested by the user. Wholesale imports must remain byte-for-byte upstream.
 - Keep unchanged review snapshots under `upstream/<name>/UPSTREAM_SKILL.md`; they remain committed but must not be discoverable by the Skills CLI.
 - Keep adapted imports as top-level reviewed snapshots. `imports.json` owns origin, reviewed SHA, licence, local-edit metadata, and distribution mode.
 - Materialise metadata with `scripts/import_skill.py --metadata-only`; fetch upstream review snapshots with the same script.

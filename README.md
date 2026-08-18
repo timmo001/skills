@@ -68,7 +68,7 @@ checker manages reviewed upstream skill revisions separately.
 ## Maintenance
 
 - Add new skills under `<name>/` at the repository root.
-- Distribute imported skills only when this repository contains substantive local edits. Keep unchanged snapshots under `upstream/` and install them from their owning repository.
+- Distribute imported skills only when this repository contains substantive local edits. An explicit `wholesale` import is the exception and must remain byte-for-byte upstream. Keep other unchanged snapshots under `upstream/` and install them from their owning repository.
 - Maintain import provenance, reviewed SHA, licence, local edits, and distribution mode in `imports.json`.
 - Use `python scripts/import_skill.py <name>` to generate an upstream comparison, then apply reviewed changes manually.
 - Keep `skills.sh.json` and `PORTABILITY.md` in sync.

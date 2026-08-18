@@ -129,6 +129,14 @@ def main() -> int:
             )
         for name, metadata in imports.items():
             local_edits = metadata.get("localEdits")
+            if metadata.get("distribution") == "wholesale":
+                if local_edits != []:
+                    failures.append(
+                        f"imports.json: {name} wholesale import must not declare local edits"
+                    )
+                if not (ROOT / name / "SKILL.md").is_file():
+                    failures.append(f"imports.json: missing wholesale skill: {name}")
+                continue
             if metadata.get("distribution") == "official-source":
                 if local_edits != []:
                     failures.append(

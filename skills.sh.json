@@ -50,6 +50,7 @@
         "home-assistant-lazy-context",
         "home-assistant-list-components",
         "home-assistant-lit-rendering",
+        "install-anti-slop",
         "pitchfork-dev-servers",
         "pkexec-root",
         "safe-process-signals",

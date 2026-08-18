@@ -20,7 +20,7 @@ External skill repos are often written for a specific agent framework (e.g. Clau
 - Keep only Agent Skills frontmatter fields. `allowed-tools` is portable; remove framework-specific fields such as `disable-model-invocation` and `argument-hint`.
 - Replace framework-specific tool names, hook mechanisms, or subagent patterns with capability-based instructions when that preserves the workflow.
 - Keep an intentional environment dependency when abstraction would make the instructions less truthful, then classify it in `PORTABILITY.md`.
-- If the skill is useful as-is, retain any review snapshot under `upstream/<name>/UPSTREAM_SKILL.md` and install it from its owning repository. Never expose that snapshot through the local Skills CLI catalogue.
+- If the skill is useful as-is, retain any review snapshot under `upstream/<name>/UPSTREAM_SKILL.md` and install it from its owning repository. Never expose that snapshot through the local Skills CLI catalogue unless the user explicitly requests a byte-for-byte `wholesale` import.
 
 ## Adaptation
 

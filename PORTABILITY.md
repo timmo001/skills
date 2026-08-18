@@ -26,6 +26,7 @@ These skills use general engineering concepts and ordinary agent capabilities. T
 | `human-step-guide` | General workflow guidance. |
 | `improve-codebase-architecture` | General architecture workflow with a colocated report template. |
 | `import-external-skill` | Uses the Agent Skills format and repository metadata. |
+| `install-anti-slop` | Requires TypeScript or JavaScript, Oxlint, and the target repository's package manager. |
 | `lit-rendering` | Requires Lit in the target project. |
 | `maintain-docs` | Uses ordinary repository and documentation tools. |
 | `plan` | General planning workflow. |
@@ -78,6 +79,6 @@ Migrate one coherent family at a time:
 1. Split reusable behaviour from personal wrappers in git, notes, handoff, and installation skills.
 2. Replace runtime-specific tool names with capability descriptions plus small client adapters where needed.
 3. Add `compatibility` metadata to environment-bound skills after checking how each target client displays it.
-4. Distribute imported skills only when they contain documented local edits; keep unchanged review snapshots under `upstream/` and install them from their owning repository.
+4. Distribute imported skills only when they contain documented local edits, except for explicit byte-for-byte wholesale imports; keep other unchanged review snapshots under `upstream/` and install them from their owning repository.
 5. Use `imports.json` as the maintenance metadata overlay for adapted imports.
 6. Use `scripts/import_skill.py` to fetch and compare upstream content before manually reviewing an adapted skill.
