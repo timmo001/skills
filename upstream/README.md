@@ -6,7 +6,7 @@ Install each unchanged skill from its official source:
 
 | Skill | Official source |
 | --- | --- |
-| `ctx-agent-history-search` | <https://github.com/ctxrs/ctx/tree/main/skills/ctx-agent-history-search> |
+| `ctx` | <https://github.com/ctxrs/ctx/tree/main/skills/ctx> |
 | `effect` | <https://github.com/kitlangton/skills/tree/main/skills/effect> |
 | `effect-service-design` | <https://github.com/dmmulroy/skills/tree/main/effect-service-design> |
 | `herdr` | <https://github.com/herdrdev/herdr/tree/master/skills/herdr> |
