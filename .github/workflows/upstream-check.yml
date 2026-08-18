@@ -33,7 +33,8 @@ jobs:
         run: |
           git config user.name 'skill-updates[bot]'
           git config user.email 'skill-updates[bot]@users.noreply.github.com'
-          jq -r '.[] | select(.state == "update-available") | .name' skill-updates.json | while read -r skill; do
+          mapfile -t skills < <(jq -r '.[] | select(.state == "update-available") | .name' skill-updates.json)
+          for skill in "${skills[@]}"; do
             branch="skill-update/$skill"
             git checkout -B "$branch" origin/main
             python scripts/import_skill.py "$skill" --apply
