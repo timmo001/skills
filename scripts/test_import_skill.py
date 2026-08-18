@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from import_skill import (
+    apply_snapshot,
     load_import,
     main,
     materialise_metadata,
@@ -16,6 +17,95 @@ from import_skill import (
 
 
 class ImportSkillTest(unittest.TestCase):
+    def test_applies_official_source_as_non_discoverable_snapshot(self) -> None:
+        import import_skill
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            snapshot = root / "snapshot"
+            snapshot.mkdir()
+            snapshot.joinpath("SKILL.md").write_text("upstream\n", encoding="utf-8")
+            imports = root / "imports.json"
+            imports.write_text(
+                '{\n  "imports": {\n'
+                f'    "example": {{ "upstreamSha": "{"b" * 40}" }}\n'
+                "  }\n}\n",
+                encoding="utf-8",
+            )
+            original_root = import_skill.ROOT
+            original_imports = import_skill.IMPORTS
+            import_skill.ROOT = root
+            import_skill.IMPORTS = imports
+            try:
+                apply_snapshot(
+                    "example",
+                    {"distribution": "official-source", "localEdits": []},
+                    snapshot,
+                    "a" * 40,
+                )
+            finally:
+                import_skill.ROOT = original_root
+                import_skill.IMPORTS = original_imports
+
+            target = root / "upstream" / "example"
+            self.assertEqual(
+                target.joinpath("UPSTREAM_SKILL.md").read_text(encoding="utf-8"),
+                "upstream\n",
+            )
+            self.assertFalse(target.joinpath("SKILL.md").exists())
+            self.assertIn('"upstreamSha": "' + "a" * 40, imports.read_text())
+
+    def test_refuses_to_apply_adapted_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as temp:
+            with self.assertRaisesRegex(SystemExit, "has local edits"):
+                apply_snapshot(
+                    "example",
+                    {"localEdits": ["adapted"]},
+                    Path(temp),
+                    "a" * 40,
+                )
+
+    def test_applies_wholesale_snapshot_without_renaming_skill(self) -> None:
+        import import_skill
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            snapshot = root / "snapshot"
+            snapshot.mkdir()
+            snapshot.joinpath("SKILL.md").write_text("upstream\n", encoding="utf-8")
+            imports = root / "imports.json"
+            imports.write_text(
+                '{\n  "imports": {\n'
+                f'    "example": {{ "upstreamSha": "{"b" * 40}" }}\n'
+                "  }\n}\n",
+                encoding="utf-8",
+            )
+            original_root = import_skill.ROOT
+            original_imports = import_skill.IMPORTS
+            import_skill.ROOT = root
+            import_skill.IMPORTS = imports
+            try:
+                apply_snapshot(
+                    "example",
+                    {"distribution": "wholesale", "localEdits": []},
+                    snapshot,
+                    "a" * 40,
+                )
+            finally:
+                import_skill.ROOT = original_root
+                import_skill.IMPORTS = original_imports
+
+            self.assertEqual(
+                root.joinpath("example/SKILL.md").read_text(encoding="utf-8"),
+                "upstream\n",
+            )
+            self.assertEqual(
+                imports.read_text(encoding="utf-8"),
+                '{\n  "imports": {\n'
+                f'    "example": {{ "upstreamSha": "{"a" * 40}" }}\n'
+                "  }\n}\n",
+            )
+
     def test_rejects_distributed_import_without_local_edits(self) -> None:
         import import_skill
 

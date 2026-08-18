@@ -156,9 +156,26 @@ def fetch_snapshot(name: str, metadata: dict, destination: Path) -> str:
 
 
 def update_reviewed_sha(name: str, sha: str) -> None:
-    document = json.loads(IMPORTS.read_text(encoding="utf-8"))
-    document["imports"][name]["upstreamSha"] = sha
-    IMPORTS.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
+    text = IMPORTS.read_text(encoding="utf-8")
+    marker = f'"{name}": {{'
+    start = text.find(marker)
+    if start == -1:
+        raise SystemExit(f"unknown imported skill: {name}")
+    end = text.find("\n    \"", start + len(marker))
+    if end == -1:
+        end = text.find("\n  }", start + len(marker))
+    if end == -1:
+        raise SystemExit(f"{name}: malformed import metadata")
+    entry = text[start:end]
+    updated, count = re.subn(
+        r'("upstreamSha"\s*:\s*")[0-9a-f]+(")',
+        rf"\g<1>{sha}\g<2>",
+        entry,
+        count=1,
+    )
+    if count != 1:
+        raise SystemExit(f"{name}: missing upstream SHA")
+    IMPORTS.write_text(text[:start] + updated + text[end:], encoding="utf-8")
 
 
 def comparable_skill_content(path: Path) -> str:
@@ -192,9 +209,24 @@ def skill_directories_match(local: Path, upstream: Path) -> bool:
     )
 
 
+def apply_snapshot(name: str, metadata: dict, snapshot: Path, upstream_sha: str) -> None:
+    if metadata.get("localEdits"):
+        raise SystemExit(
+            f"{name}: has local edits; review the generated snapshot before applying"
+        )
+    target = tracked_skill_path(name, metadata).parent
+    if target.exists():
+        shutil.rmtree(target)
+    shutil.copytree(snapshot, target)
+    if metadata.get("distribution") == "official-source":
+        target.joinpath("SKILL.md").rename(target / "UPSTREAM_SKILL.md")
+    update_reviewed_sha(name, upstream_sha)
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("name")
+    parser.add_argument("--apply", action="store_true")
     parser.add_argument("--metadata-only", action="store_true")
     parser.add_argument("--reviewed-sha")
     args = parser.parse_args()
@@ -226,10 +258,13 @@ def main() -> int:
                 file=sys.stderr,
             )
             return 1
-        subprocess.run(
-            ["diff", "--recursive", "--unified", str(target), str(snapshot)],
-            check=False,
-        )
+        if args.apply:
+            apply_snapshot(args.name, metadata, snapshot, upstream_sha)
+        else:
+            subprocess.run(
+                ["diff", "--recursive", "--unified", str(target), str(snapshot)],
+                check=False,
+            )
     return 0
 
 

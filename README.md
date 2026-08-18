@@ -60,7 +60,7 @@ mise exec npm:skills -- skills add . --list
 
 The local validator checks the portable metadata contract, directory names, relative links, and catalog coverage. CI also verifies the expected installer-discovery count.
 
-Imports are checked daily against the latest commit touching their upstream path. Adapted imports are reported for manual review; unchanged upstream snapshots are listed separately as upstream updates.
+Imports are checked daily against the latest commit touching their upstream path. Adapted imports are reported for manual review; unchanged upstream snapshots receive automated update pull requests.
 
 Renovate manages the pinned mise tools and GitHub Actions. The scheduled import
 checker manages reviewed upstream skill revisions separately.
@@ -70,9 +70,9 @@ checker manages reviewed upstream skill revisions separately.
 - Add new skills under `<name>/` at the repository root.
 - Distribute imported skills only when this repository contains substantive local edits. An explicit `wholesale` import is the exception and must remain byte-for-byte upstream. Keep other unchanged snapshots under `upstream/` and install them from their owning repository.
 - Maintain import provenance, reviewed SHA, licence, local edits, and distribution mode in `imports.json`.
-- Use `python scripts/import_skill.py <name>` to generate an upstream comparison, then apply reviewed changes manually. The importer rejects an adapted skill that exactly matches every file in its source and prints the standard reimport command instead.
+- Use `python scripts/import_skill.py <name>` to generate an upstream comparison. The scheduled checker applies unchanged imports with `--apply`; adapted changes remain manual. The importer rejects an adapted skill that exactly matches every file in its source and prints the standard reimport command instead.
 - Keep `skills.sh.json` and `PORTABILITY.md` in sync.
-- Prefer repository revisions for installed copies. The scheduled checker separates adapted imports requiring manual review from unchanged upstream updates.
+- Prefer repository revisions for installed copies. The scheduled checker reports adapted imports for manual review and opens pull requests for unchanged upstream updates.
 - Do not duplicate canonical skills into checked-in agent-specific directories.
 
 The current portability backlog is intentionally documented rather than mechanically rewriting all existing skills in one migration.
