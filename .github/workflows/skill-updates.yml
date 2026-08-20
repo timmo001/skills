@@ -1,6 +1,14 @@
 name: Skill updates
 
 on:
+  push:
+    branches: [main]
+    paths:
+      - "imports.json"
+      - "*/**"
+      - "!scripts/**"
+      - "!.github/**"
+      - "!.cursor/**"
   schedule:
     - cron: "0 14 * * *"
   workflow_dispatch: {}

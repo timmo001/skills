@@ -60,7 +60,7 @@ mise exec npm:skills -- skills add . --list
 
 The local validator checks the portable metadata contract, directory names, relative links, and catalog coverage. CI also verifies the expected installer-discovery count.
 
-Imports are checked daily against the latest commit touching their upstream path. Adapted imports are reported for manual review; unchanged upstream snapshots receive automated update pull requests.
+Imports are checked daily and after skill changes merge to `main`. Adapted imports are reported for manual review; unchanged upstream snapshots receive automated update pull requests.
 
 The shared update entrypoint runs in either environment:
 
@@ -70,7 +70,7 @@ dot skill-updates-agent device --config /path/to/skill-updates-agent.yml
 dot skill-updates-agent device --config /path/to/skill-updates-agent.yml --run-id 123456
 ```
 
-GitHub Actions builds `dot` from the public dotfiles checkout and uses its `github` mode for import checks, clean update pull requests, validation dispatches, and dashboard refreshes. A local device uses `device` mode to optionally wait for one workflow run and then invoke its configured OpenCode processor. Repeated device calls are safe because the processor records the last completed workflow run.
+GitHub Actions builds `dot` from the public dotfiles checkout and uses its `github` mode for scheduled checks and checks after merged skill changes, clean update pull requests, validation dispatches, and dashboard refreshes. A local device uses `device` mode to optionally wait for one workflow run and then invoke its configured OpenCode processor. Repeated device calls are safe because the processor records the last completed workflow run.
 
 Renovate manages the pinned mise tools and GitHub Actions. The scheduled import
 checker manages reviewed upstream skill revisions separately.
