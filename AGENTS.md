@@ -3,6 +3,7 @@
 ## Scope
 
 - `<name>/` at the repository root is the canonical source for every tracked skill. This preserves direct stow consumers that use the repository root as `~/.agents/skills`.
+- After any commit or reviewed upstream update in this repository, update and commit the `agents/.agents/skills` submodule pointer in `~/.config/dotfiles`. Do not leave the repositories out of sync.
 - Preserve imported history, provenance comments, and upstream licence material.
 - Do not create checked-in copies under `.agents/`, `.claude/`, `.cursor/`, or `.opencode/`.
 - Keep agent-specific packaging as metadata around the canonical skills, not forks of their content.
