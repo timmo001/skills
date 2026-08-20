@@ -3,7 +3,7 @@ name: agentic-workflows
 description: Design, create, update, debug, audit, or upgrade GitHub Agentic Workflows with the `gh aw` extension. Use when work involves workflow Markdown, compiled `.lock.yml` files, agent engines, MCP tools, safe outputs, or `gh aw` commands.
 license: MIT
 # origin: https://github.com/github/gh-aw/tree/main/.github/skills/agentic-workflows
-# upstream-sha: 2821783c33ae2aae26cda0e0d06834eb6e5d2a04
+# upstream-sha: dff98aaaaab3957534e1257232a3f30f97f1242d
 # local-edits:
 #   - SKILL.md: made the upstream router self-contained and replaced unavailable repository-relative prompt loading with official source lookup
 ---
@@ -27,8 +27,9 @@ compiled to GitHub Actions lock files.
    - create: `create-agentic-workflow.md`
    - update: `update-agentic-workflow.md`
    - debug or audit: `debug-agentic-workflow.md`
-   - upgrade: `upgrade-agentic-workflows.md`
-   - engine setup: `configure-agentic-engine.md`
+    - upgrade: `upgrade-agentic-workflows.md`
+    - job configuration and job-level behaviour: `jobs.md`
+    - engine setup: `configure-agentic-engine.md`
    - agent runtime, Docker, gVisor, Docker sbx, ARC DinD, self-hosted
      runners, or runtime installation: `agent-runtime-instructions.md`
    - shared workflows or MCP wrappers: `create-shared-agentic-workflow.md`
