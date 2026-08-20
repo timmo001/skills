@@ -51,9 +51,9 @@ jobs:
             git commit -m "Update skill: $skill"
             git push --force-with-lease origin "$branch"
             if url="$(gh pr list --head "$branch" --state open --json url --jq '.[0].url')" && [[ -n "$url" ]]; then
-              gh pr edit "$url" --title "Update skill: $skill"
+              gh pr edit "$url" --title "Update skill: $skill" --add-assignee timmo001
             else
-              gh pr create --base main --head "$branch" --title "Update skill: $skill" --body "Update the reviewed upstream snapshot for \`$skill\`."
+              gh pr create --base main --head "$branch" --title "Update skill: $skill" --body "Update the reviewed upstream snapshot for \`$skill\`." --assignee timmo001
             fi
             gh workflow run validate.yml --ref "$branch"
           done
