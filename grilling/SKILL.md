@@ -3,7 +3,7 @@ name: grilling
 description: Grill the user about a plan, decision, or idea in dependency-ready rounds. Use when the user wants to stress-test their thinking or uses a grill trigger phrase.
 license: MIT
 # origin: https://github.com/mattpocock/skills/tree/main/skills/productivity/grilling
-# upstream-sha: 85f83d3fde1d3a90d5c9a657f6998c79a6c37308
+# upstream-sha: 86cba45f4244b2545112d13e77ba82eb2bfad325
 # local-edits:
 #   - preserve Light/Full intensity and materiality rules
 #   - adapt fact-finding and delegation to available client capabilities
