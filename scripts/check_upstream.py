@@ -141,7 +141,7 @@ def check_imports(root: Path = ROOT) -> list[ImportStatus]:
                     reason,
                 )
             )
-        except (OSError, ValueError, urllib.error.HTTPError) as error:
+        except ValueError as error:
             statuses.append(
                 ImportStatus(
                     name,
@@ -152,6 +152,8 @@ def check_imports(root: Path = ROOT) -> list[ImportStatus]:
                     str(error),
                 )
             )
+        except (OSError, urllib.error.HTTPError):
+            raise
     return statuses
 
 

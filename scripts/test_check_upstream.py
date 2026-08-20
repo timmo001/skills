@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import unittest
+import urllib.error
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from unittest.mock import patch
@@ -15,6 +16,24 @@ from check_upstream import (
 
 
 class CheckUpstreamTest(unittest.TestCase):
+    def test_transport_failures_abort_the_scan(self) -> None:
+        with TemporaryDirectory() as temp:
+            root = Path(temp)
+            (root / "imports.json").write_text(
+                '{"imports":{"example":{'
+                '"origin":"https://github.com/org/repo/tree/main/example",'
+                '"upstreamSha":"old","localEdits":[]}}}',
+                encoding="utf-8",
+            )
+            with patch(
+                "check_upstream.latest_path_sha",
+                side_effect=urllib.error.HTTPError(
+                    "https://api.github.com", 403, "rate limited", {}, None
+                ),
+            ):
+                with self.assertRaises(urllib.error.HTTPError):
+                    check_imports(root)
+
     def test_only_adapted_changes_require_manual_review(self) -> None:
         with TemporaryDirectory() as temp:
             root = Path(temp)
@@ -22,7 +41,7 @@ class CheckUpstreamTest(unittest.TestCase):
                 '{"imports":{'
                 '"adapted":{"origin":"https://github.com/org/repo/tree/main/adapted","upstreamSha":"old","localEdits":["adapted"]},'
                 '"official":{"origin":"https://github.com/org/repo/tree/main/official","upstreamSha":"old","localEdits":[],"distribution":"official-source"}'
-                '}}',
+                "}}",
                 encoding="utf-8",
             )
             with (
