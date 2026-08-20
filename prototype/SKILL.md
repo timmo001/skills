@@ -3,7 +3,7 @@ name: prototype
 description: Build disposable code to answer one design question. Use when the user wants to test whether logic or a state model feels right, or compare materially different UI directions before production implementation.
 license: MIT
 # origin: https://github.com/mattpocock/skills/tree/main/skills/engineering/prototype
-# upstream-sha: 6bcbcb09e2f1ed5fa20b4e890c732ecbb58c6b64
+# upstream-sha: 321658273cb1d20b76026717d027d505790106d4
 # local-edits:
 #   - SKILL.md: condensed branches, made the question and lifecycle explicit, and removed automatic branch, issue, and commit actions
 #   - LOGIC.md: condensed the shareable state-model workflow and kept tests as optional verification rather than a design driver
