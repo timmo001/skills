@@ -62,6 +62,16 @@ The local validator checks the portable metadata contract, directory names, rela
 
 Imports are checked daily against the latest commit touching their upstream path. Adapted imports are reported for manual review; unchanged upstream snapshots receive automated update pull requests.
 
+The shared update entrypoint runs in either environment:
+
+```bash
+dot skill-updates-agent github --skills-dir /path/to/skills
+dot skill-updates-agent device --config /path/to/skill-updates-agent.yml
+dot skill-updates-agent device --config /path/to/skill-updates-agent.yml --run-id 123456
+```
+
+GitHub Actions builds `dot` from the public dotfiles checkout and uses its `github` mode for import checks, clean update pull requests, validation dispatches, and dashboard refreshes. A local device uses `device` mode to optionally wait for one workflow run and then invoke its configured OpenCode processor. Repeated device calls are safe because the processor records the last completed workflow run.
+
 Renovate manages the pinned mise tools and GitHub Actions. The scheduled import
 checker manages reviewed upstream skill revisions separately.
 
