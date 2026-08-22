@@ -3,7 +3,7 @@ name: browser-control
 description: Control the user's existing Chromium-family browser through the Browser Control extension and local relay. Use when asked to automate, test, inspect, or drive the visible browser with Browser Control, especially in this repo or once the extension is installed.
 license: MIT
 # origin: https://github.com/anomalyco/browser-control/tree/main/skills/browser-control
-# upstream-sha: 05b068dec4cacdf91980d5123de366019ff92f8a
+# upstream-sha: 045805c2e5a3781c61c7ed1d57a6f75cc7db1491
 # local-edits:
 #   - SKILL.md: description expanded to cover visible browser automation and local relay usage
 ---
@@ -184,7 +184,10 @@ Use the least expensive view that answers the question:
   baseline. A diff invalidates earlier refs and exposes refs only for added or
   changed current lines.
 - `ariaSnapshot(target?, { timeout })` returns Playwright's detailed YAML aria
-  tree when the compact snapshot omits needed structure.
+  tree when the compact snapshot omits needed structure. Text-control values are
+  omitted so password, token, search, numeric, range, and textarea contents do
+  not enter tool output. Await it separately; do not run other operations on the
+  same page concurrently.
 - `screenshotWithLabels({ page, path? })` adds visual labels and metadata when
   layout matters.
 
