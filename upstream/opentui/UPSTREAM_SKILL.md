@@ -3,7 +3,7 @@ name: opentui
 description: Build terminal UIs with OpenTUI. Covers Core, frameworks, components, application APIs, testing, extensions, integrations, deployment, and public API lookup.
 license: MIT
 # origin: https://github.com/anomalyco/opentui/tree/main/packages/web/src/content
-# upstream-sha: a84a0bac70d5994d52054c4a06293177ed911070
+# upstream-sha: fa14b96ad42855acaadb568443931e6d94e17c71
 ---
 
 # OpenTUI Skill
