@@ -95,9 +95,14 @@ band or has a recorded successor rotation in progress.
   session open. Host-native sessions remain referenced by their native ID.
 - Check for stale owned sessions at the start and end of a coordination run.
   Close only settled coordinator-owned topology with a verified record.
+- Treat lifecycle records as temporary cleanup guards. After every session from
+  the current run is settled and closed and its result is included in the final
+  summary, remove that run's record files one at a time and verify each path is
+  gone. Never bulk-delete the directory or remove records owned by another
+  concurrent coordinator run.
 
 Cleanup is complete when no settled coordinator-owned pane, tab, workspace, or
-agent remains open without a verified cache record.
+agent remains open and no lifecycle record created by the current run remains.
 
 ## Approvals And Delivery
 
