@@ -1,6 +1,6 @@
 ---
 name: session-coordination
-description: Coordinate delegated agent sessions with bounded assignments, asynchronous background scheduling, soft concurrency caps, context-window rotation, independent review cycles, and logged cleanup of OpenCode or Herdr sessions. Use when managing multiple agents, panes, tabs, branches, stages, or long-running tasks while keeping the coordinating session small.
+description: Coordinate delegated agent sessions with bounded assignments, asynchronous background scheduling, soft concurrency caps, context-window rotation, independent review cycles, and logged cleanup across native child sessions and Herdr-managed agents. Use when managing multiple agents, panes, tabs, branches, stages, or long-running tasks while keeping the coordinating session small.
 ---
 
 # Session Coordination
@@ -44,8 +44,10 @@ verification, review, and large reads.
    fresh session.
 5. Use a fresh read-only session for every review cycle. Route verified findings
    to the owning implementation session, then use another fresh reviewer.
-6. Native OpenCode children match the parent runtime. Keep OpenCode 2 work on
-   native OpenCode 2 children; use Herdr for visible sessions or other engines.
+6. Prefer host-native child sessions when the delegated work should use the same
+   runtime as the coordinator. In OpenCode, keep V2 parents on V2 children and V1
+   parents on V1 children. Use Herdr for visible sessions, Pi, or any other
+   supported agent kind appropriate to the assignment.
 
 The assignment phase is complete when every ready item is either owned, queued
 by the cap, or blocked on a named dependency or user decision.
@@ -62,8 +64,9 @@ by the cap, or blocked on a named dependency or user decision.
 - A successor receives only current scope, decisions, state, blockers,
   verification, and direct native or artefact references. Do not replay the old
   transcript.
-- Track role, runtime, native handle, scope, status, and blocker. Use an OpenCode
-  session ID for native children and Herdr agent plus pane IDs for Herdr sessions.
+- Track role, runtime, native handle, scope, status, and blocker. Use the host's
+  native session ID when available and Herdr agent plus pane IDs for
+  Herdr-managed sessions.
 
 Context control is complete when each active session remains below its warning
 band or has a recorded successor rotation in progress.
@@ -72,7 +75,7 @@ band or has a recorded successor rotation in progress.
 
 - Name coordinator-created Herdr agents with `coord-`.
 - Before closing any owned session, write and read back
-  `~/.cache/opencode/coordinator/sessions/<UTC>-<sanitised-handle>.md`. Include
+  `~/.cache/agent-coordinator/sessions/<UTC>-<sanitised-handle>.md`. Include
   its handle, runtime, role, scope, repository or worktree, decisions, result,
   changed paths or findings, verification, blockers, artefact references, and
   closure reason.
@@ -81,7 +84,7 @@ band or has a recorded successor rotation in progress.
   other loaded skills still own project handoffs or notes when those are needed.
 - Follow `herdr` ownership and state safeguards when closing or recovering
   `coord-` sessions. If the record cannot be produced or verified, leave the
-  session open. Native OpenCode sessions remain referenced by ID.
+  session open. Host-native sessions remain referenced by their native ID.
 - Check for stale owned sessions at the start and end of a coordination run.
   Close only settled coordinator-owned topology with a verified record.
 
