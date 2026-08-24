@@ -49,12 +49,13 @@ verification, review, and large reads.
    a runtime name into a native profile argument such as OpenCode's `--agent`.
    Herdr's `agent start --kind` selects an integration's default executable; it
    is not a runtime-version selector. For a Herdr-managed alternate runtime,
-   use `herdr pane run` with the explicit launcher path, then verify its
-   foreground `argv` with `herdr pane process-info` before assigning work. When
-   the user does not choose a runtime, use host-native child sessions and match
-   the coordinator's runtime. In OpenCode, keep V2 parents on V2 children and
-   V1 parents on V1 children. Use Pi or another Herdr-supported agent kind only
-   when the user requests it.
+   resolve the explicit launcher in the coordinator before creating its pane.
+   Do not use the target pane for launcher discovery. Start it with `herdr pane
+   run`, then verify its foreground `argv` with `herdr pane process-info` before
+   assigning work. When the user does not choose a runtime, use host-native
+   child sessions and match the coordinator's runtime. In OpenCode, keep V2
+   parents on V2 children and V1 parents on V1 children. Use Pi or another
+   Herdr-supported agent kind only when the user requests it.
 
 The assignment phase is complete when every ready item is either owned, queued
 by the cap, or blocked on a named dependency or user decision.
