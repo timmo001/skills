@@ -66,6 +66,7 @@
         "git-context",
         "handoff",
         "install-tool",
+        "session-coordination",
         "workflows-watch"
       ]
     }

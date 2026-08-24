@@ -70,6 +70,7 @@ These encode the current OpenCode, dotfiles, notes, or maintainer workflow. They
 | `git-context` | Generalise injected context and OpenCode MCP names. |
 | `handoff` | Abstract the Notes MCP vault and OpenCode tool names. |
 | `install-tool` | Separate general installation policy from personal package manifests and overlays. |
+| `session-coordination` | Depends on OpenCode child sessions, Herdr lifecycle semantics, local context warnings, and the coordinator cache path. |
 | `workflows-watch` | Decouple from OpenCode background tasks and the local workflow manifest tool. |
 
 ## Follow-Up
