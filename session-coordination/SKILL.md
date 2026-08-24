@@ -44,10 +44,17 @@ verification, review, and large reads.
    fresh session.
 5. Use a fresh read-only session for every review cycle. Route verified findings
    to the owning implementation session, then use another fresh reviewer.
-6. Honour an explicitly requested agent runtime. When the user does not choose
-   one, use host-native child sessions and match the coordinator's runtime. In
-   OpenCode, keep V2 parents on V2 children and V1 parents on V1 children. Use Pi
-   or another Herdr-supported agent kind only when the user requests it.
+6. Honour an explicitly requested agent runtime. Keep runtime selection
+   separate from the agent profile selected inside that runtime: never convert
+   a runtime name into a native profile argument such as OpenCode's `--agent`.
+   Herdr's `agent start --kind` selects an integration's default executable; it
+   is not a runtime-version selector. For a Herdr-managed alternate runtime,
+   use `herdr pane run` with the explicit launcher path, then verify its
+   foreground `argv` with `herdr pane process-info` before assigning work. When
+   the user does not choose a runtime, use host-native child sessions and match
+   the coordinator's runtime. In OpenCode, keep V2 parents on V2 children and
+   V1 parents on V1 children. Use Pi or another Herdr-supported agent kind only
+   when the user requests it.
 
 The assignment phase is complete when every ready item is either owned, queued
 by the cap, or blocked on a named dependency or user decision.
