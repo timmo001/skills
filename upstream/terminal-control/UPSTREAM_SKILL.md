@@ -3,7 +3,7 @@ name: terminal-control
 description: Drive and verify terminal applications with the termctrl CLI in a real PTY - read visible screens, run named live sessions, send typed keyboard input, wait for text, save evidence, record timelines, and export edited videos. Use when an agent must operate or test a TUI, REPL, interactive CLI, shell process, or OpenTUI application.
 license: MIT
 # origin: https://github.com/anomalyco/terminal-control/tree/main/skills/terminal-control
-# upstream-sha: cde267619a818f6aa7d5d9df63f92fc3da94032f
+# upstream-sha: 861ad0f62e33c108d8be179bc91c43e96e837e64
 ---
 
 # Terminal Control
@@ -22,10 +22,10 @@ Keep an application alive when interaction or repeated inspection is required:
 
 ```bash
 termctrl start app -- my-terminal-app
-termctrl wait app "Ready" --timeout 5000
+termctrl wait app "Ready"
 termctrl show app
 termctrl send app text:help enter
-termctrl wait app "Commands" --timeout 5000
+termctrl wait app "Commands"
 termctrl show app
 termctrl stop app
 ```
@@ -52,6 +52,9 @@ never chooses a suffixed name. Pass an explicit name when running multiple copie
 
 Do not treat logs as the visible state of an alternate-screen TUI.
 
+Named-session reads return immediately by default. Add settling only when intentionally waiting for
+quiet output. `wait` defaults to five seconds; set `--timeout` only when choosing another limit.
+
 ## Drive Input Precisely
 
 Send plain text with `text:<value>` and named keys as separate input atoms:
@@ -71,8 +74,9 @@ Use the OpenTUI host handshake for applications such as OpenCode:
 
 ```bash
 termctrl start app --host opentui --cols 112 --rows 34 -- opencode
-termctrl wait app "/connect" --timeout 5000
+termctrl wait app "/connect"
 termctrl show app
+termctrl show app --format semantic
 ```
 
 Use `resize` when the application requires more visible area. Use `restart app` to reuse stored launch settings after a deliberate application restart.
@@ -89,7 +93,7 @@ Record demos only when the user wants a retained timeline or video. Add markers 
 
 ```bash
 termctrl start app --record artifacts/run.termctrl -- my-terminal-app
-termctrl wait app "Ready" --timeout 5000
+termctrl wait app "Ready"
 termctrl mark app ready
 termctrl send app text:demo enter
 termctrl wait app "Done" --timeout 60000
@@ -107,7 +111,7 @@ Treat `.termctrl` recordings, ANSI transcripts, screen artifacts, command argume
 ## Recover From Problems
 
 - Run `termctrl status app` to inspect state and launch settings.
-- Run `termctrl list` to discover retained named sessions.
-- MCP agents can use `list_sessions` for command/cwd discovery and `get_session_status({ name })` for complete structured status without parsing CLI output.
+- Run `termctrl list` to discover running named sessions. Add `--state`, `--command`, or `--cwd` when narrowing discovery; use `--all` only when retained exited or unavailable entries are relevant.
+- MCP agents can pass `state`, `command`, or `cwd` to `list_sessions` and use `get_session_status({ name })` for complete structured status without parsing CLI output.
 - If a session socket path is too long, set `TERMCTRL_RUNTIME_DIR` to a short private directory under `/tmp` before starting sessions.
 - If `termctrl` is unavailable, install Terminal Control with `cargo install terminal-control` or ask the user which installed binary to use.
