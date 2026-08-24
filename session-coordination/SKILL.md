@@ -34,10 +34,12 @@ verification, review, and large reads.
    coordinator-created background panes in the current Herdr tab. Queue excess
    work. Exceed either cap only with user approval, and never create topology
    merely to bypass a cap.
-3. Run independent or long-running work asynchronously. Use background native
-   sessions, unfocused Herdr panes, or the delegated session's background
-   facilities. Advance other ready work and join results only when a dependency
-   needs them. Do not poll or duplicate running work.
+3. Run independent or long-running work asynchronously. Native background
+   sessions are only for bounded baseline research. When coordinating inside
+   Herdr, use visible Herdr-managed sessions for implementation, execution,
+   verification, and review; keep their panes unfocused while they work. Advance
+   other ready work and join results only when a dependency needs them. Do not
+   poll or duplicate running work.
 4. Keep conflicting work sequential unless the user approves separate topology.
    Reuse a session only for the same assignment, its review fixes, or unfinished
    verification. New scope or a new independently reviewable outcome gets a
@@ -49,13 +51,17 @@ verification, review, and large reads.
    a runtime name into a native profile argument such as OpenCode's `--agent`.
    Herdr's `agent start --kind` selects an integration's default executable; it
    is not a runtime-version selector. For a Herdr-managed alternate runtime,
-   resolve the explicit launcher in the coordinator before creating its pane.
-   Do not use the target pane for launcher discovery. Start it with `herdr pane
-   run`, then verify its foreground `argv` with `herdr pane process-info` before
-   assigning work. When the user does not choose a runtime, use host-native
-   child sessions and match the coordinator's runtime. In OpenCode, keep V2
-   parents on V2 children and V1 parents on V1 children. Use Pi or another
-   Herdr-supported agent kind only when the user requests it.
+   treat the configured launcher path as authoritative. Verify that exact path
+   in the coordinator before creating its pane; never resolve a bare runtime
+   command from `PATH` or use the target pane for launcher discovery. Start the
+   exact launcher with `herdr pane run`, then use `herdr pane process-info` to
+   confirm its foreground `argv` matches the launcher or its documented exec
+   target before prompting the session. When the user does not choose a runtime,
+   match the coordinator's runtime. Outside Herdr, use host-native child
+   sessions. Inside Herdr, use Herdr-managed sessions except for the bounded
+   baseline research allowed above. In OpenCode, keep V2 parents on V2 children
+   and V1 parents on V1 children. Use Pi or another Herdr-supported agent kind
+   only when the user requests it.
 
 The assignment phase is complete when every ready item is either owned, queued
 by the cap, or blocked on a named dependency or user decision.
