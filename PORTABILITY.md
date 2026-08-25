@@ -54,6 +54,7 @@ These are agent-agnostic in format, but useful only when their named tool, servi
 | `home-assistant-lazy-context` | Home Assistant frontend source and conventions. |
 | `home-assistant-list-components` | Home Assistant frontend source and components. |
 | `home-assistant-lit-rendering` | Home Assistant frontend and Lit. |
+| `opencode-effect` | OpenCode V2 plus mutually compatible plugin, client, SDK, and Effect package contracts. |
 | `pitchfork-dev-servers` | Pitchfork and repository-provided server configuration. |
 | `pkexec-root` | Linux, `pkexec`, and the configured root helper. |
 | `safe-process-signals` | POSIX process tools. |
