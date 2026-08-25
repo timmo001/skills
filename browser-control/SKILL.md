@@ -1,9 +1,9 @@
 ---
 name: browser-control
-description: Control the user's existing Chromium-family browser through the Browser Control extension and local relay. Use when asked to automate, test, inspect, or drive the visible browser with Browser Control, especially in this repo or once the extension is installed.
+description: Control the user's existing Chromium-family browser through the Browser Control extension and local relay with deterministic Playwright. Use when asked to inspect, automate, test, or interact with a visible browser tab; continue an authenticated browser workflow; handle 2FA, passkeys, CAPTCHAs, or payment confirmation; record browser behaviour; or capture an authenticated network flow.
 license: MIT
 # origin: https://github.com/anomalyco/browser-control/tree/main/skills/browser-control
-# upstream-sha: 045805c2e5a3781c61c7ed1d57a6f75cc7db1491
+# upstream-sha: 2de472a139db938ab0083769755f543da76b35f0
 # local-edits:
 #   - SKILL.md: description expanded to cover visible browser automation and local relay usage
 ---
@@ -124,6 +124,9 @@ browser-control session reset github
 browser-control session delete github
 ```
 
+Deletion is idempotent for an explicit session id, so cleanup can be safely
+retried when that session is already absent.
+
 Every execute is journaled under
 `~/.browser-control/sessions/<id>/journal.jsonl`. The journal records code,
 status, duration, URL movement, warnings, handoffs, and bounded diagnostics.
@@ -163,6 +166,10 @@ await page.getByRole("heading", { name: /account|dashboard/i }).waitFor()
 return { authenticatedUrl: page.url(), title: await page.title() }
 ```
 
+After a resolved handoff, Browser Control waits through transient destination
+context replacement before returning, so this verification can remain in the
+same execute.
+
 Tell the user what action is waiting. Human acknowledgment is not verification:
 always assert the expected URL or stable element after `handoff`. If the action
 was already completed and only the human step remains, call `handoff(message)`
@@ -184,10 +191,10 @@ Use the least expensive view that answers the question:
   baseline. A diff invalidates earlier refs and exposes refs only for added or
   changed current lines.
 - `ariaSnapshot(target?, { timeout })` returns Playwright's detailed YAML aria
-  tree when the compact snapshot omits needed structure. Text-control values are
-  omitted so password, token, search, numeric, range, and textarea contents do
-  not enter tool output. Await it separately; do not run other operations on the
-  same page concurrently.
+  tree when the compact snapshot omits needed structure. Native text-control
+  values, custom ARIA range values, and editable content are omitted so they do
+  not enter tool output. Await it separately; do not run other operations on
+  the same page concurrently.
 - `screenshotWithLabels({ page, path? })` adds visual labels and metadata when
   layout matters.
 
@@ -306,6 +313,23 @@ browser-control secrets status github
 browser-control secrets run github -- ./github-cli repositories
 ```
 
+Generated TypeScript applications can own that wrapper internally through the
+public SDK:
+
+```ts
+import { SecretProfile } from "@opencode-ai/browser-control"
+import { Effect } from "effect"
+
+const result = await Effect.runPromise(SecretProfile.run({
+  name: "github",
+  command: process.execPath,
+  args: ["./github-cli.js", "repositories"],
+}))
+```
+
+The trusted worker receives `BC_SECRET_N` variables and its bounded output is
+redacted. The public SDK exposes profile metadata but never raw profile values.
+
 Refresh credentials normally renewed by a page reload with:
 
 ```bash
@@ -346,12 +370,14 @@ existence, and report the viewport, state, and interaction path actually tested.
 
 Common diagnoses:
 
-- `connected:false`: run a relay-backed command, then reload the unpacked
-  extension only if its reconnect loop does not recover.
+- `connected:false`: run a relay-backed command and allow the extension startup
+  or alarm wake-up to reconnect. Reload the unpacked extension only if that loop
+  does not recover.
 - Incompatible extension protocol: update either the extension or npm package;
   exact extension and relay release versions do not need to match.
-- Stale relay build: operational commands reject it with restart guidance;
-  rebuild the CLI and restart the relay.
+- Stale relay build: operational commands automatically replace an older
+  detached managed relay that advertises guarded shutdown. Older unsupported,
+  source, foreground, and newer relays fail closed with restart guidance.
 - `Target not found`: attach the intended tab, then select or adopt it using a
   unique URL substring or explicit index.
 - All targets disappeared: dismissing Chromium's debugging banner detaches every
