@@ -3,7 +3,7 @@ name: gh-stack
 description: Manage stacked branches and pull requests with GitHub's `gh stack` extension. Use when work involves stacked PRs, dependent branches, stack creation, navigation, submission, synchronisation, rebasing, restructuring, linking, or merging.
 license: MIT
 # origin: https://github.com/github/gh-stack/tree/main/skills/gh-stack
-# upstream-sha: 14fc42ed9b6c376a53b2f999f138d3bd26dac546
+# upstream-sha: cf65746bd737920a5932a8511fae044fba599614
 # local-edits:
 #   - SKILL.md: condensed upstream reference and replaced mutation instructions with local authorisation rules; upstream reference files intentionally omitted
 ---
