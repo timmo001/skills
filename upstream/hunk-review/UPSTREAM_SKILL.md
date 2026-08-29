@@ -3,7 +3,7 @@ name: hunk-review
 description: Interacts with live Hunk diff review sessions via CLI. Inspects review focus, navigates files, hunks, and exact lines, reloads session contents, adds inline review comments, and paints attention marks on character ranges. Use when the user has a Hunk session running or wants to review diffs interactively.
 license: MIT
 # origin: https://github.com/modem-dev/hunk/tree/main/skills/hunk-review
-# upstream-sha: bb6405e43c22bee359cd75b24b3c0fc08b0f24fa
+# upstream-sha: a572286e687fabaca3e95213c78e949ca1c5c03f
 ---
 
 # Hunk Review
@@ -62,6 +62,7 @@ hunk session review (<session-id> | --repo <path>) [--include-patch] [--include-
 
 ```bash
 hunk session navigate (<session-id> | --repo <path>) --file <path> (--hunk <n> | --old-line <n> | --new-line <n>) [--json]
+hunk session navigate (<session-id> | --repo <path>) --comment <id> [--json]
 hunk session navigate (<session-id> | --repo <path>) (--next-comment | --prev-comment) [--json]
 ```
 
@@ -71,6 +72,12 @@ Absolute navigation requires `--file` and exactly one of `--hunk`, `--new-line`,
 hunk session navigate --repo . --file src/App.tsx --hunk 2
 hunk session navigate --repo . --file src/App.tsx --new-line 372
 hunk session navigate --repo . --file src/App.tsx --old-line 355
+```
+
+Exact comment navigation uses the `commentId` returned by `hunk session comment list --json` and does not require `--file`:
+
+```bash
+hunk session navigate --repo . --comment comment-1
 ```
 
 Relative comment navigation jumps between annotated hunks and does not require `--file`:
