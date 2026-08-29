@@ -3,7 +3,7 @@ name: agentic-workflows
 description: Design, create, update, debug, audit, or upgrade GitHub Agentic Workflows with the `gh aw` extension. Use when work involves workflow Markdown, compiled `.lock.yml` files, agent engines, MCP tools, safe outputs, or `gh aw` commands.
 license: MIT
 # origin: https://github.com/github/gh-aw/tree/main/.github/skills/agentic-workflows
-# upstream-sha: f6f2bea8b1dc0a982995dbf0f0fcffd6effcae06
+# upstream-sha: c4148bb8f6aedf3dd421512529b6f603cb431d13
 # local-edits:
 #   - SKILL.md: made the upstream router self-contained and replaced unavailable repository-relative prompt loading with official source lookup
 ---
@@ -34,6 +34,15 @@ compiled to GitHub Actions lock files.
    - shared workflows or MCP wrappers: `create-shared-agentic-workflow.md`
    - drive-backed workflow memory: `drive-memory.md`
    - declarative skills or agent plugins: `skills.md`
+   - report generation: `report.md`
+   - Dependabot manifest updates: `dependabot.md`
+   - test coverage analysis: `test-coverage.md`
+   - compact Markdown charts: `asciicharts.md`
+   - CLI command to MCP tool mapping: `cli-commands.md`
+   - workflow architecture and patterns: `patterns.md`
+   - token usage and cost optimisation: `token-optimization.md`
+   - long-running multi-agent research: `multi-agent-research.md`
+   - OpenTelemetry queries and analysis: `skills/otel-queries/SKILL.md`
    - permissions and output controls: `safe-outputs.md` and
      `workflow-constraints.md`
 4. Edit the Markdown source, not the generated lock file. Compile with the
