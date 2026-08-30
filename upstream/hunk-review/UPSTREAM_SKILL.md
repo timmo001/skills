@@ -3,7 +3,7 @@ name: hunk-review
 description: Interacts with live Hunk diff review sessions via CLI. Inspects review focus, navigates files, hunks, and exact lines, reloads session contents, adds inline review comments, and paints attention marks on character ranges. Use when the user has a Hunk session running or wants to review diffs interactively.
 license: MIT
 # origin: https://github.com/modem-dev/hunk/tree/main/skills/hunk-review
-# upstream-sha: a572286e687fabaca3e95213c78e949ca1c5c03f
+# upstream-sha: a78dac9e11487458f419d2e7c4f2bdfb12f4ba32
 ---
 
 # Hunk Review
@@ -163,7 +163,7 @@ hunk session highlight clear --repo .
 
 - `highlight add` requires `--file`, exactly one of `--old-line` or `--new-line`, and the `--start` / `--end` offsets
 - `--start` is a 0-based inclusive offset into the line's text and `--end` is exclusive, counted in UTF-16 code units — the same `[start, end)` range extensions use
-- Tones: `match` (default), `info`, `warning`, `error`; `current` renders as reverse video and is best reserved for the one range under discussion
+- Tones: `match` (default), `info`, `warning`, `error`, `dim`; `current` renders as reverse video and is best reserved for the one range under discussion
 - Pass `--focus` to also land the viewport on the marked line
 - Marks survive scrolling, navigation, and reloads that leave the marked file's content unchanged; a reload that changes that file drops its marks, and `highlight clear` removes them explicitly (optionally per `--file`)
 - Marks are visual only — pair them with a `comment add` when the explanation should persist as a note
