@@ -63,6 +63,7 @@
       "title": "Workflow-bound",
       "description": "Skills coupled to the current OpenCode, dotfiles, notes, or maintainer workflow.",
       "skills": [
+        "agent-oxlint",
         "branch-context-consumer",
         "git-commit",
         "git-context",

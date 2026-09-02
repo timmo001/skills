@@ -71,6 +71,7 @@ These encode the current OpenCode, dotfiles, notes, or maintainer workflow. They
 | `git-commit` | Separate general commit discipline from the `dot git-commit` gateway. |
 | `git-context` | Generalise injected context and OpenCode MCP names. |
 | `handoff` | Abstract the Notes MCP vault and OpenCode tool names. |
+| `agent-oxlint` | Requires the `dot agent-oxlint` command, private `dot-git.yml` opt-ins, and its managed package cache. |
 | `install-tool` | Separate general installation policy from personal package manifests and overlays. |
 | `session-coordination` | Depends on host-native child sessions, Herdr lifecycle semantics, local context warnings, and the coordinator cache path. |
 | `workflows-watch` | Decouple from OpenCode background tasks and the local workflow manifest tool. |
