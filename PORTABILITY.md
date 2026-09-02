@@ -28,6 +28,7 @@ These skills use general engineering concepts and ordinary agent capabilities. T
 | `import-external-skill` | Uses the Agent Skills format and repository metadata. |
 | `add-oxlint-rule` | Requires a writable checkout of the central Oxlint rules package. |
 | `install-timmo-oxlint-rules` | Requires TypeScript or JavaScript, Oxlint, and the target repository's package manager. |
+| `release-oxlint-rules` | Requires a writable checkout of the central Oxlint rules package, GitHub CLI, npm, and JSR. |
 | `lit-rendering` | Requires Lit in the target project. |
 | `maintain-docs` | Uses ordinary repository and documentation tools. |
 | `plan` | General planning workflow. |

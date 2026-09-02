@@ -52,6 +52,7 @@
         "home-assistant-lit-rendering",
         "add-oxlint-rule",
         "install-timmo-oxlint-rules",
+        "release-oxlint-rules",
         "opencode-effect",
         "pitchfork-dev-servers",
         "pkexec-root",
