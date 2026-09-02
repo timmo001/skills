@@ -34,6 +34,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
+          token: ${{ secrets.SKILL_UPDATES_TOKEN }}
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           repository: timmo001/dotfiles
@@ -51,5 +52,5 @@ jobs:
           bun run --cwd .dotfiles/dot build
       - name: Run skill updates
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.SKILL_UPDATES_TOKEN }}
         run: .dotfiles/scripts/.local/bin/dot skill-updates-agent github --skills-dir "$GITHUB_WORKSPACE"
