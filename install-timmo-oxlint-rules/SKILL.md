@@ -6,7 +6,7 @@ description: >-
   Effect rules, or replacing a local anti-slop copy.
 license: Apache-2.0
 # origin: https://github.com/timmo001/oxlint-rules/tree/main/skills/install-timmo-oxlint-rules
-# upstream-sha: 92e94f731fa7762b1d521131c63d3bf89681de17
+# upstream-sha: 546598b763b5c7bb64a3117d9c82f763d6f72d3c
 ---
 
 # Install Timmo Oxlint Rules
@@ -27,8 +27,9 @@ license: Apache-2.0
    and lockfile. Add an exact development dependency through that package
    manager.
 3. Extend `@timmo001/oxlint-rules/configs/recommended`. The config owns plugin
-   registration and recommended severities. Use `/configs/effect` instead only
-   when `effect` is a direct dependency or the user explicitly requests it.
+   registration and recommended severities. Use `/configs/recommended-effect`
+   instead only when `effect` is a direct dependency or the user explicitly
+   requests it.
 4. Keep dependency and config edits visible. Do not delegate them to a script.
 
 ## Copy rules
