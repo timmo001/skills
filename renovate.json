@@ -9,6 +9,11 @@
       "description": "Group GitHub Actions.",
       "groupName": "github actions",
       "matchManagers": ["github-actions"]
+    },
+    {
+      "description": "Update first-party workflows without a release delay.",
+      "matchPackageNames": ["timmo001/workflows"],
+      "minimumReleaseAge": null
     }
   ]
 }

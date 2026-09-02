@@ -1,5 +1,7 @@
+---
 name: Validate
 
+# yamllint disable-line rule:truthy
 on:
   workflow_dispatch:
   pull_request:
@@ -25,12 +27,7 @@ jobs:
         run: bun install --frozen-lockfile
       - name: Check repository
         run: |
-          bun run lint
-          bun run typecheck
-          bun run test
-          bun run format:check
-          bun run build
-          ./dist/skill-maintenance validate
+          mise run validate
           ./dist/skill-maintenance --completions bash >/dev/null
           ./dist/skill-maintenance --completions fish >/dev/null
           ./dist/skill-maintenance --completions zsh >/dev/null
