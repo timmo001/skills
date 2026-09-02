@@ -9,6 +9,8 @@ on:
       - "!scripts/**"
       - "!.github/**"
       - "!.cursor/**"
+  repository_dispatch:
+    types: [first-party-skill-updated]
   schedule:
     - cron: "0 14 * * *"
   workflow_dispatch: {}
