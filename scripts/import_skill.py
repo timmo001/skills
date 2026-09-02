@@ -237,8 +237,6 @@ def main() -> int:
         update_reviewed_sha(args.name, args.reviewed_sha)
         metadata = load_import(args.name)
     if args.metadata_only:
-        if metadata.get("distribution") == "wholesale":
-            return 0
         materialise_metadata(
             tracked_skill_path(args.name, metadata), args.name, metadata
         )
@@ -246,9 +244,8 @@ def main() -> int:
     with tempfile.TemporaryDirectory(prefix=f"skill-review-{args.name}-") as temp:
         snapshot = Path(temp) / args.name
         upstream_sha = fetch_snapshot(args.name, metadata, snapshot)
-        if metadata.get("distribution") != "wholesale":
-            review_metadata = {**metadata, "upstreamSha": upstream_sha}
-            materialise_metadata(snapshot / "SKILL.md", args.name, review_metadata)
+        review_metadata = {**metadata, "upstreamSha": upstream_sha}
+        materialise_metadata(snapshot / "SKILL.md", args.name, review_metadata)
         target = tracked_skill_path(args.name, metadata).parent
         if metadata.get("localEdits") and skill_directories_match(target, snapshot):
             origin = metadata["origin"]

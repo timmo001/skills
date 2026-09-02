@@ -17,7 +17,7 @@
 - Update `PORTABILITY.md` when a skill gains or loses runtime, tool, repository, or machine assumptions.
 - Distribute imported skills only when they contain documented local edits, except for an explicit `wholesale` import requested by the user. Wholesale imports must remain byte-for-byte upstream.
 - Keep unchanged review snapshots under `upstream/<name>/UPSTREAM_SKILL.md`; they remain committed but must not be discoverable by the Skills CLI.
-- Keep adapted imports as top-level reviewed snapshots. `imports.json` owns origin, reviewed SHA, licence, local-edit metadata, and distribution mode.
+- Keep adapted imports as top-level reviewed snapshots. `imports.json` owns origin, reviewed SHA, licence, local-edit metadata, and distribution mode. Materialise its provenance overlay in every distributed imported skill, including wholesale imports.
 - Materialise metadata with `scripts/import_skill.py --metadata-only`; fetch upstream review snapshots with the same script.
 - Do not add client-specific marketplace packaging or duplicate canonical skill content.
 

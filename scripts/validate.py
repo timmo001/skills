@@ -134,9 +134,10 @@ def main() -> int:
                     failures.append(
                         f"imports.json: {name} wholesale import must not declare local edits"
                     )
-                if not (ROOT / name / "SKILL.md").is_file():
+                skill_path = ROOT / name / "SKILL.md"
+                if not skill_path.is_file():
                     failures.append(f"imports.json: missing wholesale skill: {name}")
-                continue
+                    continue
             if metadata.get("distribution") == "official-source":
                 if local_edits != []:
                     failures.append(
@@ -150,7 +151,8 @@ def main() -> int:
                         f"imports.json: {name} upstream snapshot is discoverable"
                     )
                 continue
-            if (
+                continue
+            if metadata.get("distribution") != "wholesale" and (
                 not isinstance(local_edits, list)
                 or not local_edits
                 or not all(

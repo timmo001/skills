@@ -26,7 +26,8 @@ These skills use general engineering concepts and ordinary agent capabilities. T
 | `human-step-guide` | General workflow guidance. |
 | `improve-codebase-architecture` | General architecture workflow with a colocated report template. |
 | `import-external-skill` | Uses the Agent Skills format and repository metadata. |
-| `install-anti-slop` | Requires TypeScript or JavaScript, Oxlint, and the target repository's package manager. |
+| `add-oxlint-rule` | Requires a writable checkout of the central Oxlint rules package. |
+| `install-timmo-oxlint-rules` | Requires TypeScript or JavaScript, Oxlint, and the target repository's package manager. |
 | `lit-rendering` | Requires Lit in the target project. |
 | `maintain-docs` | Uses ordinary repository and documentation tools. |
 | `plan` | General planning workflow. |

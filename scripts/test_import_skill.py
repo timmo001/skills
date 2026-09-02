@@ -156,6 +156,46 @@ class ImportSkillTest(unittest.TestCase):
             finally:
                 import_skill.IMPORTS = original
 
+    def test_materialises_wholesale_import_metadata(self) -> None:
+        import import_skill
+
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            skill = root / "example"
+            skill.mkdir()
+            skill.joinpath("SKILL.md").write_text(
+                "---\nname: example\ndescription: Example\n---\n\n# Body\n",
+                encoding="utf-8",
+            )
+            imports = root / "imports.json"
+            imports.write_text(
+                '{"imports":{"example":{'
+                '"origin":"https://github.com/org/repo/tree/main/example",'
+                f'"upstreamSha":"{"a" * 40}",'
+                '"license":"MIT","localEdits":[],"distribution":"wholesale"}}}',
+                encoding="utf-8",
+            )
+            original_root = import_skill.ROOT
+            original_imports = import_skill.IMPORTS
+            import_skill.ROOT = root
+            import_skill.IMPORTS = imports
+            try:
+                with patch(
+                    "sys.argv", ["import_skill.py", "example", "--metadata-only"]
+                ):
+                    self.assertEqual(main(), 0)
+            finally:
+                import_skill.ROOT = original_root
+                import_skill.IMPORTS = original_imports
+
+            content = skill.joinpath("SKILL.md").read_text(encoding="utf-8")
+            self.assertIn("license: MIT", content)
+            self.assertIn(
+                "# origin: https://github.com/org/repo/tree/main/example", content
+            )
+            self.assertIn(f"# upstream-sha: {'a' * 40}", content)
+            self.assertTrue(content.endswith("\n# Body\n"))
+
     def test_materialises_overlay_without_changing_body(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             path = Path(temp) / "SKILL.md"
