@@ -2,7 +2,8 @@ name: Skill updates
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
     paths:
       - "imports.json"
       - "*/**"
@@ -10,7 +11,8 @@ on:
       - "!.github/**"
       - "!.cursor/**"
   repository_dispatch:
-    types: [first-party-skill-updated]
+    types:
+      - first-party-skill-updated
   schedule:
     - cron: "0 14 * * *"
   workflow_dispatch: {}
