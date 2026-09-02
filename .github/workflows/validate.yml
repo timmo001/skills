@@ -4,7 +4,8 @@ on:
   workflow_dispatch:
   pull_request:
   push:
-    branches: [main]
+    branches:
+      - main
 
 permissions:
   contents: read
@@ -17,9 +18,21 @@ jobs:
       - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
           cache: true
-      - name: Validate repository
-        run: python scripts/validate.py
-      - name: Test upstream checker
-        run: python -m unittest discover -s scripts -p 'test_*.py'
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: 1.4.0
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Check repository
+        run: |
+          bun run lint
+          bun run typecheck
+          bun run test
+          bun run format:check
+          bun run build
+          ./dist/skill-maintenance validate
+          ./dist/skill-maintenance --completions bash >/dev/null
+          ./dist/skill-maintenance --completions fish >/dev/null
+          ./dist/skill-maintenance --completions zsh >/dev/null
       - name: Verify installer discovery
         run: mise exec npm:skills -- skills add . --list

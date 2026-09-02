@@ -35,22 +35,17 @@ jobs:
         with:
           fetch-depth: 0
           token: ${{ secrets.SKILL_UPDATES_TOKEN }}
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          repository: timmo001/dotfiles
-          ref: distro/arch-omarchy-quattro
-          path: .dotfiles
       - uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
           cache: true
       - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
         with:
           bun-version: 1.4.0
-      - name: Build dot
+      - name: Install and build skill maintenance
         run: |
-          bun install --cwd .dotfiles/dot --frozen-lockfile
-          bun run --cwd .dotfiles/dot build
+          bun install --frozen-lockfile
+          bun run build
       - name: Run skill updates
         env:
           GH_TOKEN: ${{ secrets.SKILL_UPDATES_TOKEN }}
-        run: .dotfiles/scripts/.local/bin/dot skill-updates-agent github --skills-dir "$GITHUB_WORKSPACE"
+        run: ./dist/skill-maintenance updates-agent github --skills-dir "$GITHUB_WORKSPACE"

@@ -31,14 +31,14 @@ Imported skills are indexed in `imports.json`; the importer materialises the sam
 
 For each tracked import:
 
-1. Run `python scripts/check_upstream.py` to compare each overlay entry with the current upstream path commit.
-2. Run `python scripts/import_skill.py <name>` to let the Vercel Skills CLI materialise the complete candidate snapshot in temporary review space.
+1. Run `./dist/skill-maintenance updates --json` to compare each overlay entry with the current upstream path commit.
+2. Run `./dist/skill-maintenance import <name>` to let the Skills CLI materialise the complete candidate snapshot in temporary review space.
 3. Compare the candidate with the committed directory, accounting for `imports.json.localEdits`.
 4. Report whether the import is unchanged, can receive an automated update pull request, needs manual review, or cannot be checked.
 5. Apply an update only when the user requested it. Preserve provenance, local adaptations, licence material, and files intentionally owned by this repository.
 6. Update `imports.json.upstreamSha` after the comparison is complete, including when upstream changed but all differences were deliberately rejected, then run `--metadata-only`.
-7. Run `python scripts/validate.py` and `mise exec npm:skills -- skills add . --list`.
-8. Run `dot skill-check --skill <name>` for each reviewed adapted import.
+7. Run `./dist/skill-maintenance validate` and `mise exec npm:skills -- skills add . --list`.
+8. Run `./dist/skill-maintenance check --skill <name> --diff-origin` for each reviewed adapted import.
 
 Use the `import-external-skill` adaptation workflow when upstream and local changes overlap.
 

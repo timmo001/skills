@@ -86,4 +86,4 @@ Migrate one coherent family at a time:
 3. Add `compatibility` metadata to environment-bound skills after checking how each target client displays it.
 4. Distribute imported skills only when they contain documented local edits, except for explicit byte-for-byte wholesale imports; keep other unchanged review snapshots under `upstream/` and install them from their owning repository.
 5. Use `imports.json` as the maintenance metadata overlay for adapted imports.
-6. Use `scripts/import_skill.py` to fetch and compare upstream content before manually reviewing an adapted skill.
+6. Build `dist/skill-maintenance` and use `./dist/skill-maintenance import <name>` to fetch and compare upstream content before manually reviewing an adapted skill. This requires Bun 1.4.0 and the locked Effect 4 dependencies, but makes no dotfiles assumptions.

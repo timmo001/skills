@@ -27,12 +27,12 @@ External skill repos are often written for a specific agent framework (e.g. Clau
 Use when the external skill overlaps with or extends an existing local skill.
 
 1. Add or update the `imports.json` entry with the origin, reviewed SHA, licence, and non-empty `localEdits` declarations.
-2. Run `python scripts/import_skill.py <name>` to generate the complete upstream comparison without replacing the tracked skill.
+2. Run `./dist/skill-maintenance import <name>` to generate the complete upstream comparison without replacing the tracked skill.
 3. Compare against the existing local skill, identifying gaps and conflicts.
 4. Present the comparison: what the external skill adds, what overlaps, and what conflicts with existing rules.
 5. Wait for the user to decide which additions to make.
-6. Apply the agreed changes to the existing local skill, update `imports.json.upstreamSha`, then run `python scripts/import_skill.py <name> --metadata-only`.
-7. Run `dot skill-check --skill <name>` to confirm the adapted import still differs from its complete source.
+6. Apply the agreed changes to the existing local skill, update `imports.json.upstreamSha`, then run `./dist/skill-maintenance import <name> --metadata-only`.
+7. Run `./dist/skill-maintenance check --skill <name> --diff-origin` to confirm the adapted import still differs from its complete source.
 
 ## Frontmatter Format
 
@@ -47,7 +47,7 @@ description: One or two sentences. First sentence says what. Second says when to
 
 Portable frontmatter fields are `name`, `description`, `license`, `compatibility`, `metadata`, and `allowed-tools`. Do not rely on one client's tolerance for unknown fields.
 
-`imports.json` is the maintenance source for origin, reviewed SHA, licence, and local edits. The script materialises those fields into `SKILL.md` so each standalone skill remains self-describing.
+`imports.json` is the maintenance source for origin, reviewed SHA, licence, and local edits. The standalone CLI materialises those fields into `SKILL.md` so each skill remains self-describing.
 
 If the import adapts body content beyond frontmatter, add a `# local-edits:` block documenting the differences from upstream. This prevents a later review from treating intentional adaptations as drift. List what differs, not a changelog:
 
