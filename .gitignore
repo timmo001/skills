@@ -3,5 +3,5 @@
 .opencode/
 .claude/skills/
 .dotfiles/
-__pycache__/
-*.pyc
+dist/
+node_modules/
