@@ -72,6 +72,12 @@ export const check = Effect.fn("Check.run")(function* (
           );
         }
       }),
+    ).pipe(
+      Effect.catchTag("DeletedOriginError", () =>
+        Console.log(
+          `${name}: skipped because its upstream path no longer exists`,
+        ),
+      ),
     );
   }
   if (exactMatches.length > 0)

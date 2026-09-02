@@ -110,6 +110,29 @@ export const buildUpdateReport = Effect.fn("Updates.buildReport")(function* (
       continue;
     }
     const origin = originResult.success;
+    const exists = yield* Effect.result(originExists(origin));
+    if (exists._tag === "Failure") {
+      skills.push({
+        name,
+        directory: name,
+        state:
+          exists.failure instanceof DeletedOriginError
+            ? "origin-gone"
+            : "error",
+        origin: metadata.origin,
+        storedSha: metadata.upstreamSha,
+        upstreamSha: null,
+        files: [],
+        localEdits: metadata.localEdits,
+        reason:
+          exists.failure instanceof DeletedOriginError
+            ? "upstream path no longer exists"
+            : exists.failure._tag === "UpstreamStatusError"
+              ? `GitHub returned HTTP ${exists.failure.status}`
+              : exists.failure.stderr,
+      });
+      continue;
+    }
     const latest = yield* Effect.result(latestPathSha(origin));
     if (latest._tag === "Failure") {
       skills.push({
@@ -145,29 +168,6 @@ export const buildUpdateReport = Effect.fn("Updates.buildReport")(function* (
         upstreamSha: latest.success,
         files: [],
         localEdits: metadata.localEdits,
-      });
-      continue;
-    }
-    const exists = yield* Effect.result(originExists(origin));
-    if (exists._tag === "Failure") {
-      skills.push({
-        name,
-        directory: name,
-        state:
-          exists.failure instanceof DeletedOriginError
-            ? "origin-gone"
-            : "error",
-        origin: metadata.origin,
-        storedSha: metadata.upstreamSha,
-        upstreamSha: latest.success,
-        files: [],
-        localEdits: metadata.localEdits,
-        reason:
-          exists.failure instanceof DeletedOriginError
-            ? "upstream path no longer exists"
-            : exists.failure._tag === "UpstreamStatusError"
-              ? `GitHub returned HTTP ${exists.failure.status}`
-              : exists.failure.stderr,
       });
       continue;
     }

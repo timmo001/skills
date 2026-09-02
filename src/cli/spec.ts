@@ -1,5 +1,8 @@
 import { Option } from "effect";
 import { Argument, Command, Flag } from "effect/unstable/cli";
+import { existsSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
 import { check } from "../commands/Check.js";
 import { importSkill } from "../commands/Import.js";
 import { updates } from "../commands/Updates.js";
@@ -16,23 +19,39 @@ const bool = (name: string, description: string) =>
   );
 const optional = <A>(value: Option.Option<A>) => Option.getOrUndefined(value);
 
+export const resolveSkillsRoot = (
+  cwd = process.cwd(),
+  home = homedir(),
+  exists: (path: string) => boolean = existsSync,
+) =>
+  [
+    cwd,
+    join(home, "repos", "skills"),
+    join(home, ".config", "dotfiles", "agents", ".agents", "skills"),
+  ].find((candidate) => exists(join(candidate, "imports.json"))) ?? cwd;
+
 export const validateCommand = Command.make("validate", {}, () =>
-  validate(process.cwd()),
+  validate(resolveSkillsRoot()),
 ).pipe(Command.withDescription("Validate skills and repository metadata"));
 
 export const importCommand = Command.make(
   "import",
   {
-    name: Argument.string("name"),
+    name: Argument.string("name").pipe(
+      Argument.withDescription("Imported skill name"),
+    ),
     apply: bool("apply", "Apply a clean upstream snapshot"),
     metadataOnly: bool(
       "metadata-only",
       "Materialise imports.json metadata only",
     ),
-    reviewedSha: Flag.string("reviewed-sha").pipe(Flag.optional),
+    reviewedSha: Flag.string("reviewed-sha").pipe(
+      Flag.optional,
+      Flag.withDescription("Set the reviewed upstream SHA"),
+    ),
   },
   ({ apply, metadataOnly, name, reviewedSha }) =>
-    importSkill(process.cwd(), name, {
+    importSkill(resolveSkillsRoot(), name, {
       apply,
       metadataOnly,
       reviewedSha: optional(reviewedSha),
@@ -45,7 +64,10 @@ export const updatesCommand = Command.make(
     check: bool("check", "Exit non-zero when imports need attention"),
     update: bool("update", "Apply clean updates and SHA-only refreshes"),
     json: bool("json", "Print the versioned machine report"),
-    skill: Flag.string("skill").pipe(Flag.optional),
+    skill: Flag.string("skill").pipe(
+      Flag.optional,
+      Flag.withDescription("Limit to one skill"),
+    ),
     commit: Flag.boolean("commit").pipe(
       Flag.withDefault(true),
       Flag.withDescription("Commit applied updates"),
@@ -53,7 +75,7 @@ export const updatesCommand = Command.make(
     skipReview: bool("skip-review", "Do not open adapted imports for review"),
   },
   ({ check, commit, json, skill, skipReview, update }) =>
-    updates(process.cwd(), {
+    updates(resolveSkillsRoot(), {
       check,
       update,
       json,
@@ -66,12 +88,15 @@ export const updatesCommand = Command.make(
 export const checkCommand = Command.make(
   "check",
   {
-    skill: Flag.string("skill").pipe(Flag.optional),
+    skill: Flag.string("skill").pipe(
+      Flag.optional,
+      Flag.withDescription("Check one skill"),
+    ),
     diffOrigin: bool("diff-origin", "Render complete upstream diffs"),
     openOpencode: bool("open-opencode", "Open an interactive OpenCode review"),
   },
   ({ diffOrigin, openOpencode, skill }) =>
-    check(process.cwd(), {
+    check(resolveSkillsRoot(), {
       skill: optional(skill),
       diffOrigin,
       openOpencode,
@@ -83,10 +108,11 @@ export const githubAgentCommand = Command.make(
   {
     skillsDir: Flag.path("skills-dir", { pathType: "directory" }).pipe(
       Flag.optional,
+      Flag.withDescription("Use this Skills checkout"),
     ),
   },
   ({ skillsDir }) =>
-    runGitHubSkillUpdates(optional(skillsDir) ?? process.cwd()),
+    runGitHubSkillUpdates(optional(skillsDir) ?? resolveSkillsRoot()),
 ).pipe(
   Command.withDescription("Publish clean import updates from GitHub Actions"),
 );
@@ -94,11 +120,15 @@ export const githubAgentCommand = Command.make(
 export const deviceAgentCommand = Command.make(
   "device",
   {
-    config: Flag.path("config", { pathType: "file" }).pipe(Flag.optional),
-    runId: Flag.string("run-id").pipe(Flag.optional),
+    config: Flag.path("config", { pathType: "file" }).pipe(
+      Flag.withDescription("Use this YAML config"),
+    ),
+    runId: Flag.string("run-id").pipe(
+      Flag.optional,
+      Flag.withDescription("Wait for this workflow run"),
+    ),
   },
-  ({ config, runId }) =>
-    runDeviceSkillUpdates(optional(config), optional(runId)),
+  ({ config, runId }) => runDeviceSkillUpdates(config, optional(runId)),
 ).pipe(
   Command.withDescription("Process one completed update workflow locally"),
 );

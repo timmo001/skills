@@ -32,7 +32,7 @@ interface FixtureImportMetadata {
   distribution?: string;
 }
 
-const snapshotExecutorLayer = (content: string) =>
+const snapshotExecutorLayer = (content: string, originExists = true) =>
   Layer.effect(
     CommandExecutor,
     Effect.gen(function* () {
@@ -62,7 +62,7 @@ const snapshotExecutorLayer = (content: string) =>
             }
             return "";
           }).pipe(Effect.orDie),
-        exitCode: () => Effect.succeed(0),
+        exitCode: () => Effect.succeed(originExists ? 0 : 1),
         inherit: () => Effect.succeed(0),
         stream: () => Stream.empty,
       });
@@ -437,6 +437,34 @@ describe("import snapshots", () => {
     }).pipe(
       Effect.scoped,
       Effect.provide(snapshotExecutorLayer("")),
+      Effect.provide(NodeServices.layer),
+    ),
+  );
+
+  it.effect("skips an adapted skill whose upstream path was removed", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const root = yield* fs.makeTempDirectoryScoped({
+        prefix: "skill-check-deleted-test-",
+      });
+      yield* fs.writeFileString(
+        path.join(root, "imports.json"),
+        importedMetadata(["retained after upstream deletion"]),
+      );
+      yield* fs.makeDirectory(path.join(root, "example"));
+      yield* fs.writeFileString(
+        path.join(root, "example", "SKILL.md"),
+        "---\nname: example\ndescription: Example\n---\nBody\n",
+      );
+      yield* check(root, {
+        skill: "example",
+        diffOrigin: false,
+        openOpencode: false,
+      });
+    }).pipe(
+      Effect.scoped,
+      Effect.provide(snapshotExecutorLayer("", false)),
       Effect.provide(NodeServices.layer),
     ),
   );

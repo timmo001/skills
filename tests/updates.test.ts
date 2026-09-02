@@ -332,6 +332,37 @@ describe("upstream status", () => {
 });
 
 describe("versioned update reports", () => {
+  it.effect("reports a deleted path even when its last SHA is unchanged", () =>
+    Effect.gen(function* () {
+      const root = yield* makeRepository("Old body");
+      const report = yield* buildUpdateReport(root);
+      expect(report.skills[0]).toMatchObject({
+        state: "origin-gone",
+        upstreamSha: null,
+        reason: "upstream path no longer exists",
+      });
+    }).pipe(
+      Effect.scoped,
+      Effect.provide(
+        githubLayer({
+          api: () =>
+            Effect.fail(
+              new GitHubError({
+                command: "gh api contents",
+                exitCode: 1,
+                stderr: "HTTP 404",
+                status: 404,
+                retryable: false,
+              }),
+            ),
+          apiJson: () => Effect.succeed([{ sha: sha("a") }]),
+        }),
+      ),
+      Effect.provide(commandLayer()),
+      Effect.provide(NodeServices.layer),
+    ),
+  );
+
   it.effect(
     "reports an empty upstream commit history as a deleted origin",
     () =>

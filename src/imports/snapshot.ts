@@ -5,7 +5,7 @@ import {
   trackedSkillPath,
   writeReviewedSha,
 } from "./metadata.js";
-import { parseOrigin } from "./upstream.js";
+import { DeletedOriginError, parseOrigin } from "./upstream.js";
 
 export class SnapshotError extends Schema.TaggedError<SnapshotError>()(
   "SnapshotError",
@@ -237,6 +237,16 @@ export const withFetched = Effect.fn("Snapshot.withFetched")(function* <
       yield* executor
         .run("git", ["-C", checkout, "checkout", "--quiet", sha])
         .pipe(snapshotError("git.checkout-sha"));
+      const originExists = yield* executor.exitCode("git", [
+        "-C",
+        checkout,
+        "cat-file",
+        "-e",
+        `${sha}:${origin.path}`,
+      ]);
+      if (originExists !== 0) {
+        return yield* new DeletedOriginError({ origin: metadata.origin });
+      }
       yield* executor
         .run(
           "mise",
