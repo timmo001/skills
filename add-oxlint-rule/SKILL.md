@@ -7,7 +7,7 @@ description: >-
   package.
 license: Apache-2.0
 # origin: https://github.com/timmo001/oxlint-rules/tree/main/skills/add-oxlint-rule
-# upstream-sha: af714b10bca8730e882212ec45c908eabc658d90
+# upstream-sha: 92e94f731fa7762b1d521131c63d3bf89681de17
 ---
 
 # Add An Oxlint Rule
@@ -24,8 +24,10 @@ license: Apache-2.0
 5. Put generic upstream-independent rules under the appropriate locally owned
    plugin. Never modify `vendor/anti-slop`; propose an upstream contribution
    separately when Dylan Mulroy's plugin should own the behaviour.
-6. Register the rule in its plugin and matching config, then update the README
-   rule list and behaviour description.
+6. Register the rule in its plugin. Verify the matching config and copy command
+   discover it from the plugin's `rules` map, then update the README rule list
+   and behaviour description. Keep skills workflow-only; do not duplicate rule
+   or plugin inventories or counts in them.
 7. Run `mise run check`, `mise run build`, `npm pack --dry-run`, and
    `bunx jsr@0.14.3 publish --dry-run` in the central checkout.
 
