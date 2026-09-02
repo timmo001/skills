@@ -7,7 +7,7 @@ description: >-
   package.
 license: Apache-2.0
 # origin: https://github.com/timmo001/oxlint-rules/tree/main/skills/add-oxlint-rule
-# upstream-sha: 229d9b94729827a5c78b584d931d442c6cb810d0
+# upstream-sha: af714b10bca8730e882212ec45c908eabc658d90
 ---
 
 # Add An Oxlint Rule
