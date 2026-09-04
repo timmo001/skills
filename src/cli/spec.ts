@@ -3,6 +3,10 @@ import { Argument, Command, Flag } from "effect/unstable/cli";
 import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import {
+  checkSkillsCatalogue,
+  writeSkillsCatalogue,
+} from "../commands/Catalogue.js";
 import { check } from "../commands/Check.js";
 import { importSkill } from "../commands/Import.js";
 import { updates } from "../commands/Updates.js";
@@ -33,6 +37,24 @@ export const resolveSkillsRoot = (
 export const validateCommand = Command.make("validate", {}, () =>
   validate(resolveSkillsRoot()),
 ).pipe(Command.withDescription("Validate skills and repository metadata"));
+
+export const catalogueCommand = Command.make(
+  "catalogue",
+  {
+    check: bool(
+      "check",
+      "Exit non-zero when SKILLS.md does not match the generated catalogue",
+    ),
+  },
+  ({ check }) =>
+    check
+      ? checkSkillsCatalogue(resolveSkillsRoot())
+      : writeSkillsCatalogue(resolveSkillsRoot()),
+).pipe(
+  Command.withDescription(
+    "Generate or check the SKILLS.md catalogue from skill frontmatter",
+  ),
+);
 
 export const importCommand = Command.make(
   "import",
@@ -141,6 +163,7 @@ export const updatesAgentCommand = Command.make("updates-agent").pipe(
 export const skillMaintenanceCommand = Command.make("skill-maintenance").pipe(
   Command.withSubcommands([
     validateCommand,
+    catalogueCommand,
     importCommand,
     updatesCommand,
     checkCommand,

@@ -1,5 +1,7 @@
 import { Console, Effect, FileSystem, Path, Schema } from "effect";
 import { readImports, trackedSkillPath } from "../imports/metadata.js";
+import { parseFrontmatter } from "../lib/frontmatter.js";
+import { checkSkillsCatalogue } from "./Catalogue.js";
 
 export class ValidationError extends Schema.TaggedError<ValidationError>()(
   "ValidationError",
@@ -15,33 +17,6 @@ const allowedFields = new Set([
   "allowed-tools",
 ]);
 
-const frontmatter = (text: string) => {
-  const lines = text.split(/\r?\n/);
-  const failures: string[] = [];
-  if (lines[0] !== "---")
-    return {
-      fields: new Map<string, string>(),
-      failures: ["missing opening frontmatter delimiter"],
-    };
-  const end = lines.indexOf("---", 1);
-  if (end < 0)
-    return {
-      fields: new Map<string, string>(),
-      failures: ["missing closing frontmatter delimiter"],
-    };
-  const fields = new Map<string, string>();
-  for (const line of lines.slice(1, end)) {
-    if (!line || line.trimStart().startsWith("#") || /^\s/.test(line)) continue;
-    const match = line.match(/^([a-z][a-z0-9-]*):(?:\s*(.*))?$/);
-    if (!match)
-      failures.push(
-        `invalid top-level frontmatter line: ${JSON.stringify(line)}`,
-      );
-    else fields.set(match[1] ?? "", match[2] ?? "");
-  }
-  return { fields, failures };
-};
-
 export const validate = Effect.fn("Validate.run")(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -55,7 +30,7 @@ export const validate = Effect.fn("Validate.run")(function* (root: string) {
     if (!(yield* fs.exists(file))) continue;
     skillNames.push(entry);
     const text = yield* fs.readFileString(file);
-    const parsed = frontmatter(text);
+    const parsed = parseFrontmatter(text);
     for (const failure of parsed.failures)
       failures.push(`${entry}: ${failure}`);
     const unknown = [...parsed.fields.keys()].filter(
@@ -73,8 +48,8 @@ export const validate = Effect.fn("Validate.run")(function* (root: string) {
       failures.push(
         `${entry}: name ${JSON.stringify(name)} does not match directory ${JSON.stringify(entry)}`,
       );
-    if (!parsed.fields.has("description"))
-      failures.push(`${entry}: missing description`);
+    const description = (parsed.fields.get("description") ?? "").trim();
+    if (!description) failures.push(`${entry}: missing description`);
     for (const match of text.matchAll(/(?<!!)\[[^\]]*\]\(([^)]+)\)/g)) {
       const target = (match[1] ?? "").split("#", 1)[0] ?? "";
       if (!target || target.includes("://") || target.startsWith("mailto:"))
@@ -208,6 +183,15 @@ export const validate = Effect.fn("Validate.run")(function* (root: string) {
       !imports.imports[name]
     )
       failures.push(`imports.json: missing imports: ${name}`);
+  }
+  if (failures.length === 0) {
+    yield* checkSkillsCatalogue(root).pipe(
+      Effect.catchTag("CatalogueError", (error) =>
+        Effect.sync(() => {
+          failures.push(...error.failures);
+        }),
+      ),
+    );
   }
   if (failures.length > 0) {
     yield* Console.error(

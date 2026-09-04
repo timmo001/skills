@@ -39,6 +39,7 @@ describe("CLI specification", () => {
           expect(output).toContain("updates-agent");
           expect(output).toContain("github");
           expect(output).toContain("device");
+          expect(output).toContain("catalogue");
           expect(output).toContain("skills-dir");
           expect(output).toContain("run-id");
           expect(output).toContain("metadata-only");

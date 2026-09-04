@@ -11,6 +11,7 @@
     "test": "vitest run",
     "format": "prettier --write \"{src,tests}/**/*.ts\" oxlint.config.ts package.json tsconfig.json",
     "format:check": "prettier --check \"{src,tests}/**/*.ts\" oxlint.config.ts package.json tsconfig.json",
+    "catalogue": "bun run build && ./dist/skill-maintenance catalogue",
     "validate": "bun run lint && bun run typecheck && bun run test && bun run format:check && bun run build && ./dist/skill-maintenance validate",
     "prepare": "effect-tsgo patch"
   },

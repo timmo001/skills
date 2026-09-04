@@ -4,6 +4,8 @@ Reusable agent skills used across my development workflows. The repository follo
 
 Some skills are broadly portable. Others intentionally depend on a particular tool, repository, or local workflow. See [`PORTABILITY.md`](./PORTABILITY.md) before installing the full collection.
 
+The human-readable list of tracked skills (name and description) lives in the generated [`SKILLS.md`](./SKILLS.md#skills-catalogue) catalogue.
+
 ## Install
 
 The repository toolchain pins Bun 1.4.0, Effect 4, and the Skills CLI through
@@ -61,7 +63,7 @@ bun run validate
 mise exec npm:skills -- skills add . --list
 ```
 
-The local validator checks the portable metadata contract, directory names, relative links, and catalogue coverage. TypeScript checks use Effect-aware Oxlint rules from `@timmo001/oxlint-rules/configs/recommended-effect`. CI also verifies the independent installer discovery result.
+The local validator checks the portable metadata contract, directory names, relative links, `skills.sh.json` / `PORTABILITY.md` coverage, and drift of the generated [`SKILLS.md`](./SKILLS.md#skills-catalogue) catalogue. TypeScript checks use Effect-aware Oxlint rules from `@timmo001/oxlint-rules/configs/recommended-effect`. CI also verifies the independent installer discovery result.
 
 Imports are checked daily and after skill changes merge to `main`. Adapted imports are reported for manual review; unchanged upstream snapshots receive automated update pull requests.
 
@@ -89,10 +91,11 @@ checker manages reviewed upstream skill revisions separately.
 ## Maintenance
 
 - Add new skills under `<name>/` at the repository root.
+- Classify each new skill in `skills.sh.json` and `PORTABILITY.md`, then regenerate the human catalogue with `mise run catalogue` (or `./dist/skill-maintenance catalogue`) and commit `SKILLS.md`.
 - Distribute imported skills only when this repository contains substantive local edits. An explicit `wholesale` import is the exception and must remain byte-for-byte upstream. Keep other unchanged snapshots under `upstream/` and install them from their owning repository.
 - Maintain import provenance, reviewed SHA, licence, local edits, and distribution mode in `imports.json`.
 - Use `./dist/skill-maintenance import <name>` to generate a complete upstream comparison. Use `--apply` only for clean official-source or wholesale imports; adapted changes remain manual. The importer rejects an adapted skill that exactly matches every file in its source and prints the standard reimport command instead.
-- Keep `skills.sh.json` and `PORTABILITY.md` in sync.
+- Keep `skills.sh.json`, `PORTABILITY.md`, and `SKILLS.md` in sync.
 - Prefer repository revisions for installed copies. The scheduled checker reports adapted imports for manual review and opens pull requests for unchanged upstream updates.
 - Do not duplicate canonical skills into checked-in agent-specific directories.
 

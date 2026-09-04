@@ -21,5 +21,9 @@ run = "bun run format"
 [tasks."format:check"]
 run = "bun run format:check"
 
+[tasks.catalogue]
+run = "bun run catalogue"
+description = "Regenerate SKILLS.md from skill frontmatter"
+
 [tasks.validate]
 run = "bun run validate"
