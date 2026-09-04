@@ -2,9 +2,9 @@
 
 Reusable agent skills used across my development workflows. The repository follows the [Agent Skills specification](https://agentskills.io/specification), with each skill kept as a self-contained top-level directory.
 
-Some skills are broadly portable. Others intentionally depend on a particular tool, repository, or local workflow. See [`PORTABILITY.md`](./PORTABILITY.md) before installing the full collection.
+The list of skills (name and description) lives in the generated [`SKILLS.md`](./SKILLS.md#skills-catalogue) catalogue.
 
-The human-readable list of tracked skills (name and description) lives in the generated [`SKILLS.md`](./SKILLS.md#skills-catalogue) catalogue.
+Some skills are broadly portable. Others intentionally depend on a particular tool, repository, or local workflow. See [`PORTABILITY.md`](./PORTABILITY.md) before installing the full collection.
 
 ## Install
 
