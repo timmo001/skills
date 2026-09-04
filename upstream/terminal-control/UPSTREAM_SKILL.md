@@ -3,7 +3,7 @@ name: terminal-control
 description: Drive and verify terminal applications with the termctrl CLI in a real PTY - read visible screens, run named live sessions, send typed keyboard input, wait for text, save evidence, record timelines, and export edited videos. Use when an agent must operate or test a TUI, REPL, interactive CLI, shell process, or OpenTUI application.
 license: MIT
 # origin: https://github.com/anomalyco/terminal-control/tree/main/skills/terminal-control
-# upstream-sha: 861ad0f62e33c108d8be179bc91c43e96e837e64
+# upstream-sha: b0a4d8b43977e026dc5d5aa07760bce9e677b90d
 ---
 
 # Terminal Control
@@ -55,6 +55,18 @@ Do not treat logs as the visible state of an alternate-screen TUI.
 Named-session reads return immediately by default. Add settling only when intentionally waiting for
 quiet output. `wait` defaults to five seconds; set `--timeout` only when choosing another limit.
 
+For fast demos, keep the session alive, omit `--pace-ms` unless slow typing is intentional, and
+combine a known transition into one shell call:
+
+```bash
+termctrl send app text:help enter && termctrl wait app "Commands" && termctrl show app
+```
+
+The wait ends as soon as the text appears; its timeout is a maximum, not a fixed delay. Do not
+insert sleeps between these commands. Inspect text during interaction, save PNGs only for visual
+checks or requested evidence, and export video after driving the app. With MCP, prefer `interact`
+with `waitFor` to combine keyboard input, readiness, and a screen read in one tool call.
+
 ## Drive Input Precisely
 
 Send plain text with `text:<value>` and named keys as separate input atoms:
@@ -67,6 +79,27 @@ printf '%s' 'multiline prompt' | termctrl send app --stdin
 ```
 
 Use `wait` after sending input instead of sleeping or assuming that the interface has updated.
+
+For mouse-enabled applications, use typed mouse commands with zero-based cell coordinates:
+
+```bash
+termctrl mouse app move 12 4
+termctrl mouse app click 12 4
+termctrl mouse app down 12 4
+termctrl mouse app move 20 4
+termctrl mouse app up 20 4
+```
+
+`move` hovers when no button is held; down/move/up drags. `--button right` or `middle`, `--shift`,
+`--alt`, and `--ctrl` are optional. The app must enable mouse reporting; hover requires any-event
+tracking. Coordinates outside the resized viewport fail. Do not work around disabled reporting
+by injecting raw escape sequences. Restart older named sessions if the command requests it.
+
+For recorded demos, opt into `video --pointer-overlay` to show mouse input with smooth travel,
+subtle press compression, and fades. This defaults to 60 fps and does not delay actual input.
+Use `--pointer-reduced-motion` to keep fades only. Trim/speed/hold edits stay on the same source
+clock. Only typed mouse commands provide overlay evidence; raw bytes and forwarded human input
+do not. `show`/`save` remain plain terminal evidence, separate from the video overlay.
 
 ## Operate OpenTUI Applications
 
