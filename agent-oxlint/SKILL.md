@@ -17,11 +17,13 @@ description: Run the optional advisory Oxlint pass during JavaScript or TypeScri
 
    Use `dot agent-oxlint --all` only when the user requests or the task requires
    a full-tree scan.
-3. Treat either successful skip as final:
+3. Treat either successful skip as final unless the user explicitly asked to
+   force the pass:
    - the repository is not opted in through private `dot-git.yml`;
    - the repository has its own Oxlint config, dependency, script, or binary.
 
-   Do not bypass either gate or add files to make this pass run.
+   Do not bypass either gate or add files to make this pass run. Use
+   `dot agent-oxlint --force` only when the user explicitly requests it.
 4. Match each diagnostic to the recorded changed-line ranges. Fix a diagnostic
    only when its reported line intersects an added or modified range. Do not
    clean pre-existing findings elsewhere in a changed file, and do not widen
