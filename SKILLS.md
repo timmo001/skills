@@ -7,7 +7,7 @@ Generated from each top-level skill's `SKILL.md` frontmatter (`name` and `descri
 # or: mise run catalogue
 ```
 
-This repository currently documents **54** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
+This repository currently documents **55** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
 
 ## Portable
 
@@ -82,4 +82,5 @@ Skills coupled to the current OpenCode, dotfiles, notes, or maintainer workflow.
 | [`handoff`](./handoff/) | Compact the current conversation into a handoff document for another agent to pick up. |
 | [`install-tool`](./install-tool/) | Install tools, applications, CLIs, runtimes, and packages. Use when an installation request should prefer mise for development tools, then fall back to pacman or yay for system-integrated software. |
 | [`session-coordination`](./session-coordination/) | Coordinate delegated agent sessions with bounded assignments, asynchronous background scheduling, soft concurrency caps, context-window rotation, independent review cycles, and logged cleanup across native child sessions and Herdr-managed agents. Use when managing multiple agents, panes, tabs, branches, stages, or long-running tasks while keeping the coordinating session small. |
+| [`task-focus`](./task-focus/) | Keep the original task on track when the user raises a side thought, side question, tentative branch idea, or explicit change of task. Use before diverting work, switching branches, or choosing between a BTW session, a fresh session, and the current conversation, especially with a large context window. |
 | [`workflows-watch`](./workflows-watch/) | Watch GitHub Actions workflows in an experimental background task and return the result. Use when asked to watch checks, wait for workflows, or follow workflow runs without blocking the main agent; diagnose and fix only when the caller explicitly requests fix mode. |
