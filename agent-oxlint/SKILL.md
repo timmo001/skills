@@ -17,6 +17,11 @@ description: Run the optional advisory Oxlint pass during JavaScript or TypeScri
 
    Use `dot agent-oxlint --all` only when the user requests or the task requires
    a full-tree scan.
+   When the user explicitly asks to persist the opt-in, run
+   `dot agent-oxlint --opt-in`. It enables the existing private config entry
+   and commits the single-line change through `dot git-commit`, without pushing.
+   Add paths or `--all` to also lint. The config must be clean; active commit
+   hooks are refused to preserve the one-line change.
 3. Treat either successful skip as final unless the user explicitly asked to
    force the pass:
    - the repository is not opted in through private `dot-git.yml`;
