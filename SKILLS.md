@@ -7,7 +7,7 @@ Generated from each top-level skill's `SKILL.md` frontmatter (`name` and `descri
 # or: mise run catalogue
 ```
 
-This repository currently documents **55** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
+This repository currently documents **56** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
 
 ## Portable
 
@@ -17,6 +17,7 @@ General engineering and writing skills that work across Agent Skills clients.
 | --- | --- |
 | [`ask-questions-if-underspecified`](./ask-questions-if-underspecified/) | Ask minimal clarifying questions only when ambiguity materially changes implementation. Use for routine underspecification; do not use for user-requested light or full grilling, plan stress-testing, or broad design interviews. |
 | [`bro`](./bro/) | Re-pitch the immediately preceding response with enough context to follow, using plain, concise, unambiguous language. Use ONLY when the user explicitly invokes /bro or says the previous response did not land. |
+| [`browser-access`](./browser-access/) | Decide whether browser access is needed and keep authorised checks narrow. Use for frontend or UI diagnosis, before proposing or using Browser Control, Chrome DevTools, or equivalent browser automation, and when the user explicitly requests browser interaction. |
 | [`changeset-scope`](./changeset-scope/) | Keep all scoped code work contained to the user-defined changeset. Use for implementation, fixes, diagnosis, refactoring, cleanup, and review when explicit instructions, named files, diffs, branches, pull requests, or injected work scopes define the boundary. |
 | [`chill`](./chill/) | Stop overengineering and reinventing the wheel. Use ONLY when the user explicitly invokes /chill or asks to simplify an approach that has become unnecessarily complex. |
 | [`check-skill-updates`](./check-skill-updates/) | Check imported skills for upstream changes and review safe updates. Use when a tracked `# origin:` may have changed or when refreshing installed skills from their source repositories. |

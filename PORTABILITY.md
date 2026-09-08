@@ -10,6 +10,7 @@ These skills use general engineering concepts and ordinary agent capabilities. T
 | --- | --- |
 | `ask-questions-if-underspecified` | Uses structured questions when available and falls back to chat. |
 | `bro` | Reusable explicit-invocation response behaviour. |
+| `browser-access` | General evidence and permission workflow; uses the chosen browser driver's skill or documentation for tool mechanics. |
 | `changeset-scope` | No repository-specific dependency. |
 | `chill` | Explicit-invocation workflow. |
 | `check-skill-updates` | Uses standard consumer updates and repository provenance comments. |
