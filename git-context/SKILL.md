@@ -1,5 +1,6 @@
 ---
 name: git-context
+compatibility: Designed for Git with dotfiles Git helpers and GitHub CLI for PR operations. Plugin-backed commands require BranchContextPlugin; ad-hoc context can use Context MCP or Git fallbacks. Amendments use dot git-commit.
 description: Patterns for working with git branches, remotes, diffs against the default branch, and rebases. Use when resolving rebase conflicts, continuing interactive rebases, amending commits, or any git operation that would open an interactive editor.
 ---
 

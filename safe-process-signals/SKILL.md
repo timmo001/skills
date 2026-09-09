@@ -1,5 +1,6 @@
 ---
 name: safe-process-signals
+compatibility: Designed for Linux shell process tools, including pgrep, pkill, killall, and timeout. Omarchy restart helpers apply only to Omarchy-managed apps.
 description: >
   Safe process killing and signal handling for agent/subprocess contexts. Use when running pkill, killall, kill, or any process termination command from a shell subprocess, automated script, or coding agent.
 ---

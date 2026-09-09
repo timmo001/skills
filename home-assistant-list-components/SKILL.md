@@ -1,5 +1,6 @@
 ---
 name: home-assistant-list-components
+compatibility: Requires Home Assistant frontend source with the ha-list-base, ha-list-nav, ha-list-selectable, and ha-list-item-base component family.
 description: Home Assistant list component migration and usage guidance. Use when editing ha-list, ha-list-item, ha-md-list, or migrating to ha-list-nav, ha-list-selectable, ha-list-item-button, ha-list-item-option, or ha-list-item-base.
 ---
 

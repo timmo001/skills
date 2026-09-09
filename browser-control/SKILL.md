@@ -1,11 +1,13 @@
 ---
 name: browser-control
+compatibility: Requires a Chromium-family browser with the Browser Control extension, its local relay, and CLI or MCP access. CDP recording also requires ffmpeg.
 description: Control the user's existing Chromium-family browser through the Browser Control extension and local relay with deterministic Playwright. Use when asked to inspect, automate, test, or interact with a visible browser tab; continue an authenticated browser workflow; handle 2FA, passkeys, CAPTCHAs, or payment confirmation; record browser behaviour; or capture an authenticated network flow.
 license: MIT
 # origin: https://github.com/anomalyco/browser-control/tree/main/skills/browser-control
 # upstream-sha: bb6b3d279f0c0b279cb244a207c3ca4374caf99c
 # local-edits:
 #   - SKILL.md: description expanded to cover visible browser automation and local relay usage
+#   - SKILL.md: added compatibility metadata for concrete environment requirements
 ---
 
 # Browser Control

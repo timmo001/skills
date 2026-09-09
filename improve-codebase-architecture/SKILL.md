@@ -1,5 +1,6 @@
 ---
 name: improve-codebase-architecture
+compatibility: Requires subagent support, a writable temporary directory, and a browser for the HTML report. Report styling and Mermaid diagrams load from CDNs and need network access.
 description: Scan a codebase for deepening opportunities, present them as a visual HTML report, then grill through whichever one you pick.
 license: MIT
 # origin: https://github.com/mattpocock/skills/tree/main/skills/engineering/improve-codebase-architecture
@@ -9,6 +10,7 @@ license: MIT
 #   - preserve established domain and framework terms
 #   - generalised ADR callout
 #   - HTML-REPORT.md: made architecture vocabulary additive to project terminology
+#   - SKILL.md: added compatibility metadata for concrete environment requirements
 ---
 
 # Improve Codebase Architecture

@@ -1,5 +1,6 @@
 ---
 name: home-assistant-frontend
+compatibility: Designed for Home Assistant frontend source with its repository-local ha-frontend-* skills and guidance.
 description: Home Assistant frontend skill routing and personal engineering overlays. Use when editing or reviewing the Home Assistant frontend so repository-local `ha-frontend-*` skills stay authoritative and applicable Lit, TypeScript, cleanup, and HA companion skills are also loaded.
 ---
 

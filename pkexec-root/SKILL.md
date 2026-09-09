@@ -1,5 +1,6 @@
 ---
 name: pkexec-root
+compatibility: Designed for Linux with PolicyKit/pkexec. Package examples use Arch Linux pacman or yay; sudo is a fallback when PolicyKit is unavailable.
 description: >
   Use pkexec first for commands that need root directly or indirectly.
 ---

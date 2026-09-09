@@ -1,5 +1,6 @@
 ---
 name: release-oxlint-rules
+compatibility: Requires a writable checkout of the central Oxlint rules package, mise, Bun, npm, Git, and network access to npm and JSR. Publishing also requires authenticated GitHub CLI and GitHub release access.
 description: >-
   Create and publish a major, minor, or patch release of
   @timmo001/oxlint-rules. Use when asked to create, cut, prepare, or publish an
@@ -9,6 +10,7 @@ license: Apache-2.0
 # upstream-sha: 7e71fb8cf3f73cce72d19bc9a1f3278913c57e95
 # local-edits:
 #   - SKILL.md: read publication status once and stop when publication is incomplete
+#   - SKILL.md: added compatibility metadata for concrete environment requirements
 ---
 
 # Release Oxlint Rules

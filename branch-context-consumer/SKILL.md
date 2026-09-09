@@ -1,5 +1,6 @@
 ---
 name: branch-context-consumer
+compatibility: Requires BranchContextPlugin to inject a branch-context block before the command runs.
 description: Consume BranchContextPlugin injections in commands. Use when a command depends on an injected <branch-context> block for its scope.
 ---
 

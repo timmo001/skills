@@ -1,5 +1,6 @@
 ---
 name: agent-oxlint
+compatibility: Requires the dot agent-oxlint command and its managed package cache. Running the advisory pass normally requires repository opt-in through private configuration.
 description: Run the optional advisory Oxlint pass during JavaScript or TypeScript cleanup and slop-reduction work in dot-managed repositories. Use after the repository's own lint workflow; act only on diagnostics intersecting changed diff lines, while the command checks private opt-in and local Oxlint precedence.
 ---
 

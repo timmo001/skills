@@ -1,11 +1,13 @@
 ---
 name: agentic-workflows
+compatibility: Requires GitHub CLI with the gh aw extension and network access to the official Agentic Workflows documentation.
 description: Design, create, update, debug, audit, or upgrade GitHub Agentic Workflows with the `gh aw` extension. Use when work involves workflow Markdown, compiled `.lock.yml` files, agent engines, MCP tools, safe outputs, or `gh aw` commands.
 license: MIT
 # origin: https://github.com/github/gh-aw/tree/main/.github/skills/agentic-workflows
 # upstream-sha: 9a9eaa12bd36efb80b223d6670a22c9f5d0029cb
 # local-edits:
 #   - SKILL.md: made the upstream router self-contained and replaced unavailable repository-relative prompt loading with official source lookup
+#   - SKILL.md: added compatibility metadata for concrete environment requirements
 ---
 
 # Agentic Workflows
