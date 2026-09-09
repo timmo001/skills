@@ -15,7 +15,7 @@ import {
   type UpdateReportItem,
 } from "./Updates.js";
 import { importSkill } from "./Import.js";
-import { CommandExecutor } from "../services/CommandExecutor.js";
+import { CommandError, CommandExecutor } from "../services/CommandExecutor.js";
 import { GitHub } from "../services/GitHub.js";
 
 const SUCCESS_PREFIX = "STATUS: success";
@@ -353,20 +353,23 @@ const publishCleanUpdate = Effect.fn("UpdatesAgent.publishCleanUpdate")(
       ["push", "--force-with-lease", "origin", branch],
       root,
     );
-    let url = (yield* github.run([
-      "pr",
-      "list",
-      "--head",
-      branch,
-      "--state",
-      "open",
-      "--json",
-      "url",
-      "--jq",
-      ".[0].url // empty",
-      "--repo",
-      "timmo001/skills",
-    ])).trim();
+    let url = (yield* github.run(
+      [
+        "pr",
+        "list",
+        "--head",
+        branch,
+        "--state",
+        "open",
+        "--json",
+        "url",
+        "--jq",
+        ".[0].url // empty",
+        "--repo",
+        "timmo001/skills",
+      ],
+      { readOnly: true },
+    )).trim();
     const existing = url.length > 0;
     if (existing)
       yield* github.run([
@@ -421,20 +424,23 @@ const refreshDashboard = Effect.fn("UpdatesAgent.refreshDashboard")(function* (
   const report = yield* buildUpdateReport(root);
   const markdown = renderUpdateMarkdown(report);
   const marker = "<!-- adapted-skill-updates -->";
-  const number = (yield* github.run([
-    "issue",
-    "list",
-    "--state",
-    "open",
-    "--limit",
-    "100",
-    "--json",
-    "number,body",
-    "--jq",
-    `map(select(.body | contains("${marker}")))[0].number // empty`,
-    "--repo",
-    "timmo001/skills",
-  ])).trim();
+  const number = (yield* github.run(
+    [
+      "issue",
+      "list",
+      "--state",
+      "open",
+      "--limit",
+      "100",
+      "--json",
+      "number,body",
+      "--jq",
+      `map(select(.body | contains("${marker}")))[0].number // empty`,
+      "--repo",
+      "timmo001/skills",
+    ],
+    { readOnly: true },
+  )).trim();
   yield* github.run([
     "issue",
     number ? "edit" : "create",
@@ -629,18 +635,21 @@ const latestPullRequestNumber = Effect.fn(
   const pulls = yield* decodeJson(
     "pull-requests",
     PullRequestNumbers,
-    yield* github.run([
-      "pr",
-      "list",
-      "--state",
-      "all",
-      "--limit",
-      "1",
-      "--json",
-      "number",
-      "--repo",
-      "timmo001/skills",
-    ]),
+    yield* github.run(
+      [
+        "pr",
+        "list",
+        "--state",
+        "all",
+        "--limit",
+        "1",
+        "--json",
+        "number",
+        "--repo",
+        "timmo001/skills",
+      ],
+      { readOnly: true },
+    ),
   );
   return pulls[0]?.number ?? 0;
 });
@@ -651,40 +660,43 @@ export const validatePullRequestPolicy = Effect.fn(
   const pulls = yield* decodeJson(
     "pull-requests",
     PullRequestNumbers,
-    yield* github.run([
-      "pr",
-      "list",
-      "--state",
-      "all",
-      "--limit",
-      "100",
-      "--json",
-      "number",
-      "--repo",
-      "timmo001/skills",
-    ]),
+    yield* github.run(
+      [
+        "pr",
+        "list",
+        "--state",
+        "all",
+        "--limit",
+        "100",
+        "--json",
+        "number",
+        "--repo",
+        "timmo001/skills",
+      ],
+      { readOnly: true },
+    ),
   );
   for (const { number } of pulls.filter(({ number }) => number > after)) {
     const details = yield* decodeJson(
       "pull-request",
       PullRequestPolicy,
-      yield* github.run([
-        "pr",
-        "view",
-        String(number),
-        "--json",
-        "title,state,mergedAt,assignees,autoMergeRequest,commits",
-        "--repo",
-        "timmo001/skills",
-      ]),
+      yield* github.run(
+        [
+          "pr",
+          "view",
+          String(number),
+          "--json",
+          "title,state,mergedAt,assignees,autoMergeRequest,commits",
+          "--repo",
+          "timmo001/skills",
+        ],
+        { readOnly: true },
+      ),
     );
-    const patch = yield* github.run([
-      "pr",
-      "diff",
-      String(number),
-      "--repo",
-      "timmo001/skills",
-    ]);
+    const patch = yield* github.run(
+      ["pr", "diff", String(number), "--repo", "timmo001/skills"],
+      { readOnly: true },
+    );
     const shaTitle = details.title.match(/^\[SHA-only\] Update ([a-z0-9-]+)$/);
     const contentTitle = details.title.match(/^Update skill: ([a-z0-9-]+)$/);
     const skill = shaTitle?.[1] ?? contentTitle?.[1];
@@ -786,22 +798,56 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
     const locked = yield* Config.boolean("SKILL_MAINTENANCE_AGENT_LOCKED").pipe(
       Config.withDefault(false),
     );
-    if (runId && !locked)
-      yield* runOrFail(
-        "gh",
-        [
-          "run",
-          "watch",
-          runId,
-          "--repo",
-          "timmo001/skills",
-          "--compact",
-          "--exit-status",
-          "--interval",
-          "10",
-        ],
-        process.cwd(),
-      );
+    if (runId && !locked) {
+      const github = yield* GitHub;
+      yield* github
+        .stream(
+          [
+            "run",
+            "watch",
+            runId,
+            "--repo",
+            "timmo001/skills",
+            "--compact",
+            "--exit-status",
+            "--interval",
+            "10",
+          ],
+          { cwd: process.cwd(), timeout: null },
+        )
+        .pipe(
+          Stream.mapError((error) =>
+            error.exitCode === -1
+              ? new CommandError({
+                  command: error.command,
+                  exitCode: error.exitCode,
+                  stderr: error.stderr,
+                })
+              : new SkillUpdatesAgentError({
+                  operation: error.command,
+                  message: `Command exited with code ${error.exitCode}`,
+                }),
+          ),
+          Stream.runForEach((chunk) =>
+            Effect.callback<void, SkillUpdatesAgentError>((resume) => {
+              const output =
+                chunk._tag === "Stdout" ? process.stdout : process.stderr;
+              output.write(chunk.text, (error) =>
+                resume(
+                  error
+                    ? Effect.fail(
+                        new SkillUpdatesAgentError({
+                          operation: "workflow.output",
+                          message: String(error),
+                        }),
+                      )
+                    : Effect.void,
+                ),
+              );
+            }),
+          ),
+        );
+    }
     const config = yield* loadConfig(configPath);
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;

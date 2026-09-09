@@ -1,5 +1,6 @@
 #!/usr/bin/env bun
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
+import { layer as ghLayer } from "@timmo001/effect-gh";
 import { Effect, Layer } from "effect";
 import { CliConfig, CliError, Command } from "effect/unstable/cli";
 import { skillMaintenanceCommand } from "./cli/spec.js";
@@ -9,7 +10,10 @@ import { GitHub } from "./services/GitHub.js";
 const commandExecutorLayer = CommandExecutor.layer.pipe(
   Layer.provide(NodeServices.layer),
 );
-const githubLayer = GitHub.layer.pipe(Layer.provide(commandExecutorLayer));
+const githubLayer = GitHub.layer.pipe(
+  Layer.provide(ghLayer()),
+  Layer.provide(NodeServices.layer),
+);
 const applicationLayer = Layer.mergeAll(
   NodeServices.layer,
   commandExecutorLayer,

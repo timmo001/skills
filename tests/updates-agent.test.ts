@@ -27,7 +27,11 @@ import {
   type SkillUpdatesAgentConfig,
 } from "../src/commands/UpdatesAgent.js";
 import { CommandExecutor } from "../src/services/CommandExecutor.js";
-import { GitHub, type GitHubService } from "../src/services/GitHub.js";
+import {
+  GitHub,
+  GitHubError,
+  type GitHubService,
+} from "../src/services/GitHub.js";
 
 const config: SkillUpdatesAgentConfig = {
   workflowApi: "https://api.github.com/example",
@@ -42,10 +46,14 @@ const config: SkillUpdatesAgentConfig = {
   prompt: "Process the dashboard.",
 };
 
-const githubLayer = (run: GitHubService["run"]) =>
+const githubLayer = (
+  run: GitHubService["run"],
+  stream: GitHubService["stream"] = () => Stream.empty,
+) =>
   Layer.succeed(GitHub, {
     isAvailable: () => Effect.succeed(true),
     run,
+    stream,
     json: () => Effect.succeed({}),
     api: () => Effect.succeed(""),
     apiJson: () => Effect.succeed({}),
@@ -209,6 +217,7 @@ describe("updates agent policies", () => {
         Effect.provide(
           Layer.succeed(GitHub, {
             isAvailable: () => Effect.succeed(true),
+            stream: () => Stream.empty,
             run: (args) => {
               githubCalls.push([...args]);
               return Effect.succeed(
@@ -467,6 +476,57 @@ describe("updates agent policies", () => {
     ),
   );
 
+  for (const exitCode of [1, -1]) {
+    it.effect(
+      `stops before config loading and locking when watch exits ${exitCode}`,
+      () =>
+        Effect.gen(function* () {
+          const failure = yield* Effect.flip(
+            runDeviceSkillUpdates("must-not-read.yml", "42"),
+          );
+          expect(failure).toMatchObject(
+            exitCode === 1
+              ? {
+                  _tag: "SkillUpdatesAgentError",
+                  operation: "gh run watch 42",
+                  message: "Command exited with code 1",
+                }
+              : {
+                  _tag: "CommandError",
+                  command: "gh run watch 42",
+                  exitCode: -1,
+                  stderr: "spawn failed",
+                },
+          );
+        }).pipe(
+          Effect.provide(
+            githubLayer(
+              () => Effect.die("Unexpected GitHub request"),
+              () =>
+                Stream.fail(
+                  new GitHubError({
+                    command: "gh run watch 42",
+                    exitCode,
+                    stderr: "spawn failed",
+                    status: null,
+                    retryable: false,
+                  }),
+                ),
+            ),
+          ),
+          Effect.provide(Layer.mock(CommandExecutor, {})),
+          Effect.provide(NodeServices.layer),
+          Effect.provide(
+            ConfigProvider.layer(
+              ConfigProvider.fromUnknown({
+                SKILL_MAINTENANCE_AGENT_LOCKED: false,
+              }),
+            ),
+          ),
+        ),
+    );
+  }
+
   it.effect("watches before locking and migrates a legacy lock directory", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
@@ -510,7 +570,16 @@ describe("updates agent policies", () => {
             stream: () => Stream.empty,
           }),
         ),
-        Effect.provide(githubLayer(() => Effect.succeed(""))),
+        Effect.provide(
+          githubLayer(
+            () => Effect.succeed(""),
+            (args, options) => {
+              expect(options).toEqual({ cwd: process.cwd(), timeout: null });
+              calls.push(["gh", ...args]);
+              return Stream.empty;
+            },
+          ),
+        ),
         Effect.provide(
           ConfigProvider.layer(
             ConfigProvider.fromUnknown({
@@ -520,7 +589,18 @@ describe("updates agent policies", () => {
           ),
         ),
       );
-      expect(calls[0]?.slice(0, 4)).toEqual(["gh", "run", "watch", "42"]);
+      expect(calls[0]).toEqual([
+        "gh",
+        "run",
+        "watch",
+        "42",
+        "--repo",
+        "timmo001/skills",
+        "--compact",
+        "--exit-status",
+        "--interval",
+        "10",
+      ]);
       expect(calls[1]?.[0]).toBe("flock");
       expect(yield* fs.exists(lockFile)).toBe(false);
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
@@ -620,6 +700,7 @@ describe("updates agent policies", () => {
       });
       const github = Layer.succeed(GitHub, {
         isAvailable: () => Effect.succeed(true),
+        stream: () => Stream.empty,
         api: () =>
           Effect.succeed(
             JSON.stringify({

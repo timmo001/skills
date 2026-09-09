@@ -1,13 +1,19 @@
 import {
+  Gh,
+  type GhChunk,
+  type GhError,
+  type GhOptions,
+} from "@timmo001/effect-gh";
+import {
   Config,
   Context,
-  Duration,
   Effect,
   Layer,
   Redacted,
+  Schedule,
   Schema,
+  Stream,
 } from "effect";
-import { CommandExecutor } from "./CommandExecutor.js";
 
 export class GitHubError extends Schema.TaggedError<GitHubError>()(
   "GitHubError",
@@ -24,11 +30,24 @@ export interface GitHubApiOptions {
   readonly jq?: string | undefined;
 }
 
+export interface GitHubRunOptions {
+  /** Opt in only for known-idempotent reads. Mutations are never retried by default. */
+  readonly readOnly?: boolean;
+}
+
 export interface GitHubService {
   readonly isAvailable: () => Effect.Effect<boolean, GitHubError>;
-  readonly run: (args: readonly string[]) => Effect.Effect<string, GitHubError>;
+  readonly run: (
+    args: readonly string[],
+    options?: GitHubRunOptions,
+  ) => Effect.Effect<string, GitHubError>;
+  readonly stream: (
+    args: readonly string[],
+    options?: Pick<GhOptions, "cwd" | "timeout">,
+  ) => Stream.Stream<GhChunk, GitHubError>;
   readonly json: (
     args: readonly string[],
+    options?: GitHubRunOptions,
   ) => Effect.Effect<unknown, GitHubError>;
   readonly api: (
     endpoint: string,
@@ -63,14 +82,28 @@ const isRetryable = (stderr: string) => {
   ].some((pattern) => lower.includes(pattern));
 };
 
-const fromCommandError = (error: import("./CommandExecutor.js").CommandError) =>
-  new GitHubError({
-    command: error.command,
-    exitCode: error.exitCode,
-    stderr: error.stderr,
-    status: statusFromStderr(error.stderr),
-    retryable: isRetryable(error.stderr),
+const fromGhError = (command: string, error: GhError, stderr?: string) => {
+  const detail =
+    error._tag === "GhCommandError"
+      ? (stderr ?? error.stderr).trim()
+      : error._tag === "GhTimeoutError"
+        ? `Command timed out after ${error.timeoutMs}ms`
+        : String(error.cause);
+  return new GitHubError({
+    command,
+    exitCode:
+      error._tag === "GhCommandError"
+        ? error.exitCode
+        : error._tag === "GhDecodeError"
+          ? 0
+          : -1,
+    stderr: detail,
+    status: statusFromStderr(detail),
+    retryable:
+      error._tag === "GhTimeoutError" ||
+      (error._tag !== "GhDecodeError" && isRetryable(detail)),
   });
+};
 
 const decodeJson = (command: string, output: string) =>
   Effect.try({
@@ -91,7 +124,7 @@ export class GitHub extends Context.Service<GitHub, GitHubService>()(
   static readonly layer = Layer.effect(
     GitHub,
     Effect.gen(function* () {
-      const executor = yield* CommandExecutor;
+      const gh = yield* Gh;
       const token = yield* Config.option(Config.redacted("GH_TOKEN"));
       const fallbackToken = yield* Config.option(
         Config.redacted("GITHUB_TOKEN"),
@@ -109,34 +142,66 @@ export class GitHub extends Context.Service<GitHub, GitHubService>()(
             ? { GH_TOKEN: Redacted.value(fallbackToken.value) }
             : undefined,
       );
-      const runAttempt = Effect.fn("GitHub.runAttempt")(function* (
-        args: readonly string[],
-        attempt: number,
-      ): Effect.fn.Return<string, GitHubError> {
-        const result = yield* Effect.result(executor.run("gh", args, { env }));
-        if (result._tag === "Success") return result.success;
-        const failure = fromCommandError(result.failure);
-        if (!failure.retryable || attempt >= retries) return yield* failure;
-        yield* Effect.sleep(Duration.seconds(2 ** attempt));
-        return yield* runAttempt(args, attempt + 1);
-      });
-      const run = Effect.fn("GitHub.run")(function* (args: readonly string[]) {
-        return yield* runAttempt(args, 0);
-      });
+      const stream: GitHubService["stream"] = (args, options) =>
+        gh
+          .stream(args, { ...options, ...(env && { env }) })
+          .pipe(
+            Stream.mapError((error) =>
+              fromGhError(`gh ${args.join(" ")}`, error),
+            ),
+          );
+      const run = Effect.fn("GitHub.run")(
+        function* (args: readonly string[], _options?: GitHubRunOptions) {
+          // Keep full stderr for status and retry classification, beyond the SDK error tail.
+          let stderr = "";
+          return yield* gh.stream(args, env ? { env } : {}).pipe(
+            Stream.tap((chunk) =>
+              Effect.sync(() => {
+                if (chunk._tag === "Stderr") stderr += chunk.text;
+              }),
+            ),
+            Stream.runFold(
+              () => "",
+              (output, chunk) =>
+                chunk._tag === "Stdout" ? output + chunk.text : output,
+            ),
+            Effect.mapError((error) =>
+              fromGhError(`gh ${args.join(" ")}`, error, stderr),
+            ),
+          );
+        },
+        (effect, _args, options) =>
+          effect.pipe(
+            Effect.retry({
+              schedule: Schedule.exponential("1 second"),
+              times: options?.readOnly ? retries : 0,
+              while: (error) => error.retryable,
+            }),
+          ),
+      );
       const json = Effect.fn("GitHub.json")(function* (
         args: readonly string[],
+        options?: GitHubRunOptions,
       ) {
-        return yield* decodeJson(`gh ${args.join(" ")}`, yield* run(args));
+        return yield* decodeJson(
+          `gh ${args.join(" ")}`,
+          yield* run(args, options),
+        );
       });
       const api = Effect.fn("GitHub.api")(function* (
         endpoint: string,
         options?: GitHubApiOptions,
       ) {
-        return (yield* run([
-          "api",
-          endpoint,
-          ...(options?.jq ? ["--jq", options.jq] : []),
-        ])).trim();
+        return (yield* run(
+          [
+            "api",
+            endpoint,
+            "--method",
+            "GET",
+            ...(options?.jq ? ["--jq", options.jq] : []),
+          ],
+          { readOnly: true },
+        )).trim();
       });
       const apiJson = Effect.fn("GitHub.apiJson")(function* (
         endpoint: string,
@@ -148,12 +213,13 @@ export class GitHub extends Context.Service<GitHub, GitHubService>()(
         );
       });
       const isAvailable = Effect.fn("GitHub.isAvailable")(function* () {
-        return yield* executor.exitCode("gh", ["--version"]).pipe(
-          Effect.map((code) => code === 0),
-          Effect.mapError(fromCommandError),
+        return yield* gh.execute(["--version"]).pipe(
+          Effect.as(true),
+          Effect.catchTag("GhCommandError", () => Effect.succeed(false)),
+          Effect.mapError((error) => fromGhError("gh --version", error)),
         );
       });
-      return GitHub.of({ run, json, api, apiJson, isAvailable });
+      return GitHub.of({ run, stream, json, api, apiJson, isAvailable });
     }),
   );
 }

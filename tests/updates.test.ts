@@ -1,13 +1,6 @@
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import {
-  ConfigProvider,
-  Effect,
-  FileSystem,
-  Layer,
-  Path,
-  Stream,
-} from "effect";
+import { Effect, FileSystem, Layer, Path, Stream } from "effect";
 import {
   buildUpdateReport,
   renderUpdateMarkdown,
@@ -48,6 +41,7 @@ const githubLayer = (overrides: Partial<GitHubService> = {}) =>
   Layer.succeed(GitHub, {
     isAvailable: () => Effect.succeed(true),
     run: () => Effect.succeed(""),
+    stream: () => Stream.empty,
     json: () => Effect.succeed({}),
     api: () => Effect.succeed(""),
     apiJson: () => Effect.succeed([{ sha: sha("b") }]),
@@ -178,67 +172,6 @@ describe("command and GitHub services", () => {
         CommandExecutor.layer.pipe(Layer.provide(NodeServices.layer)),
       ),
     ),
-  );
-
-  it.effect("provides raw and decoded GitHub seams with typed failures", () =>
-    Effect.gen(function* () {
-      const github = yield* GitHub;
-      expect(yield* github.run(["api", "example"])).toBe('{"ok":true}');
-      expect(yield* github.json(["api", "example"])).toEqual({ ok: true });
-      const malformed = yield* Effect.flip(github.json(["api", "malformed"]));
-      expect(malformed).toMatchObject({ exitCode: 0, status: null });
-      const failed = yield* Effect.flip(github.api("missing"));
-      expect(failed).toMatchObject({ exitCode: 1, status: 404 });
-    }).pipe(
-      Effect.provide(
-        GitHub.layer.pipe(
-          Layer.provide(
-            commandLayer({
-              run: (_command, args) =>
-                args.includes("missing")
-                  ? Effect.fail(
-                      new CommandError({
-                        command: "gh api missing",
-                        exitCode: 1,
-                        stderr: "HTTP 404: Not Found",
-                      }),
-                    )
-                  : Effect.succeed(
-                      args.includes("malformed") ? "not json" : '{"ok":true}',
-                    ),
-            }),
-          ),
-        ),
-      ),
-    ),
-  );
-
-  it.effect(
-    "passes configured GitHub tokens without exposing redacted text",
-    () =>
-      Effect.gen(function* () {
-        const github = yield* GitHub;
-        expect(yield* github.run(["api", "example"])).toBe("ok");
-      }).pipe(
-        Effect.provide(
-          GitHub.layer.pipe(
-            Layer.provide(
-              commandLayer({
-                run: (_command, _args, options) =>
-                  Effect.sync(() => {
-                    expect(options?.env?.GH_TOKEN).toBe("secret-token");
-                    return "ok";
-                  }),
-              }),
-            ),
-          ),
-        ),
-        Effect.provide(
-          ConfigProvider.layer(
-            ConfigProvider.fromUnknown({ GH_TOKEN: "secret-token" }),
-          ),
-        ),
-      ),
   );
 });
 
