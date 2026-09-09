@@ -1,5 +1,6 @@
 ---
 name: evidence-first
+license: Apache-2.0
 description: Check questions and uncertain statements before answering, while following clear user choices and limits. Use in any agent mode when the user asks why or how something works, says things like I think, I remember, or I don't think, asks whether something is correct, requests advice, or gives a firm preference such as I don't want this, reduce the scope, or this is going too far.
 ---
 

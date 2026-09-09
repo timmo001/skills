@@ -1,5 +1,6 @@
 ---
 name: changeset-scope
+license: Apache-2.0
 description: Keep all scoped code work contained to the user-defined changeset. Use for implementation, fixes, diagnosis, refactoring, cleanup, and review when explicit instructions, named files, diffs, branches, pull requests, or injected work scopes define the boundary.
 ---
 

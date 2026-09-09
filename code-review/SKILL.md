@@ -1,5 +1,6 @@
 ---
 name: code-review
+license: Apache-2.0
 description: Review code changes along two axes - Standards (does it follow the repo's conventions, plus a Fowler code-smell baseline?) and Spec (does it implement what the originating issue or spec asked for?). Use when reviewing a pull request, a branch, work-in-progress changes, or a diff.
 ---
 

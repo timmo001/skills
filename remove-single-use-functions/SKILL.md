@@ -1,5 +1,6 @@
 ---
 name: remove-single-use-functions
+license: Apache-2.0
 description: Safe inlining and removal of single-use functions during code review and refactoring. Use when a local, non-exported helper has exactly one real call site and inlining preserves behaviour and readability.
 ---
 

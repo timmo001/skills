@@ -1,5 +1,6 @@
 ---
 name: github-development-rulesets
+license: Apache-2.0
 description: Create GitHub Development rulesets from the bundled JSON baseline, compare and migrate existing rulesets, or update required CI checks. Use when setting up a Development ruleset, choosing among existing rulesets, or reconciling their policy and emitted check names.
 compatibility: Requires authenticated GitHub CLI, jq, Bash, and repository ruleset write access for mutations.
 ---

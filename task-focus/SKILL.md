@@ -1,5 +1,6 @@
 ---
 name: task-focus
+license: Apache-2.0
 compatibility: Separate-session workflows need a client that can start fresh agent sessions. The preferred separate-implementation path uses Herdr workspaces/worktrees and the herdr skill.
 description: Keep the original task on track when the user raises a side thought, side question, tentative branch idea, or explicit change of task. Use before diverting work, switching branches, or choosing between a BTW session, a fresh session, and the current conversation, especially with a large context window.
 ---

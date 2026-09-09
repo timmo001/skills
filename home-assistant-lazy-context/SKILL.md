@@ -1,5 +1,6 @@
 ---
 name: home-assistant-lazy-context
+license: Apache-2.0
 compatibility: Requires Home Assistant frontend source with its Lit context mixin, lazy context providers, and consume-context-entry decorators.
 description: 'Home Assistant frontend lazy-context, memoization, and `hass` removal guidance. Use when migrating Lit components from `hass!: HomeAssistant`, `.hass=${...}`, or broad `hass` access to context slices.'
 ---

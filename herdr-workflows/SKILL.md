@@ -1,5 +1,6 @@
 ---
 name: herdr-workflows
+license: Apache-2.0
 compatibility: Requires Herdr, its CLI environment, Git for worktree transfers, and the separately installed herdr skill.
 description: Apply local safeguards for Herdr session recovery and transferring linked-worktree changes back to a host checkout. Use alongside the herdr skill when diagnosing Herdr socket routing, recovering the default session, or moving, consolidating, or continuing Herdr worktree changes from the main or host checkout. The herdr skill remains authoritative for all Herdr CLI, topology, targeting, lifecycle, and safety behaviour.
 ---

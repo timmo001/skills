@@ -1,5 +1,6 @@
 ---
 name: writing-style
+license: Apache-2.0
 description: >
   Write commit messages, PR and issue text, docs (README), code comments, and
   user-facing strings (notifications, UI labels, toasts, error messages) in the

@@ -1,5 +1,6 @@
 ---
 name: chill
+license: Apache-2.0
 description: Stop overengineering and reinventing the wheel. Use ONLY when the user explicitly invokes /chill or asks to simplify an approach that has become unnecessarily complex.
 ---
 

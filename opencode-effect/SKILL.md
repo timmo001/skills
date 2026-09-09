@@ -1,5 +1,6 @@
 ---
 name: opencode-effect
+license: Apache-2.0
 compatibility: Designed for OpenCode V2 integrations with mutually compatible OpenCode and Effect packages, plus access to current V2 documentation and package metadata.
 description: Develop and migrate OpenCode V2 plugins, clients, SDK hosts, and HTTP API integrations. Use for the OpenCode plugin API, `@opencode-ai/client`, `@opencode-ai/sdk`, server API, Effect entrypoints, or V1-to-V2 API migration.
 ---

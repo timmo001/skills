@@ -1,5 +1,6 @@
 ---
 name: human-step-guide
+license: Apache-2.0
 description: Prepare a concise guide when progress is blocked by a genuinely human-only action. Use for approvals, physical actions, credential entry, or dashboard steps the agent cannot perform; do not use for work available tools can complete.
 ---
 

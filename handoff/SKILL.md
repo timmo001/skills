@@ -1,5 +1,6 @@
 ---
 name: handoff
+license: Apache-2.0
 compatibility: Requires a configured repository notes vault, note-writing and note-deletion tools, and injected repo-note-context containing the notes path.
 description: Compact the current conversation into a handoff document for another agent to pick up.
 ---

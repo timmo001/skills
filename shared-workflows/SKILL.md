@@ -1,5 +1,6 @@
 ---
 name: shared-workflows
+license: Apache-2.0
 compatibility: Requires authenticated GitHub access and access to the relevant owner's reusable GitHub Actions workflows and consumer repositories.
 description: Use, configure, maintain, or create reusable GitHub Actions workflows for personal and organisation repositories. Use when a task mentions shared workflows, reusable workflows, `workflow_call`, cross-repository workflow `uses:`, or the personal workflows repository; do not use for repository-specific or proof-of-concept CI unless evaluating whether it should be shared.
 ---

@@ -1,5 +1,6 @@
 ---
 name: session-coordination
+license: Apache-2.0
 compatibility: Requires host-native child sessions or Herdr-managed agents, plus writable local cache storage for lifecycle records. Herdr operations require the separately installed herdr skill.
 description: Coordinate delegated agent sessions with bounded assignments, asynchronous background scheduling, soft concurrency caps, context-window rotation, independent review cycles, and logged cleanup across native child sessions and Herdr-managed agents. Use when managing multiple agents, panes, tabs, branches, stages, or long-running tasks while keeping the coordinating session small.
 ---

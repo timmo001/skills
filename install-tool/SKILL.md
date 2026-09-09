@@ -1,5 +1,6 @@
 ---
 name: install-tool
+license: Apache-2.0
 compatibility: Designed for Arch Linux with mise and pacman, plus yay for AUR packages. Managed installs use the dot command and stow-managed dotfiles; privileged operations prefer pkexec.
 description: Install tools, applications, CLIs, runtimes, and packages. Use when an installation request should prefer mise for development tools, then fall back to pacman or yay for system-integrated software.
 ---

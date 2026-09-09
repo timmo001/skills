@@ -1,5 +1,6 @@
 ---
 name: effect-principles
+license: Apache-2.0
 description: Apply the Effect way of reasoning in codebases that do not use Effect, in any programming language. Use when editing or reviewing non-Effect code so dependencies, failures, state, boundaries, resources, time, and workflows stay explicit without adding Effect-shaped architecture or broader scope.
 ---
 

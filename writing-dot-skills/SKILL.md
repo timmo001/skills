@@ -1,5 +1,6 @@
 ---
 name: writing-dot-skills
+license: Apache-2.0
 description: Craft for authoring Agent Skills that select reliably and stay lean. Use when creating or revising a skill's description, workflow, references, scripts, or structure.
 ---
 

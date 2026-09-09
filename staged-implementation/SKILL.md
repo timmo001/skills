@@ -1,5 +1,6 @@
 ---
 name: staged-implementation
+license: Apache-2.0
 description: Execute broad changes one coherent, independently verifiable stage at a time. Use when work spans multiple independently reviewable changes, or when contracts, producer-consumer migrations, generated artefacts, or release packaging create an ordered multi-stage rollout; skip small single-purpose changes.
 ---
 

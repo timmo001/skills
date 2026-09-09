@@ -1,5 +1,6 @@
 ---
 name: check-skill-updates
+license: Apache-2.0
 compatibility: Requires mise, the Skills CLI, and network access. Repository import reviews also require this repository's imports.json and built skill-maintenance CLI, Git, and authenticated GitHub CLI.
 description: Check imported skills for upstream changes and review safe updates. Use when a tracked `# origin:` may have changed or when refreshing installed skills from their source repositories.
 ---

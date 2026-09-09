@@ -1,5 +1,6 @@
 ---
 name: browser-access
+license: Apache-2.0
 description: Decide whether browser access is needed and keep authorised checks narrow. Use for frontend or UI diagnosis, before proposing or using Browser Control, Chrome DevTools, or equivalent browser automation, and when the user explicitly requests browser interaction.
 ---
 

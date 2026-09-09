@@ -1,5 +1,6 @@
 ---
 name: pitchfork-dev-servers
+license: Apache-2.0
 compatibility: The Pitchfork fallback requires Pitchfork CLI or MCP access and repository daemon configuration. Framework-native background workflows use the project's own runtime.
 description: Manage long-running local dev servers by precedence - the project's own AGENTS.md workflow first, framework-native background mode next, then pitchfork as the fallback. Use when starting, stopping, restarting, checking, or tailing development servers, background servers, `pitchfork.toml`, pitchfork MCP tools, or local AGENTS/mise tasks that mention pitchfork.
 ---

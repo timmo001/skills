@@ -1,5 +1,6 @@
 ---
 name: cleanup-unnecessary-variables
+license: Apache-2.0
 description: Safe removal of unnecessary variables during code review and refactoring. Use when simplifying code, inlining temporary or single-use variables, or removing redundant aliases, while preserving runtime behaviour, evaluation order, and variables kept for readability or debugging.
 ---
 

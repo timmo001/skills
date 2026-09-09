@@ -1,5 +1,6 @@
 ---
 name: plan
+license: Apache-2.0
 description: Produce implementation-ready plans from the current conversation and repository context. Use when entering native plan mode, invoking /plan, or when a task needs concrete implementation sequencing before edits begin; do not use for round-based grilling.
 ---
 

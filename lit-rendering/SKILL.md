@@ -1,5 +1,6 @@
 ---
 name: lit-rendering
+license: Apache-2.0
 description: Lit rendering and picker callback-shape guidance for editing and reviewing Lit components.
 ---
 
