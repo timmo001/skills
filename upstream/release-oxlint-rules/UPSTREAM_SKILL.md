@@ -7,8 +7,6 @@ description: >-
 license: Apache-2.0
 # origin: https://github.com/timmo001/oxlint-rules/tree/main/skills/release-oxlint-rules
 # upstream-sha: 7e71fb8cf3f73cce72d19bc9a1f3278913c57e95
-# local-edits:
-#   - SKILL.md: read publication status once and stop when publication is incomplete
 ---
 
 # Release Oxlint Rules
@@ -34,8 +32,10 @@ license: Apache-2.0
 5. Resolve the target only after the push with `git rev-parse HEAD`. Pass the
    resulting full 40-character SHA as the `--target` value when running
    `gh release create`. Never pass an abbreviated SHA as `target_commitish`.
-6. After creating the release, read the release commit's `Publish to npm` and
-   `Publish to JSR` job status once.
+6. Create the release before resolving workflow targets because publication is
+   triggered by the `release.published` event. Watch only the release commit's
+   exact workflow runs and require both `Publish to npm` and `Publish to JSR` to
+   succeed.
 7. Report the release URL, version commit, validation results, and npm and JSR
-   publication conclusions. Stop and report publication as incomplete unless
-   both jobs have succeeded.
+   publication conclusions. Do not report the release as complete while either
+   publication job is pending or failed.

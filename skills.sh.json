@@ -72,8 +72,7 @@
         "handoff",
         "install-tool",
         "session-coordination",
-        "task-focus",
-        "workflows-watch"
+        "task-focus"
       ]
     }
   ]

@@ -21,7 +21,7 @@ verification, review, and large reads.
   after explicit commit or push authorisation. Those skills own Git operations
   and approval details.
 - Require review sessions to load `code-review`, `changeset-scope`, and matching
-  specialist skills. Load `workflows-watch` for long-running GitHub checks.
+  specialist skills.
 - Tell each child which repository and domain skills apply. Do not load its
   implementation skills into the coordinator's context.
 

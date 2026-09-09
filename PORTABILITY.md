@@ -77,7 +77,6 @@ These encode the current OpenCode, dotfiles, notes, or maintainer workflow. They
 | `install-tool` | Separate general installation policy from personal package manifests and overlays. |
 | `session-coordination` | Depends on host-native child sessions, Herdr lifecycle semantics, local context warnings, and the coordinator cache path. |
 | `task-focus` | Uses BTW or fresh sessions, context usage when available, and Herdr-managed workspaces/worktrees through the separately installed `herdr` skill. |
-| `workflows-watch` | Decouple from OpenCode background tasks and the local workflow manifest tool. |
 
 ## Follow-Up
 
