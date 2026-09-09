@@ -48,6 +48,7 @@ These are agent-agnostic in format, but their workflows or specific branches dep
 | `add-oxlint-rule` | Writable central Oxlint rules checkout, mise, Bun, npm, and registry access for validation. Wholesale import; compatibility frontmatter belongs upstream. |
 | `agentic-workflows` | GitHub `gh aw` extension and Agentic Workflows. |
 | `browser-control` | Browser Control relay, extension, and CLI or MCP tools. |
+| `effect-gh` | TypeScript, @timmo001/effect-gh with its compatible Effect peer, a platform adapter providing ChildProcessSpawner, and an installed, authenticated GitHub CLI for operations. Wholesale import; consumers choose the runtime and platform. |
 | `gh-stack` | GitHub `gh stack` extension. |
 | `github-development-rulesets` | Authenticated GitHub CLI, jq, Bash, and ruleset write access for mutations. Includes the Development JSON baseline for creation. |
 | `herdr-sdk` | TypeScript, @herdr/sdk, compatible Effect/platform packages and runtime, current upstream docs, and a compatible Herdr local socket server for live checks. |
