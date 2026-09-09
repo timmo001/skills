@@ -52,6 +52,7 @@ These are agent-agnostic in format, but useful only when their named tool, servi
 | `agentic-workflows` | GitHub `gh aw` extension and Agentic Workflows. |
 | `browser-control` | Browser Control relay, extension, and CLI or MCP tools. |
 | `gh-stack` | GitHub `gh stack` extension. |
+| `github-development-rulesets` | Authenticated GitHub CLI, jq, Bash, and ruleset write access for mutations. Includes the Development JSON baseline for creation. |
 | `herdr-workflows` | Herdr, its CLI environment, and the separately installed upstream `herdr` skill. |
 | `home-assistant-frontend` | Home Assistant frontend checkout and its local guidance. |
 | `home-assistant-lazy-context` | Home Assistant frontend source and conventions. |
