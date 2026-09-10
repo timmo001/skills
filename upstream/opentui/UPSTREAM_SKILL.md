@@ -3,7 +3,7 @@ name: opentui
 description: Build terminal UIs with OpenTUI. Covers Core, frameworks, components, application APIs, testing, extensions, integrations, deployment, and public API lookup.
 license: MIT
 # origin: https://github.com/anomalyco/opentui/tree/main/packages/web/src/content
-# upstream-sha: 09a0dd695d2265c537bf5a01d75deb125dee3772
+# upstream-sha: 97a20ab24953cb7a08d4ad319fdc59b1f32c55a8
 ---
 
 # OpenTUI Skill
@@ -88,7 +88,7 @@ Use public package entry points instead of source-file deep imports.
 | `embedded-terminal`, `terminal-renderable`, `ghostty`, `vt`, `pty`                                                   | `docs/components/embedded-terminal.mdx`     |
 | `clipboard`, `copy`, `osc52`, `host-clipboard`                                                                       | `docs/core-concepts/clipboard.mdx`          |
 | `audio`, `native-audio`, `sound`, `playback`, `mixer`, `devices`, `tap`                                              | `docs/core-concepts/audio.mdx`              |
-| `audio-streaming`, `audio-stream`, `radio`, `mp3`, `flac`, `icy`, `backpressure`, `reconnect`                        | `docs/application-apis/audio-streaming.mdx` |
+| `audio-streaming`, `audio-stream`, `pcm`, `f32le`, `radio`, `mp3`, `flac`, `icy`, `backpressure`, `reconnect`        | `docs/application-apis/audio-streaming.mdx` |
 | `audio-capture`, `microphone`, `pcm`, `recording`, `wav`, `audio-recorder`                                           | `docs/application-apis/audio-capture.mdx`   |
 | `animation`, `timeline`, `easing`, `use-timeline`                                                                    | `docs/application-apis/animation.mdx`       |
 | `testing`, `test-renderer`, `snapshots`, `frames`                                                                    | `docs/core-concepts/testing.mdx`            |
