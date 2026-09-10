@@ -7,7 +7,7 @@ Generated from each top-level skill's `SKILL.md` frontmatter (`name` and `descri
 # or: mise run catalogue
 ```
 
-This repository currently documents **58** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
+This repository currently documents **59** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
 
 ## Portable
 
@@ -55,6 +55,7 @@ Skills for named tools, services, and target repositories.
 | [`effect-gh`](./effect-gh/) | Use @timmo001/effect-gh for GitHub CLI integration in Effect TypeScript code. Apply when adding or changing gh-backed API requests, repository, issue, pull request or workflow operations, streaming output, or migrating hand-written gh subprocess wrappers to Effect. |
 | [`gh-stack`](./gh-stack/) | Manage stacked branches and pull requests with GitHub's `gh stack` extension. Use when work involves stacked PRs, dependent branches, stack creation, navigation, submission, synchronisation, rebasing, restructuring, linking, or merging. |
 | [`github-development-rulesets`](./github-development-rulesets/) | Create GitHub Development rulesets from the bundled JSON baseline, compare and migrate existing rulesets, or update required CI checks. Use when setting up a Development ruleset, choosing among existing rulesets, or reconciling their policy and emitted check names. |
+| [`github-repository-setup`](./github-repository-setup/) | Create GitHub repositories with the preferred feature and squash-merge settings, offer CI and automerge workflows, and finish first-push setup with a Development ruleset. Use when creating a GitHub repository, using gh repo create, applying repository defaults, or completing a new repository's initial GitHub setup. |
 | [`herdr-sdk`](./herdr-sdk/) | Use dmmulroy/herdr-ts-sdk (@herdr/sdk) for Effect TypeScript integrations with Herdr. Use when adding, migrating, debugging, or reviewing SDK consumers; read current upstream docs and installed contracts before coding. For terminal or workspace control, use the herdr skill. |
 | [`herdr-workflows`](./herdr-workflows/) | Apply local safeguards for Herdr session recovery and transferring linked-worktree changes back to a host checkout. Use alongside the herdr skill when diagnosing Herdr socket routing, recovering the default session, or moving, consolidating, or continuing Herdr worktree changes from the main or host checkout. The herdr skill remains authoritative for all Herdr CLI, topology, targeting, lifecycle, and safety behaviour. |
 | [`home-assistant-frontend`](./home-assistant-frontend/) | Home Assistant frontend skill routing and personal engineering overlays. Use when editing or reviewing the Home Assistant frontend so repository-local `ha-frontend-*` skills stay authoritative and applicable Lit, TypeScript, cleanup, and HA companion skills are also loaded. |
