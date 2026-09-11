@@ -29,11 +29,38 @@ Drafting the text is never permission to perform the action.
 
 Apply these rules to all writing covered by this skill. Follow AGENTS.md for chat replies and other output too.
 
+- Keep it simple. Use the fewest words that explain the point clearly. Cut repetition and obvious explanations, but keep details the reader needs.
 - Never use an em-dash or a spaced en-dash as a substitute. Use a hyphen, comma, colon, parentheses, or split the sentence.
-- No robotic or marketing tone. Drop filler such as "seamlessly", "powerful", "effortless", and "It is worth noting". Judge words in context: keep a precise technical use such as "robust regression".
+- No robotic or marketing tone. Use the replacements below and cut filler.
 - Use everyday words when they say the same thing. Avoid jargon, abstract labels, and fancy wording for simple ideas. Keep technical terms when they add precision the reader needs; explain unfamiliar ones briefly. Before finishing, replace any phrase that makes the reader decode what you mean.
 - Spelling: UK English by default (centralise, behaviour, colour, optimise, cancelled, licence as a noun); follow the repo's locale where it sets a different one. See "Defer to house style".
 - Be concrete and specific over vague summary.
+
+## Banned wording
+
+Do not use these as fancy substitutes for ordinary words:
+
+| Avoid | Write instead |
+| --- | --- |
+| humanise prose | make writing sound natural |
+| prose | writing or text |
+| register | tone |
+| venue | where the text will appear |
+| artefact / artifact | file, document, or output, whichever you mean |
+| corpus | writing samples or existing work |
+| provenance | source or where it came from |
+| materialise | create or write |
+| canonical | main or source, whichever you mean |
+| scaffolding / ceremony | setup or extra steps, whichever you mean |
+| leverage / utilise | use |
+| delve into | read, check, or investigate |
+| facilitate | help or enable |
+| rationale | reason |
+| calibrate against | compare with or match |
+
+Cut empty praise and padding: "seamlessly", "robust", "powerful", "effortless", "groundbreaking", "pivotal", "comprehensive", "It is worth noting", "In order to", "Furthermore", and "Let's dive in". State the useful fact instead of replacing one buzzword with another.
+
+These bans apply to vague or inflated wording. Keep exact names, quotations, code, and technical terms when they genuinely mean something specific, such as a CPU register or robust regression. Do not rename technical concepts to satisfy a word list.
 
 ## Editing pass
 
