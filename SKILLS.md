@@ -42,7 +42,7 @@ General engineering and writing skills that work across Agent Skills clients.
 | [`to-questionnaire`](./to-questionnaire/) | Turn a decision the user cannot answer alone into a channel-aware questionnaire draft for one other person. Use when missing knowledge belongs to a colleague, maintainer, or domain expert and the user needs questions for GitHub, Slack, Discord, or a document. |
 | [`types-enforce-ts`](./types-enforce-ts/) | TypeScript type-safety guidance for editing and reviewing `.ts`, `.tsx`, `.mts`, and `.cts` files. |
 | [`writing-dot-skills`](./writing-dot-skills/) | Craft for authoring Agent Skills that select reliably and stay lean. Use when creating or revising a skill's description, workflow, references, scripts, or structure. |
-| [`writing-style`](./writing-style/) | Write commit messages, PR and issue text, docs (README), code comments, and user-facing strings (notifications, UI labels, toasts, error messages) in the project owner's voice: concise, human, UK English, no em-dashes, no robotic or marketing tone. Use when authoring or editing any of these. Defer to a repo's established house style when it has one; otherwise this sets the default voice. |
+| [`writing-style`](./writing-style/) | Write commit messages, PR and issue text, docs (README), code comments, and user-facing strings (notifications, UI labels, toasts, error messages) in the project owner's voice: concise, human, UK English, no em-dashes, no robotic or marketing tone. Use when writing, editing, or reviewing these, including requests to make writing sound natural or remove jargon. Keep the meaning and follow the repo's established writing style. |
 
 ## Environment-bound
 
