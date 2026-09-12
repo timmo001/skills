@@ -37,6 +37,7 @@ export const SkillUpdatesAgentConfig = Schema.Struct({
   ),
   stateFile: Schema.NonEmptyString,
   opencodeCommand: Schema.NonEmptyString,
+  opencodeArgs: Schema.optionalKey(Schema.Array(Schema.String)),
   opencodeAgent: Schema.NonEmptyString,
   opencodeModels: Schema.Array(SkillUpdatesAgentModel).check(
     Schema.isMinLength(1),
@@ -742,7 +743,9 @@ const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
           .stream(
             config.opencodeCommand,
             [
+              ...(config.opencodeArgs ?? []),
               "run",
+              "--standalone",
               "--auto",
               "--agent",
               config.opencodeAgent,

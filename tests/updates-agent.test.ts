@@ -671,6 +671,9 @@ describe("updates agent policies", () => {
           "    modelID: gpt-test",
           "  - providerID: github-copilot",
           "    modelID: gpt-fallback",
+          "opencodeArgs:",
+          "  - --wrapped",
+          "  - argument with spaces",
           "prompt: Process updates.",
           "",
         ].join("\n"),
@@ -689,7 +692,13 @@ describe("updates agent policies", () => {
           ),
         exitCode: () => Effect.succeed(0),
         inherit: () => Effect.succeed(0),
-        stream: () => {
+        stream: (_command, args) => {
+          expect(args.slice(0, 4)).toEqual([
+            "--wrapped",
+            "argument with spaces",
+            "run",
+            "--standalone",
+          ]);
           modelAttempt += 1;
           return Stream.make(
             succeeds && modelAttempt === 2
