@@ -42,7 +42,7 @@ Use this workflow when finishing the whole request in one uninterrupted change w
    - Keep a fallback working plan temporary. Move its remaining phases into separate numbered handoffs once handoffs become available, then remove the working document when it no longer carries active coordination state.
    - During read-only planning, state the proposed handoffs or working-plan path without writing them. Create or update them during execution, or when the user explicitly requests the handoff workflow.
 6. Make retirement of each durable phase artefact the last step of the work it tracks.
-   - A handoff or plan is not complete while it remains as stale coordination state. After all of its tracked work and validation are complete, ask the user to confirm deletion, then remove the note with `notes_note_delete`.
+   - A handoff or plan is not complete while it remains as stale coordination state. After all of its tracked work and validation are complete, ask the user to confirm deletion, then remove it through `notes-cli`.
    - Delete a fallback repository-local working plan in the final stage that completes its remaining work. Include that deletion in the plan's `Files` tree.
    - Do not delete an artefact while it still contains deferred, blocked, or unresolved work. Update it instead, or create the next numbered handoff before retiring the current artefact.
 
@@ -70,7 +70,7 @@ Use this workflow when finishing the whole request in one uninterrupted change w
 6. If final-gate fixes were needed, confirm those fixes and their affected risk area rather than reopening the entire diff.
 7. Do not repeat an unchanged fix-and-check cycle. Repeated rereads, duplicate edits, unchanged validation retries, stale review findings, scope drift, or loss of the stage acceptance criteria are context-pressure signals. If the same failure persists and another attempt has no new hypothesis or evidence, stop as blocked.
 8. When blocked work needs another attempt, start a fresh worker from a compact handoff containing the active contract, current diff state, validation evidence, and unresolved findings. Do not keep resuming the context-heavy worker.
-9. When the active stage completes all work tracked by a loaded handoff or plan, perform its planned retirement step last. Obtain explicit confirmation immediately before deleting a note, as required by the `notes-mcp` skill.
+9. When the active stage completes all work tracked by a loaded handoff or plan, perform its planned retirement step last. Obtain explicit confirmation immediately before deleting a note, as required by `notes-cli`.
 
 ## Checkpoint
 

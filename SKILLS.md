@@ -7,7 +7,7 @@ Generated from each top-level skill's `SKILL.md` frontmatter (`name` and `descri
 # or: mise run catalogue
 ```
 
-This repository currently documents **59** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
+This repository currently documents **61** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
 
 ## Portable
 
@@ -52,6 +52,7 @@ Skills for named tools, services, and target repositories.
 | --- | --- |
 | [`agentic-workflows`](./agentic-workflows/) | Design, create, update, debug, audit, or upgrade GitHub Agentic Workflows with the `gh aw` extension. Use when work involves workflow Markdown, compiled `.lock.yml` files, agent engines, MCP tools, safe outputs, or `gh aw` commands. |
 | [`browser-control`](./browser-control/) | Control the user's existing Chromium-family browser through the Browser Control extension and local relay with deterministic Playwright. Use when asked to inspect, automate, test, or interact with a visible browser tab; continue an authenticated browser workflow; handle 2FA, passkeys, CAPTCHAs, or payment confirmation; record browser behaviour; or capture an authenticated network flow. |
+| [`context-cli`](./context-cli/) | Use the context CLI to inspect repository branches, working-tree changes, recent commits, pull requests, and tech stacks. Use for context git, context stack, and shell-based repository snapshots. For Context MCP tool calls, use context-mcp instead. |
 | [`effect-gh`](./effect-gh/) | Use @timmo001/effect-gh for GitHub CLI integration in Effect TypeScript code. Apply when adding or changing gh-backed API requests, repository, issue, pull request or workflow operations, streaming output, or migrating hand-written gh subprocess wrappers to Effect. |
 | [`gh-stack`](./gh-stack/) | Manage stacked branches and pull requests with GitHub's `gh stack` extension. Use when work involves stacked PRs, dependent branches, stack creation, navigation, submission, synchronisation, rebasing, restructuring, linking, or merging. |
 | [`github-development-rulesets`](./github-development-rulesets/) | Create GitHub Development rulesets from the bundled JSON baseline, compare and migrate existing rulesets, or update required CI checks. Use when setting up a Development ruleset, choosing among existing rulesets, or reconciling their policy and emitted check names. |
@@ -66,6 +67,7 @@ Skills for named tools, services, and target repositories.
 | [`add-oxlint-rule`](./add-oxlint-rule/) | Create or revise a centrally maintained rule in @timmo001/oxlint-rules. Use for requests to add an Oxlint anti-slop rule, change an existing central rule, or promote a repository-specific lint preference into the shared package. |
 | [`install-timmo-oxlint-rules`](./install-timmo-oxlint-rules/) | Install or copy @timmo001/oxlint-rules into a JavaScript or TypeScript repository. Use when adding the shared anti-slop Oxlint config, enabling its Effect rules, or replacing a local anti-slop copy. |
 | [`release-oxlint-rules`](./release-oxlint-rules/) | Create and publish a major, minor, or patch release of @timmo001/oxlint-rules. Use when asked to create, cut, prepare, or publish an oxlint-rules release, including its version bump and npm and JSR publication. |
+| [`notes-cli`](./notes-cli/) | Use the notes CLI to find, read, create, update, and delete repository notes. Use for shell-based note workflows, notes commands, and handoff storage. For Notes MCP tool calls, use notes-mcp instead. |
 | [`opencode-effect`](./opencode-effect/) | Develop and migrate OpenCode V2 plugins, clients, SDK hosts, and HTTP API integrations. Use for the OpenCode plugin API, `@opencode-ai/client`, `@opencode-ai/sdk`, server API, Effect entrypoints, or V1-to-V2 API migration. |
 | [`pitchfork-dev-servers`](./pitchfork-dev-servers/) | Manage long-running local dev servers by precedence - the project's own AGENTS.md workflow first, framework-native background mode next, then pitchfork as the fallback. Use when starting, stopping, restarting, checking, or tailing development servers, background servers, `pitchfork.toml`, pitchfork MCP tools, or local AGENTS/mise tasks that mention pitchfork. |
 | [`pkexec-root`](./pkexec-root/) | Use pkexec first for commands that need root directly or indirectly. |

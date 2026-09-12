@@ -48,6 +48,7 @@ These are agent-agnostic in format, but their workflows or specific branches dep
 | `add-oxlint-rule` | Writable central Oxlint rules checkout, mise, Bun, npm, and registry access for validation. Wholesale import; compatibility frontmatter belongs upstream. |
 | `agentic-workflows` | GitHub `gh aw` extension and Agentic Workflows. |
 | `browser-control` | Browser Control relay, extension, and CLI or MCP tools. |
+| `context-cli` | Context CLI and shell access, with Git and authenticated GitHub CLI for repository and PR details. Wholesale import owned by `timmo001/context`. |
 | `effect-gh` | TypeScript, @timmo001/effect-gh with its compatible Effect peer, a platform adapter providing ChildProcessSpawner, and an installed, authenticated GitHub CLI for operations. Wholesale import; consumers choose the runtime and platform. |
 | `gh-stack` | GitHub `gh stack` extension. |
 | `github-development-rulesets` | Authenticated GitHub CLI, jq, Bash, and ruleset write access for mutations. Includes the Development JSON baseline for creation. |
@@ -60,6 +61,7 @@ These are agent-agnostic in format, but their workflows or specific branches dep
 | `home-assistant-lit-rendering` | Home Assistant frontend and Lit. |
 | `improve-codebase-architecture` | Subagent-capable client and a browser with network access for the HTML report's Tailwind and Mermaid CDNs. |
 | `install-timmo-oxlint-rules` | JavaScript or TypeScript repository, Oxlint, and its package manager; copying uses Node.js. Wholesale import; compatibility frontmatter belongs upstream. |
+| `notes-cli` | Notes CLI, shell access, and a configured repository notes vault with CLI-managed Git persistence. Wholesale import owned by `timmo001/notes`. |
 | `opencode-effect` | OpenCode V2 plus mutually compatible plugin, client, SDK, and Effect package contracts. |
 | `pitchfork-dev-servers` | Project-declared dev-server runtime and tasks; Pitchfork and daemon configuration only for the fallback tier. |
 | `pkexec-root` | Linux with polkit/pkexec; pacman or yay for Arch package operations, sudo as fallback. |
@@ -75,9 +77,9 @@ These encode the current OpenCode, dotfiles, notes, or maintainer workflow. Comp
 | --- | --- |
 | `branch-context-consumer` | Decouple from BranchContextPlugin injection. |
 | `check-skill-updates` | Consumer updates use mise and the Skills CLI; repository reviews depend on the built skill-maintenance CLI, imports.json, Git, and authenticated GitHub CLI. |
-| `git-commit` | Separate general commit discipline from the `dot git-commit` gateway. |
-| `git-context` | Generalise injected context and OpenCode MCP names. |
-| `handoff` | Abstract the Notes MCP vault and OpenCode tool names. |
+| `git-commit` | Requires the `dot git-commit` gateway and the Context CLI for snapshot refreshes. |
+| `git-context` | Uses the `context-cli` skill for repository snapshots, BranchContextPlugin for required injections, and dotfiles Git helpers. |
+| `handoff` | Uses `notes-cli` for repository-note storage and cleanup. |
 | `import-external-skill` | Depends on this repository's imports.json and built skill-maintenance CLI, Git, mise, Skills CLI, authenticated GitHub CLI, and upstream access. |
 | `agent-oxlint` | Requires the `dot agent-oxlint` command, private `dot-git.yml` opt-ins, and its managed package cache. |
 | `install-tool` | Separate general installation policy from personal package manifests and overlays. |

@@ -1,26 +1,20 @@
 ---
 name: handoff
 license: Apache-2.0
-compatibility: Requires a configured repository notes vault, note-writing and note-deletion tools, and injected repo-note-context containing the notes path.
+compatibility: Requires the notes CLI, the notes-cli skill, shell access for note operations, and a configured repository notes vault.
 description: Compact the current conversation into a handoff document for another agent to pick up.
 ---
 
-Write a handoff note summarising the current conversation so a fresh agent can continue the work. The note is stored in the repo notes vault alongside regular notes, using the note-writing tool (`notes_note_write` in OpenCode).
+Write a handoff note summarising the current conversation so a fresh agent can continue the work. Load `notes-cli` for repository resolution, CLI storage, revision checks, and mutation results. This skill owns the handoff content and lifecycle.
 
-Configuration invariant: every primary agent should have access to the repo notes tools, especially the note-writing tool, so explicit handoff and note workflows are not blocked. Tool access does not imply autonomous note manipulation: use the note-read, note-write, and note-delete tools (`notes_note_read`, `notes_note_write`, `notes_note_delete` in OpenCode) only when a note command or skill instructs it, or when the user explicitly asks to create, update, read, or delete notes. Search-only or narrowly scoped subagents do not need notes access unless their workflow explicitly requires it.
+Primary agents that create handoffs need shell permission for Notes CLI operations. Read-only agents retain read-only access; command availability does not authorise autonomous note mutations.
 
 ## Output
 
-Read `Notes path` from the `<repository>` section of the injected `<repo-note-context>`.
+Resolve the note directory through `notes-cli`, using `handoff` as the context command when no injected path is available.
 
 1. Generate a slug prefixed with `handoff-` (e.g. `handoff-auth-refactor`, `handoff-migrate-to-v4`).
-2. Call the note-writing tool (`notes_note_write` in OpenCode) with:
-   - `path`: `{notes_path}/handoff-{slug}.md`
-   - `content`: the full note content (see format below)
-
-The note-writing tool adds the frontmatter `date:` for you.
-
-Do **not** use the `write`, `bash`, or any other tool to write the file — only the note-writing tool.
+2. Save the full content below to `{notes_path}/{slug}.md` through the `notes-cli` create workflow.
 
 ## Multi-phase guard
 
@@ -73,7 +67,9 @@ type: handoff
 name: {Short human-readable title, 3–6 words, Title Case}
 description: {One sentence describing the handoff purpose}
 priority: {low | medium | high | critical, default medium}
-tags: [handoff, {2–4 additional kebab-case tags from the conversation}]
+tags:
+  - handoff
+  - {additional kebab-case tag from the conversation}
 ---
 
 # {name}
@@ -100,13 +96,9 @@ tags: [handoff, {2–4 additional kebab-case tags from the conversation}]
 
 ## Completion Cleanup
 
-After all work and validation described by this handoff are complete, ask the user to confirm deletion, then remove this handoff with `notes_note_delete`. Do not leave the completed handoff as stale coordination state.
+After all work and validation described by this handoff are complete, ask the user to confirm deletion, then remove this handoff through `notes-cli`. Do not leave the completed handoff as stale coordination state.
 ```
 
 ## Confirm
 
-Tell the user exactly:
-
-```text
-Saved: repo-notes/{owner}/{repo}/handoff-{slug}.md
-```
+Report the actual saved path from the CLI result and any partial failure.

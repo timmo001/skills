@@ -1,7 +1,7 @@
 ---
 name: git-commit
 license: Apache-2.0
-compatibility: Requires Git and the dot git-commit gateway in a build-capable agent. Working-tree refresh requires the Context MCP server when injected commit context is unavailable or stale.
+compatibility: Requires Git and the dot git-commit gateway in a build-capable agent. Working-tree refresh uses the context CLI when injected commit context is unavailable or stale.
 description: Commit workflow using the dot git-commit gateway, splitting a reviewed changeset into coherent commits by default. Use only after the user explicitly requests a commit or push, including /commit or /commit-push. Never infer authorisation for later changes; never run raw git commit.
 ---
 
@@ -38,11 +38,10 @@ staging, and message authoring around it.
 - When the block contains several `<repository-scope>` sections, treat each as
   an independent changeset. Run its `dot git-commit` commands from the listed
   repository root, and push that repository only once on its final commit.
-- Refresh with the Context MCP server's `git_context` tool when the block is
-  absent, stale, partial, or does not cover an explicitly requested repository.
-  In OpenCode this is exposed as `context_git_context`; set `diff: true` when
-  subject selection needs content. Do not reconstruct this with raw `git
-  status`/`git diff`.
+- Refresh with `context git` in each repository when the block is absent,
+  stale, partial, or does not cover an explicitly requested repository. Follow
+  `context-cli` for CLI options; add `--diff` when subject selection needs
+  content. Do not reconstruct this with raw `git status`/`git diff`.
 
 ## 3. Decide the scope (confirm before staging)
 

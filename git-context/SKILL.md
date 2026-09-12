@@ -1,7 +1,7 @@
 ---
 name: git-context
 license: Apache-2.0
-compatibility: Designed for Git with dotfiles Git helpers and GitHub CLI for PR operations. Plugin-backed commands require BranchContextPlugin; ad-hoc context can use Context MCP or Git fallbacks. Amendments use dot git-commit.
+compatibility: Requires Git, the context-cli skill for repository snapshots, dotfiles Git helpers, and GitHub CLI for their workflows. Plugin-backed commands require BranchContextPlugin. Amendments use dot git-commit.
 description: Patterns for working with git branches, remotes, diffs against the default branch, and rebases. Use when resolving rebase conflicts, continuing interactive rebases, amending commits, or any git operation that would open an interactive editor.
 ---
 
@@ -26,18 +26,11 @@ When `<branch-context>` is present:
 3. Avoid re-running `git`/`gh` commands unless the user asks for a fresh snapshot.
 4. For commands that require `BranchContextPlugin` scope, stop and report a plugin issue if context is missing instead of rebuilding scope.
 
-## MCP refresh and fallback commands
+## Command-line context
 
-If plugin context is unavailable or stale during ad-hoc work that is not plugin-backed, use the Context MCP server's `git_context` tool. In OpenCode this is exposed as `context_git_context`. Request `diff: true`, `branchDiff: true`, `since`, or PR details only when the task needs them.
+For ad-hoc work without current injected context, load `context-cli` and use its repository snapshot workflow. That skill owns Context command options and output handling.
 
-If the MCP tool is unavailable and you need a scoped work snapshot, use this fallback order:
-
-1. `git diff`
-2. `git diff --cached`
-3. `git remote` (prefer `upstream`, otherwise `origin`)
-4. `git symbolic-ref refs/remotes/<remote>/HEAD`
-5. `gh repo view --json defaultBranchRef -q .defaultBranchRef.name`
-6. `git diff <remote>/<default-branch>...HEAD` when not on the default branch
+These commands do not replace a required plugin injection. If `context` is unavailable during ad-hoc work, report that limitation and use only the Git reads needed for the task:
 
 ```bash
 git diff
@@ -47,6 +40,8 @@ git symbolic-ref refs/remotes/<remote>/HEAD
 gh repo view --json defaultBranchRef -q .defaultBranchRef.name
 git diff <remote>/<default-branch>...HEAD
 ```
+
+Prefer `upstream` as the comparison remote when present, otherwise `origin`.
 
 ## Default branch helpers
 

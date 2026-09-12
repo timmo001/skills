@@ -72,7 +72,7 @@ by the cap, or blocked on a named dependency or user decision.
 
 - Read only short briefs and targeted slices directly. Delegate full diffs,
   transcripts, logs, generated output, long history, and broad searches. Keep
-  direct `context_git_context` calls free of `diff` and `branchDiff` payloads.
+  direct `context git` calls free of `--diff` and `--branch-diff` payloads.
 - Every delegated brief must require compact results and compliance with the
   active context warning system. At a warning, stop adding scope and rotate after
   the smallest safe unit. At critical, stop unless that would leave an unsafe

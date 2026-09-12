@@ -42,6 +42,7 @@
       "skills": [
         "agentic-workflows",
         "browser-control",
+        "context-cli",
         "effect-gh",
         "gh-stack",
         "github-development-rulesets",
@@ -56,6 +57,7 @@
         "add-oxlint-rule",
         "install-timmo-oxlint-rules",
         "release-oxlint-rules",
+        "notes-cli",
         "opencode-effect",
         "pitchfork-dev-servers",
         "pkexec-root",
