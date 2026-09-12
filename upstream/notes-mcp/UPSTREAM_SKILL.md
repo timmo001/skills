@@ -1,9 +1,10 @@
 ---
 name: notes-mcp
-description: Use the Notes MCP server to list, read, create, update, or delete repository notes safely. Use when working directly with note_list, note_read, note_write, or note_delete, including client-prefixed forms such as notes_note_write.
+description: Use the Notes MCP server to list, read, create, update, or delete repository notes. Use for note_list, note_read, note_write, and note_delete tool calls, including client-prefixed names. For shell-based Notes commands, use notes-cli instead.
+compatibility: Requires an enabled Notes MCP server and access to its note tools and repository context resource.
 license: Apache-2.0
 # origin: https://github.com/timmo001/notes/tree/main/.agents/skills/notes-mcp
-# upstream-sha: 1bc7685f3944634e520f705c794dcca4466be9fa
+# upstream-sha: 69e94b79f36b8fc9f3ce3aff0ff9ec911df36ee6
 ---
 
 # Notes MCP
@@ -20,12 +21,10 @@ Clients may prefix raw tool names with the configured server key. For example, a
    - `note_read` returns the full content and SHA-256 revision of one note.
    - `note_write` creates or replaces one complete note.
    - `note_delete` permanently removes one note.
-3. For a new note, verify that the target path is unused, then supply the complete Markdown file with valid YAML frontmatter and body to `note_write`. Omit `date`; the tool inserts the current local timestamp. Because `note_write` has no create-only precondition, stop rather than overwrite if the target may already exist.
+3. For a new note, verify that the target path is unused, then supply the complete Markdown file, including valid YAML frontmatter and body, to `note_write`. The tool creates parent directories and sets or refreshes `date:` automatically. Because `note_write` has no create-only precondition, stop rather than overwrite if the target may already exist.
 4. For an update, call `note_read` first. Preserve the complete file and any frontmatter or sections the task does not change, then pass the returned revision as `expectedHash` to `note_write`.
 5. Before deletion, tell the user which note will be removed and obtain explicit confirmation. Call `note_delete` only after confirmation.
 6. Report the mutation result accurately. A note can be saved locally even when its Git commit or best-effort push fails; surface that partial outcome instead of retrying blindly.
-
-On a successful write, trust the tool result. Do not look up the date, read the note back, or run separate Git commit, status, or push checks.
 
 ## Safety
 
