@@ -4,7 +4,7 @@ description: Use the context CLI to inspect repository branches, working-tree ch
 compatibility: Requires the context CLI and shell access. Git snapshots require a Git repository; optional GitHub details require authenticated GitHub CLI access.
 license: Apache-2.0
 # origin: https://github.com/timmo001/context/tree/main/.agents/skills/context-cli
-# upstream-sha: f7bf1adedb9de15d092569591eeac8706685b679
+# upstream-sha: 69aa410180bfc5c3001bc3b5774f51a110303b6c
 ---
 
 # Context CLI
@@ -23,6 +23,24 @@ Use `context` for deterministic repository snapshots. Run it from the target rep
    - `--no-pr` when pull request context is irrelevant.
 3. Use `--json` when a consumer needs structured output. Check `context git --help` for the current options instead of guessing flags.
 4. Report warnings, truncation, or missing GitHub data as limitations. A partial snapshot is not evidence that the missing information does not exist.
+
+## Recent Commit Windows
+
+`--since` accepts ISO/RFC dates, epoch timestamps, and single Effect durations. Durations support fractions, optional `ago`, and shorthand units:
+
+```bash
+context git --since 10m
+context git --since 1.5h
+context git --since "2 days ago"
+context git --since 500ms
+context git --since "500000 micros"
+context git --since "500000000 nanos"
+context git --since "2026-09-01T10:00:00Z"
+```
+
+Units include seconds, minutes, hours, days, weeks, millis, micros and nanos. Shorthand aliases include `s`, `m`, `h`, `d`, `w`, `ms`, `us` and `ns`. Quote values containing spaces. Use a single duration such as `1.5h`, rather than compound values such as `1h 30m`.
+
+When a branch commit range is available, it takes precedence over `--since`.
 
 ## Tech Stack
 
