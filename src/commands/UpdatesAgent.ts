@@ -495,7 +495,7 @@ const loadConfig = Effect.fn("UpdatesAgent.loadConfig")(function* (
   file: string,
 ) {
   const fs = yield* FileSystem.FileSystem;
-  const home = yield* Config.string("HOME");
+  const home = yield* Config.String("HOME");
   const raw = yield* fs.readFileString(file).pipe(
     Effect.mapError(
       (cause) =>
@@ -798,7 +798,7 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
         operation: "config.resolve",
         message: "--config is required",
       });
-    const locked = yield* Config.boolean("SKILL_MAINTENANCE_AGENT_LOCKED").pipe(
+    const locked = yield* Config.Boolean("SKILL_MAINTENANCE_AGENT_LOCKED").pipe(
       Config.withDefault(false),
     );
     if (runId && !locked) {

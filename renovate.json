@@ -6,6 +6,15 @@
   "minimumReleaseAge": "1 day",
   "packageRules": [
     {
+      "description": "Update the Effect runtime and integrations together.",
+      "matchPackageNames": [
+        "effect",
+        "@effect/platform-node",
+        "@effect/vitest"
+      ],
+      "groupName": "effect packages"
+    },
+    {
       "description": "Group GitHub Actions.",
       "groupName": "github actions",
       "matchManagers": ["github-actions"]

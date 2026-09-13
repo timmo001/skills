@@ -17,7 +17,7 @@ import {
 import { validate } from "../commands/Validate.js";
 
 const bool = (name: string, description: string) =>
-  Flag.boolean(name).pipe(
+  Flag.Boolean(name).pipe(
     Flag.withDefault(false),
     Flag.withDescription(description),
   );
@@ -59,7 +59,7 @@ export const catalogueCommand = Command.make(
 export const importCommand = Command.make(
   "import",
   {
-    name: Argument.string("name").pipe(
+    name: Argument.String("name").pipe(
       Argument.withDescription("Imported skill name"),
     ),
     apply: bool("apply", "Apply a clean upstream snapshot"),
@@ -67,7 +67,7 @@ export const importCommand = Command.make(
       "metadata-only",
       "Materialise imports.json metadata only",
     ),
-    reviewedSha: Flag.string("reviewed-sha").pipe(
+    reviewedSha: Flag.String("reviewed-sha").pipe(
       Flag.optional,
       Flag.withDescription("Set the reviewed upstream SHA"),
     ),
@@ -86,11 +86,11 @@ export const updatesCommand = Command.make(
     check: bool("check", "Exit non-zero when imports need attention"),
     update: bool("update", "Apply clean updates and SHA-only refreshes"),
     json: bool("json", "Print the versioned machine report"),
-    skill: Flag.string("skill").pipe(
+    skill: Flag.String("skill").pipe(
       Flag.optional,
       Flag.withDescription("Limit to one skill"),
     ),
-    commit: Flag.boolean("commit").pipe(
+    commit: Flag.Boolean("commit").pipe(
       Flag.withDefault(true),
       Flag.withDescription("Commit applied updates"),
     ),
@@ -110,7 +110,7 @@ export const updatesCommand = Command.make(
 export const checkCommand = Command.make(
   "check",
   {
-    skill: Flag.string("skill").pipe(
+    skill: Flag.String("skill").pipe(
       Flag.optional,
       Flag.withDescription("Check one skill"),
     ),
@@ -128,7 +128,7 @@ export const checkCommand = Command.make(
 export const githubAgentCommand = Command.make(
   "github",
   {
-    skillsDir: Flag.path("skills-dir", { pathType: "directory" }).pipe(
+    skillsDir: Flag.Path("skills-dir", { pathType: "directory" }).pipe(
       Flag.optional,
       Flag.withDescription("Use this Skills checkout"),
     ),
@@ -142,10 +142,10 @@ export const githubAgentCommand = Command.make(
 export const deviceAgentCommand = Command.make(
   "device",
   {
-    config: Flag.path("config", { pathType: "file" }).pipe(
+    config: Flag.Path("config", { pathType: "file" }).pipe(
       Flag.withDescription("Use this YAML config"),
     ),
-    runId: Flag.string("run-id").pipe(
+    runId: Flag.String("run-id").pipe(
       Flag.optional,
       Flag.withDescription("Wait for this workflow run"),
     ),

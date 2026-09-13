@@ -125,11 +125,11 @@ export class GitHub extends Context.Service<GitHub, GitHubService>()(
     GitHub,
     Effect.gen(function* () {
       const gh = yield* Gh;
-      const token = yield* Config.option(Config.redacted("GH_TOKEN"));
+      const token = yield* Config.option(Config.Redacted("GH_TOKEN"));
       const fallbackToken = yield* Config.option(
-        Config.redacted("GITHUB_TOKEN"),
+        Config.Redacted("GITHUB_TOKEN"),
       );
-      const retries = yield* Config.int(
+      const retries = yield* Config.Int(
         "SKILL_MAINTENANCE_GITHUB_RETRIES",
       ).pipe(
         Config.withDefault(2),
