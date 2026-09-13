@@ -97,5 +97,5 @@ checksum = "sha256:cf02f5d0c06c794b84f277177d5cf3743d0924ca49f6641cd435dd7cb6ee9
 url = "https://nodejs.org/dist/v26.8.2/node-v26.8.2-win-x64.zip"
 
 [[tools."npm:skills"]]
-version = "1.5.25"
+version = "1.5.26"
 backend = "npm:skills"
