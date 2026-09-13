@@ -77,6 +77,10 @@ The shared update entrypoint runs in either environment:
 
 GitHub Actions builds this repository's executable and uses its `github` mode for scheduled checks, clean update pull requests, validation dispatches, and dashboard refreshes. A local device uses `device` mode to invoke its configured OpenCode processor. Repeated device calls are safe because the processor records the last completed workflow run.
 
+Device configuration requires `opencodePermissions`, a non-empty array of OpenCode V2 `{ action, resource, effect }` rules using `allow` or `deny`. Keep machine-specific paths and command selections in that configuration. The runner prepends default-deny, then appends the selected agent's resolved explicit denials so job allowances cannot override them. Use `~/` for home-relative read, edit and external-directory resources; shell patterns are literal command text.
+
+Each model attempt creates a fresh session through `api --standalone`, verifies its stored permissions and location, then uses `run --standalone --session <id> --auto`. This requires OpenCode 2.0.3's session permissions and `debug agents` contracts. Missing or changed permissions stop the attempt before prompting. Configured command wrappers apply to setup calls as well as the model run. Shell allowlists are not a filesystem sandbox, and MCP rules cannot restrict arguments or call counts. See the [V2 permissions reference](https://opencode.ai/v2/docs/permissions/).
+
 Effect generates Bash, Fish, and Zsh completions directly from the command specification:
 
 ```bash

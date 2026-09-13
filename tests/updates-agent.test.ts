@@ -44,6 +44,7 @@ const config: SkillUpdatesAgentConfig = {
   stateFile: "/tmp/last-run",
   opencodeCommand: "/usr/bin/opencode",
   opencodeAgent: "build",
+  opencodePermissions: [{ action: "read", resource: "*", effect: "allow" }],
   opencodeModels: [
     { providerID: "github-copilot", modelID: "gpt-test", variant: "low" },
   ],
@@ -576,6 +577,10 @@ describe("updates agent policies", () => {
           `stateFile: ${stateFile}`,
           "opencodeCommand: /usr/bin/opencode",
           "opencodeAgent: build",
+          "opencodePermissions:",
+          "  - action: read",
+          "    resource: '*'",
+          "    effect: allow",
           "opencodeModels:",
           "  - providerID: github-copilot",
           "    modelID: gpt-test",
@@ -702,6 +707,10 @@ describe("updates agent policies", () => {
           `stateFile: ${stateFile}`,
           "opencodeCommand: /usr/bin/opencode",
           "opencodeAgent: build",
+          "opencodePermissions:",
+          "  - action: read",
+          "    resource: '*'",
+          "    effect: allow",
           "opencodeModels:",
           "  - providerID: github-copilot",
           "    modelID: gpt-test",
@@ -719,14 +728,34 @@ describe("updates agent policies", () => {
 
       const executor = Layer.succeed(CommandExecutor, {
         capture: () => Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
-        run: (_command, args) =>
-          Effect.succeed(
+        run: (_command, args) => {
+          if (args.includes("agents"))
+            return Effect.succeed(
+              JSON.stringify([{ id: "build", permissions: [] }]),
+            );
+
+          if (args.includes("api"))
+            return Effect.succeed(
+              JSON.stringify({
+                data: {
+                  id: "ses_test",
+                  location: { directory: root },
+                  permissions: [
+                    { action: "*", resource: "*", effect: "deny" },
+                    ...config.opencodePermissions,
+                  ],
+                },
+              }),
+            );
+
+          return Effect.succeed(
             args.includes("--porcelain")
               ? ""
               : args.includes("--show-current")
                 ? "main\n"
                 : "origin/main\n",
-          ),
+          );
+        },
         exitCode: () => Effect.succeed(0),
         inherit: () => Effect.succeed(0),
         stream: (_command, args) => {

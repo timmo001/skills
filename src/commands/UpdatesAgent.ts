@@ -19,6 +19,10 @@ import {
 import { importSkill } from "./Import.js";
 import { CommandError, CommandExecutor } from "../services/CommandExecutor.js";
 import { GitHub } from "../services/GitHub.js";
+import {
+  createSkillUpdatesSession,
+  SkillUpdatesPermissions,
+} from "./UpdatesAgentPermissions.js";
 
 const SUCCESS_PREFIX = "STATUS: success";
 
@@ -45,6 +49,7 @@ export const SkillUpdatesAgentConfig = Schema.Struct({
   opencodeCommand: Schema.NonEmptyString,
   opencodeArgs: Schema.optionalKey(Schema.Array(Schema.String)),
   opencodeAgent: Schema.NonEmptyString,
+  opencodePermissions: SkillUpdatesPermissions,
   opencodeModels: Schema.Array(SkillUpdatesAgentModel).check(
     Schema.isMinLength(1),
     Schema.isMaxLength(5),
@@ -592,6 +597,12 @@ const loadConfig = Effect.fn("UpdatesAgent.loadConfig")(function* (
     repositories: config.repositories.map((repo) => expandHome(repo, home)),
     stateFile: expandHome(config.stateFile, home),
     opencodeCommand: expandHome(config.opencodeCommand, home),
+    opencodePermissions: config.opencodePermissions.map((rule) => ({
+      ...rule,
+      resource: ["read", "edit", "external_directory"].includes(rule.action)
+        ? expandHome(rule.resource, home)
+        : rule.resource,
+    })),
   } satisfies SkillUpdatesAgentConfig;
 });
 
@@ -837,32 +848,37 @@ const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
       const output: string[] = [];
 
       const result = yield* Effect.exit(
-        executor
-          .stream(
-            config.opencodeCommand,
-            [
-              ...(config.opencodeArgs ?? []),
-              "run",
-              "--standalone",
-              "--auto",
-              "--agent",
-              config.opencodeAgent,
-              "--model",
-              name,
-              "--title",
-              "Scheduled skill updates",
-              prompt,
-            ],
-            { cwd: config.repositories[0] },
-          )
-          .pipe(
-            Stream.runForEach((line) =>
-              Effect.gen(function* () {
-                yield* Console.log(line);
-                output.push(line);
-              }),
-            ),
-          ),
+        Effect.gen(function* () {
+          const session = yield* createSkillUpdatesSession(config);
+          yield* executor
+            .stream(
+              config.opencodeCommand,
+              [
+                ...(config.opencodeArgs ?? []),
+                "run",
+                "--standalone",
+                "--session",
+                session,
+                "--auto",
+                "--agent",
+                config.opencodeAgent,
+                "--model",
+                name,
+                "--title",
+                "Scheduled skill updates",
+                prompt,
+              ],
+              { cwd: config.repositories[0] },
+            )
+            .pipe(
+              Stream.runForEach((line) =>
+                Effect.gen(function* () {
+                  yield* Console.log(line);
+                  output.push(line);
+                }),
+              ),
+            );
+        }),
       );
 
       if (
