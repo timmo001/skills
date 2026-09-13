@@ -1,7 +1,7 @@
 [tools]
 bun = "1.4.2"
 node = "26.8.2"
-"npm:skills" = "1.5.25"
+"npm:skills" = "1.5.26"
 
 [tasks.build]
 run = "bun build src/index.ts --compile --outfile dist/skill-maintenance"
