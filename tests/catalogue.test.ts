@@ -13,6 +13,7 @@ describe("frontmatter", () => {
     const single = parseFrontmatter(
       "---\nname: demo\ndescription: One line description.\n---\n",
     );
+
     expect(single.failures).toEqual([]);
     expect(single.fields.get("description")).toBe("One line description.");
 
@@ -27,6 +28,7 @@ describe("frontmatter", () => {
         "",
       ].join("\n"),
     );
+
     expect(folded.failures).toEqual([]);
     expect(folded.fields.get("description")).toBe(
       "Create or revise a rule. Use when promoting a preference.",
@@ -38,9 +40,11 @@ it.effect("renders and drift-checks the skills catalogue", () =>
   Effect.gen(function* () {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
+
     const root = yield* fs.makeTempDirectoryScoped({
       prefix: "skill-catalogue-test-",
     });
+
     yield* fs.makeDirectory(path.join(root, "alpha"));
     yield* fs.writeFileString(
       path.join(root, "alpha", "SKILL.md"),

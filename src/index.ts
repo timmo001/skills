@@ -10,10 +10,12 @@ import { GitHub } from "./services/GitHub.js";
 const commandExecutorLayer = CommandExecutor.layer.pipe(
   Layer.provide(NodeServices.layer),
 );
+
 const githubLayer = GitHub.layer.pipe(
   Layer.provide(ghLayer()),
   Layer.provide(NodeServices.layer),
 );
+
 const applicationLayer = Layer.mergeAll(
   NodeServices.layer,
   commandExecutorLayer,
@@ -30,6 +32,7 @@ const program = Command.runWith(skillMaintenanceCommand, { version: "1.0.0" })(
       if (!CliError.isCliError(error)) {
         console.error(error instanceof Error ? error.message : String(error));
       }
+
       process.exitCode = 1;
     }),
   ),

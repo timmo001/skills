@@ -27,6 +27,7 @@ import {
 } from "../src/services/GitHub.js";
 
 const sha = (character: string) => character.repeat(40);
+
 const originUrl = "https://github.com/org/repo/tree/main/example";
 
 interface FixtureImportMetadata {
@@ -64,28 +65,34 @@ const snapshotLayer = (skillContent: string) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+
       return CommandExecutor.of({
         capture: () => Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
         run: (command, args, options) =>
           Effect.gen(function* () {
             if (command === "git" && args.includes("--format=%H"))
               return sha("b");
+
             if (command === "mise") {
               const sourceName = args[args.indexOf("--skill") + 1];
+
               if (!options?.cwd || !sourceName)
                 return yield* Effect.die("invalid skills fixture");
+
               const directory = path.join(
                 options.cwd,
                 ".agents",
                 "skills",
                 sourceName,
               );
+
               yield* fs.makeDirectory(directory, { recursive: true });
               yield* fs.writeFileString(
                 path.join(directory, "SKILL.md"),
                 skillContent,
               );
             }
+
             return "";
           }).pipe(Effect.orDie),
         exitCode: () => Effect.succeed(0),
@@ -101,15 +108,18 @@ const makeRepository = Effect.fn("Test.makeRepository")(function* (
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+
   const root = yield* fs.makeTempDirectoryScoped({
     prefix: "skill-updates-test-",
   });
+
   const importMetadata: FixtureImportMetadata = {
     origin: originUrl,
     upstreamSha: sha("a"),
     license: "MIT",
     localEdits,
   };
+
   if (localEdits.length === 0) importMetadata.distribution = "wholesale";
   yield* fs.writeFileString(
     path.join(root, "imports.json"),
@@ -125,6 +135,7 @@ const makeRepository = Effect.fn("Test.makeRepository")(function* (
     path.join(root, "example", "SKILL.md"),
     `---\nname: example\ndescription: Example\nlicense: MIT\n# origin: ${originUrl}\n# upstream-sha: ${sha("a")}${localEdits.length > 0 ? `\n# local-edits:\n${localEdits.map((edit) => `#   - ${edit}`).join("\n")}` : ""}\n---\n${body}\n`,
   );
+
   return root;
 });
 
@@ -132,9 +143,11 @@ describe("command and GitHub services", () => {
   it.effect("preserves subprocess exit code and stderr", () =>
     Effect.gen(function* () {
       const executor = yield* CommandExecutor;
+
       const failure = yield* Effect.flip(
         executor.run("sh", ["-c", "printf output; printf problem >&2; exit 7"]),
       );
+
       expect(failure).toMatchObject({
         command: "sh -c printf output; printf problem >&2; exit 7",
         exitCode: 7,
@@ -151,6 +164,7 @@ describe("command and GitHub services", () => {
     Effect.gen(function* () {
       const executor = yield* CommandExecutor;
       const lines: string[] = [];
+
       const failure = yield* Effect.flip(
         executor
           .stream("sh", ["-c", "printf 'first\\nproblem\\n'; exit 9"])
@@ -162,6 +176,7 @@ describe("command and GitHub services", () => {
             ),
           ),
       );
+
       expect(lines).toEqual(["first", "problem"]);
       expect(failure).toMatchObject({
         exitCode: 9,
@@ -209,6 +224,7 @@ describe("upstream status", () => {
   it.effect("distinguishes deleted, status, and transport failures", () =>
     Effect.gen(function* () {
       const origin = yield* parseOrigin(originUrl);
+
       const deleted = yield* Effect.flip(originExists(origin)).pipe(
         Effect.provide(
           githubLayer({
@@ -225,7 +241,9 @@ describe("upstream status", () => {
           }),
         ),
       );
+
       expect(deleted).toBeInstanceOf(DeletedOriginError);
+
       const status = yield* Effect.flip(latestPathSha(origin)).pipe(
         Effect.provide(
           githubLayer({
@@ -242,7 +260,9 @@ describe("upstream status", () => {
           }),
         ),
       );
+
       expect(status).toBeInstanceOf(UpstreamStatusError);
+
       const transport = yield* Effect.flip(latestPathSha(origin)).pipe(
         Effect.provide(
           githubLayer({
@@ -259,6 +279,7 @@ describe("upstream status", () => {
           }),
         ),
       );
+
       expect(transport).toBeInstanceOf(UpstreamTransportError);
     }),
   );
@@ -350,9 +371,11 @@ describe("versioned update reports", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+
       const root = yield* fs.makeTempDirectoryScoped({
         prefix: "skill-report-failure-test-",
       });
+
       const imported = (name: string) => ({
         origin: `https://github.com/org/repo/tree/main/${name}`,
         upstreamSha: sha("a"),
@@ -360,6 +383,7 @@ describe("versioned update reports", () => {
         localEdits: [],
         distribution: "wholesale",
       });
+
       yield* fs.writeFileString(
         path.join(root, "imports.json"),
         JSON.stringify({
@@ -370,6 +394,7 @@ describe("versioned update reports", () => {
           },
         }),
       );
+
       for (const name of ["broken", "later"]) {
         yield* fs.makeDirectory(path.join(root, name));
         yield* fs.writeFileString(
@@ -377,18 +402,22 @@ describe("versioned update reports", () => {
           `---\nname: ${name}\ndescription: Example\n---\nOld body\n`,
         );
       }
+
       const executor = Layer.effect(
         CommandExecutor,
         Effect.gen(function* () {
           const fixtureFs = yield* FileSystem.FileSystem;
           const fixturePath = yield* Path.Path;
+
           return CommandExecutor.of({
             capture: () =>
               Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
             run: (command, args, options) => {
               if (command === "git" && args.includes("--format=%H"))
                 return Effect.succeed(sha("b"));
+
               if (command !== "mise") return Effect.succeed("");
+
               if (options?.cwd?.includes("skill-import-broken-"))
                 return Effect.fail(
                   new CommandError({
@@ -399,8 +428,10 @@ describe("versioned update reports", () => {
                 );
               const sourceName = args[args.indexOf("--skill") + 1];
               const cwd = options?.cwd;
+
               if (!cwd || !sourceName)
                 return Effect.die("invalid report fixture");
+
               return Effect.gen(function* () {
                 const generated = fixturePath.join(
                   cwd,
@@ -408,11 +439,13 @@ describe("versioned update reports", () => {
                   "skills",
                   sourceName,
                 );
+
                 yield* fixtureFs.makeDirectory(generated, { recursive: true });
                 yield* fixtureFs.writeFileString(
                   fixturePath.join(generated, "SKILL.md"),
                   "---\nname: upstream\ndescription: Example\n---\nNew body\n",
                 );
+
                 return "";
               }).pipe(Effect.orDie);
             },
@@ -422,9 +455,11 @@ describe("versioned update reports", () => {
           });
         }),
       );
+
       const report = yield* buildUpdateReport(root).pipe(
         Effect.provide(executor),
       );
+
       expect(report.skills).toHaveLength(2);
       expect(report.skills[0]).toMatchObject({
         name: "broken",
@@ -449,6 +484,7 @@ describe("versioned update reports", () => {
         const root = yield* makeRepository("Old body", ["Keep local wording"]);
         const report = yield* buildUpdateReport(root);
         expect(report.skills[0]?.state).toBe("manual-review");
+
         const markdown = renderUpdateMarkdown({
           version: 1,
           skills: [
@@ -466,6 +502,7 @@ describe("versioned update reports", () => {
             },
           ],
         });
+
         expect(markdown).toContain("## Manual review\n\n- **example**");
         expect(markdown).toContain("**broken**: failed");
       }).pipe(

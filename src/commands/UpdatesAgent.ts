@@ -1,8 +1,10 @@
+import { GhChunk } from "@timmo001/effect-gh";
 import {
   Cause,
   Config,
   Console,
   Effect,
+  Exit,
   FileSystem,
   Path,
   Schema,
@@ -19,6 +21,7 @@ import { CommandError, CommandExecutor } from "../services/CommandExecutor.js";
 import { GitHub } from "../services/GitHub.js";
 
 const SUCCESS_PREFIX = "STATUS: success";
+
 const FAILURE_PREFIX = "STATUS: failure";
 
 export const SkillUpdatesAgentModel = Schema.Struct({
@@ -26,9 +29,11 @@ export const SkillUpdatesAgentModel = Schema.Struct({
   modelID: Schema.NonEmptyString,
   variant: Schema.optionalKey(Schema.NonEmptyString),
 });
+
 export interface SkillUpdatesAgentModel extends Schema.Schema.Type<
   typeof SkillUpdatesAgentModel
 > {}
+
 export const SkillUpdatesAgentConfig = Schema.Struct({
   workflowApi: Schema.NonEmptyString,
   dashboardIssue: Schema.NonEmptyString,
@@ -46,6 +51,7 @@ export const SkillUpdatesAgentConfig = Schema.Struct({
   ),
   prompt: Schema.NonEmptyString,
 });
+
 export interface SkillUpdatesAgentConfig extends Schema.Schema.Type<
   typeof SkillUpdatesAgentConfig
 > {}
@@ -55,12 +61,15 @@ const WorkflowRun = Schema.Struct({
   conclusion: Schema.NullOr(Schema.String),
   html_url: Schema.String,
 });
+
 const WorkflowRuns = Schema.Struct({
   workflow_runs: Schema.Array(WorkflowRun),
 });
+
 const PullRequestNumbers = Schema.Array(
   Schema.Struct({ number: Schema.Int.check(Schema.isGreaterThan(0)) }),
 );
+
 const PullRequestPolicy = Schema.Struct({
   title: Schema.String,
   state: Schema.String,
@@ -81,32 +90,36 @@ export interface SuccessfulWorkflowRun {
   readonly id: number;
   readonly url: string;
 }
+
 export const latestSuccessfulWorkflowRun = (
   runs: Schema.Schema.Type<typeof WorkflowRuns>,
 ): SuccessfulWorkflowRun | null => {
   const run = runs.workflow_runs.find(
     ({ conclusion }) => conclusion === "success",
   );
+
   return run ? { id: run.id, url: run.html_url } : null;
 };
+
 export const cleanSkillUpdateNames = (
   statuses: readonly Pick<
     UpdateReportItem,
     "name" | "state" | "storedSha" | "upstreamSha" | "localEdits"
   >[],
 ) =>
-  statuses
-    .filter(
-      ({ localEdits, state, storedSha, upstreamSha }) =>
-        state === "update-available" ||
-        (state === "up-to-date" &&
-          localEdits.length === 0 &&
-          upstreamSha !== null &&
-          upstreamSha !== storedSha),
-    )
-    .map(({ name }) => name);
+  statuses.flatMap(({ name, localEdits, state, storedSha, upstreamSha }) =>
+    state === "update-available" ||
+    (state === "up-to-date" &&
+      localEdits.length === 0 &&
+      upstreamSha !== null &&
+      upstreamSha !== storedSha)
+      ? [name]
+      : [],
+  );
+
 export const skillUpdatesAgentModelArgument = (model: SkillUpdatesAgentModel) =>
   `${model.providerID}/${model.modelID}${model.variant ? `#${model.variant}` : ""}`;
+
 export const skillUpdatesAgentPrompt = (
   config: SkillUpdatesAgentConfig,
   run: SuccessfulWorkflowRun,
@@ -120,9 +133,11 @@ export const skillUpdatesAgentPrompt = (
     "",
     "Return exactly one status line followed by a concise summary. Use `STATUS: success` only after all requested work and cleanup completed. Use `STATUS: failure` followed by the blocker otherwise.",
   ].join("\n");
+
 export const skillUpdatesWorkflowEndpoint = (value: string): string | null => {
   try {
     const url = new URL(value);
+
     return url.protocol === "https:" && url.hostname === "api.github.com"
       ? `${url.pathname.replace(/^\//, "")}${url.search}`
       : null;
@@ -130,6 +145,7 @@ export const skillUpdatesWorkflowEndpoint = (value: string): string | null => {
     return null;
   }
 };
+
 export const skillUpdatesAgentResultStatus = (
   output: string,
 ): "success" | "failure" | null => {
@@ -137,6 +153,7 @@ export const skillUpdatesAgentResultStatus = (
     .split("\n")
     .map((line) => line.trim())
     .filter((line) => line === SUCCESS_PREFIX || line === FAILURE_PREFIX);
+
   return statuses.length === 1
     ? statuses[0] === SUCCESS_PREFIX
       ? "success"
@@ -148,8 +165,10 @@ export function isShaOnlySkillPatch(patch: string, skill: string): boolean {
   const changes = new Map<string, { removed: string[]; added: string[] }>();
   let currentFile: string | undefined;
   let inHunk = false;
+
   for (const line of patch.split("\n")) {
     const file = line.match(/^diff --git a\/(.+) b\/(.+)$/);
+
     if (file) {
       if (file[1] !== file[2] || !file[1] || changes.has(file[1])) return false;
       currentFile = file[1];
@@ -157,14 +176,17 @@ export function isShaOnlySkillPatch(patch: string, skill: string): boolean {
       inHunk = false;
       continue;
     }
+
     if (!currentFile) {
       if (line) return false;
       continue;
     }
+
     if (line.startsWith("@@")) {
       inHunk = true;
       continue;
     }
+
     if (!inHunk) {
       if (
         line.startsWith("index ") ||
@@ -173,17 +195,24 @@ export function isShaOnlySkillPatch(patch: string, skill: string): boolean {
         !line
       )
         continue;
+
       return false;
     }
+
     const change = changes.get(currentFile);
+
     if (!change) return false;
+
     if (line.startsWith("-")) change.removed.push(line.slice(1));
     else if (line.startsWith("+")) change.added.push(line.slice(1));
   }
+
   const metadata = changes.get("imports.json");
+
   const frontmatter =
     changes.get(`${skill}/SKILL.md`) ??
     changes.get(`upstream/${skill}/UPSTREAM_SKILL.md`);
+
   if (
     changes.size !== 2 ||
     !metadata ||
@@ -199,12 +228,15 @@ export function isShaOnlySkillPatch(patch: string, skill: string): boolean {
   const newMetadata = metadata.added[0] ?? "";
   const oldSha = oldMetadata.match(pattern)?.[1];
   const newSha = newMetadata.match(pattern)?.[1];
+
   const oldFrontmatter = frontmatter.removed[0]?.match(
     /^# upstream-sha: ([0-9a-f]{40})$/,
   )?.[1];
+
   const newFrontmatter = frontmatter.added[0]?.match(
     /^# upstream-sha: ([0-9a-f]{40})$/,
   )?.[1];
+
   return (
     oldMetadata.includes(`"${skill}":`) &&
     newMetadata.includes(`"${skill}":`) &&
@@ -217,15 +249,19 @@ export function isShaOnlySkillPatch(patch: string, skill: string): boolean {
     newFrontmatter === newSha
   );
 }
+
 export function isScopedSkillPatch(patch: string, skill: string): boolean {
   const files = patch.split("\n").flatMap((line) => {
     const match = line.match(/^diff --git a\/(.+) b\/(.+)$/);
+
     return match?.[1] && match[2] ? [[match[1], match[2]] as const] : [];
   });
+
   const allowed = (file: string) =>
     file === "imports.json" ||
     file.startsWith(`${skill}/`) ||
     file.startsWith(`upstream/${skill}/`);
+
   return (
     files.length >= 2 &&
     files.some(([from, to]) => from === "imports.json" && to === from) &&
@@ -238,6 +274,7 @@ export function isScopedSkillPatch(patch: string, skill: string): boolean {
     files.every(([from, to]) => from === to && allowed(from))
   );
 }
+
 export const skillUpdateSubject = (patch: string, skill: string) =>
   isShaOnlySkillPatch(patch, skill)
     ? `[SHA-only] Update ${skill}`
@@ -247,6 +284,7 @@ export const applySkillUpdateAutoMergePolicy = Effect.fn(
   "UpdatesAgent.applyAutoMergePolicy",
 )(function* (url: string, shaOnly: boolean, existing: boolean) {
   const github = yield* GitHub;
+
   if (shaOnly) {
     yield* github.run([
       "pr",
@@ -283,6 +321,7 @@ const decodeJson = <S extends Schema.Top>(
           message: String(cause),
         }),
     });
+
     return yield* Schema.decodeUnknownEffect(schema)(value).pipe(
       Effect.mapError(
         (cause) =>
@@ -293,6 +332,7 @@ const decodeJson = <S extends Schema.Top>(
       ),
     );
   });
+
 const runOrFail = Effect.fn("UpdatesAgent.runOrFail")(function* (
   command: string,
   args: readonly string[],
@@ -300,6 +340,7 @@ const runOrFail = Effect.fn("UpdatesAgent.runOrFail")(function* (
 ) {
   const executor = yield* CommandExecutor;
   const code = yield* executor.inherit(command, args, { cwd });
+
   if (code !== 0)
     return yield* new SkillUpdatesAgentError({
       operation: `${command} ${args.join(" ")}`,
@@ -330,16 +371,19 @@ const publishCleanUpdate = Effect.fn("UpdatesAgent.publishCleanUpdate")(
     yield* validateRepository(root);
     yield* runOrFail("git", ["add", "--", "imports.json"], root);
     const snapshotPaths: string[] = [];
+
     for (const candidate of [name, path.join("upstream", name)])
       if (yield* fs.exists(path.join(root, candidate))) {
         yield* runOrFail("git", ["add", "-A", "--", candidate], root);
         snapshotPaths.push(candidate);
       }
+
     const patch = yield* executor.run(
       "git",
       ["diff", "--cached", "--no-ext-diff"],
       { cwd: root },
     );
+
     if (!isScopedSkillPatch(patch, name))
       return yield* new SkillUpdatesAgentError({
         operation: "patch.scope",
@@ -356,6 +400,7 @@ const publishCleanUpdate = Effect.fn("UpdatesAgent.publishCleanUpdate")(
       ["push", "--force-with-lease", "origin", branch],
       root,
     );
+
     let url = (yield* github.run(
       [
         "pr",
@@ -373,7 +418,9 @@ const publishCleanUpdate = Effect.fn("UpdatesAgent.publishCleanUpdate")(
       ],
       { readOnly: true },
     )).trim();
+
     const existing = url.length > 0;
+
     if (existing)
       yield* github.run([
         "pr",
@@ -427,6 +474,7 @@ const refreshDashboard = Effect.fn("UpdatesAgent.refreshDashboard")(function* (
   const report = yield* buildUpdateReport(root);
   const markdown = renderUpdateMarkdown(report);
   const marker = "<!-- adapted-skill-updates -->";
+
   const number = (yield* github.run(
     [
       "issue",
@@ -444,6 +492,7 @@ const refreshDashboard = Effect.fn("UpdatesAgent.refreshDashboard")(function* (
     ],
     { readOnly: true },
   )).trim();
+
   yield* github.run([
     "issue",
     number ? "edit" : "create",
@@ -469,20 +518,27 @@ export const runGitHubSkillUpdates = Effect.fn("UpdatesAgent.runGitHub")(
       ["config", "user.email", "skill-updates[bot]@users.noreply.github.com"],
       root,
     );
+
     const work = Effect.gen(function* () {
       const report = yield* buildUpdateReport(root);
+
       for (const name of cleanSkillUpdateNames(report.skills))
         yield* publishCleanUpdate(root, name);
     });
+
     const result = yield* Effect.exit(work);
+
     const restore = yield* Effect.exit(
       runOrFail("git", ["checkout", "--detach", "origin/main"], root),
     );
+
     const dashboard = yield* Effect.exit(refreshDashboard(root));
-    if (result._tag === "Failure") return yield* Effect.failCause(result.cause);
-    if (restore._tag === "Failure")
-      return yield* Effect.failCause(restore.cause);
-    if (dashboard._tag === "Failure")
+
+    if (Exit.isFailure(result)) return yield* Effect.failCause(result.cause);
+
+    if (Exit.isFailure(restore)) return yield* Effect.failCause(restore.cause);
+
+    if (Exit.isFailure(dashboard))
       return yield* Effect.failCause(dashboard.cause);
   },
 );
@@ -493,11 +549,13 @@ const expandHome = (value: string, home: string) =>
     : value.startsWith("~/")
       ? `${home}/${value.slice(2)}`
       : value;
+
 const loadConfig = Effect.fn("UpdatesAgent.loadConfig")(function* (
   file: string,
 ) {
   const fs = yield* FileSystem.FileSystem;
   const home = yield* Config.String("HOME");
+
   const raw = yield* fs.readFileString(file).pipe(
     Effect.mapError(
       (cause) =>
@@ -507,6 +565,7 @@ const loadConfig = Effect.fn("UpdatesAgent.loadConfig")(function* (
         }),
     ),
   );
+
   const value = yield* Effect.try({
     try: () => Yaml.parse(raw),
     catch: (cause) =>
@@ -515,6 +574,7 @@ const loadConfig = Effect.fn("UpdatesAgent.loadConfig")(function* (
         message: String(cause),
       }),
   });
+
   const config = yield* Schema.decodeUnknownEffect(SkillUpdatesAgentConfig)(
     value,
   ).pipe(
@@ -526,6 +586,7 @@ const loadConfig = Effect.fn("UpdatesAgent.loadConfig")(function* (
         }),
     ),
   );
+
   return {
     ...config,
     repositories: config.repositories.map((repo) => expandHome(repo, home)),
@@ -533,36 +594,45 @@ const loadConfig = Effect.fn("UpdatesAgent.loadConfig")(function* (
     opencodeCommand: expandHome(config.opencodeCommand, home),
   } satisfies SkillUpdatesAgentConfig;
 });
+
 const fetchRun = Effect.fn("UpdatesAgent.fetchRun")(function* (
   config: SkillUpdatesAgentConfig,
   runId?: string,
 ) {
   const github = yield* GitHub;
+
   if (runId && !/^\d+$/.test(runId))
     return yield* new SkillUpdatesAgentError({
       operation: "workflow.run-id",
       message: `Invalid workflow run id: ${runId}`,
     });
+
   const endpoint = runId
     ? `repos/timmo001/skills/actions/runs/${runId}`
     : skillUpdatesWorkflowEndpoint(config.workflowApi);
+
   if (!endpoint)
     return yield* new SkillUpdatesAgentError({
       operation: "workflow.url",
       message: "workflowApi must be an https://api.github.com URL",
     });
   const raw = yield* github.api(endpoint);
+
   if (runId) {
     const run = yield* decodeJson("workflow", WorkflowRun, raw);
+
     if (run.conclusion !== "success")
       return yield* new SkillUpdatesAgentError({
         operation: "workflow.select",
         message: `Workflow run ${run.id} concluded ${run.conclusion ?? "without a result"}`,
       });
+
     return { id: run.id, url: run.html_url };
   }
+
   const runs = yield* decodeJson("workflow", WorkflowRuns, raw);
   const run = latestSuccessfulWorkflowRun(runs);
+
   return (
     run ??
     (yield* new SkillUpdatesAgentError({
@@ -571,10 +641,12 @@ const fetchRun = Effect.fn("UpdatesAgent.fetchRun")(function* (
     }))
   );
 });
+
 interface RepositoryState {
   readonly path: string;
   readonly branch: string;
 }
+
 const requireCleanRepositories = Effect.fn(
   "UpdatesAgent.requireCleanRepositories",
 )(function* (repositories: readonly string[]) {
@@ -582,12 +654,14 @@ const requireCleanRepositories = Effect.fn(
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const states: RepositoryState[] = [];
+
   for (const repository of repositories) {
     if (!(yield* fs.exists(path.join(repository, ".git"))))
       return yield* new SkillUpdatesAgentError({
         operation: "repository.check",
         message: `Required repository is unavailable: ${repository}`,
       });
+
     if (
       (yield* executor.run("git", ["status", "--porcelain"], {
         cwd: repository,
@@ -597,9 +671,11 @@ const requireCleanRepositories = Effect.fn(
         operation: "repository.check",
         message: `Refusing to run with uncommitted changes in ${repository}`,
       });
+
     const branch = (yield* executor.run("git", ["branch", "--show-current"], {
       cwd: repository,
     })).trim();
+
     const expected = (yield* executor.run(
       "git",
       ["symbolic-ref", "--short", "refs/remotes/origin/HEAD"],
@@ -607,6 +683,7 @@ const requireCleanRepositories = Effect.fn(
     ))
       .trim()
       .replace(/^origin\//, "");
+
     if (!branch || branch !== expected)
       return yield* new SkillUpdatesAgentError({
         operation: "repository.branch",
@@ -614,16 +691,20 @@ const requireCleanRepositories = Effect.fn(
       });
     states.push({ path: repository, branch });
   }
+
   return states;
 });
+
 export const requireRepositoryState = Effect.fn(
   "UpdatesAgent.requireRepositoryState",
 )(function* (expected: readonly RepositoryState[]) {
   const current = yield* requireCleanRepositories(
     expected.map(({ path }) => path),
   );
+
   for (const [index, state] of current.entries()) {
     const wanted = expected[index];
+
     if (wanted && state.branch !== wanted.branch)
       return yield* new SkillUpdatesAgentError({
         operation: "repository.restore",
@@ -631,10 +712,12 @@ export const requireRepositoryState = Effect.fn(
       });
   }
 });
+
 const latestPullRequestNumber = Effect.fn(
   "UpdatesAgent.latestPullRequestNumber",
 )(function* () {
   const github = yield* GitHub;
+
   const pulls = yield* decodeJson(
     "pull-requests",
     PullRequestNumbers,
@@ -654,12 +737,15 @@ const latestPullRequestNumber = Effect.fn(
       { readOnly: true },
     ),
   );
+
   return pulls[0]?.number ?? 0;
 });
+
 export const validatePullRequestPolicy = Effect.fn(
   "UpdatesAgent.validatePullRequestPolicy",
 )(function* (after: number) {
   const github = yield* GitHub;
+
   const pulls = yield* decodeJson(
     "pull-requests",
     PullRequestNumbers,
@@ -679,6 +765,7 @@ export const validatePullRequestPolicy = Effect.fn(
       { readOnly: true },
     ),
   );
+
   for (const { number } of pulls.filter(({ number }) => number > after)) {
     const details = yield* decodeJson(
       "pull-request",
@@ -696,23 +783,28 @@ export const validatePullRequestPolicy = Effect.fn(
         { readOnly: true },
       ),
     );
+
     const patch = yield* github.run(
       ["pr", "diff", String(number), "--repo", "timmo001/skills"],
       { readOnly: true },
     );
+
     const shaTitle = details.title.match(/^\[SHA-only\] Update ([a-z0-9-]+)$/);
     const contentTitle = details.title.match(/^Update skill: ([a-z0-9-]+)$/);
     const skill = shaTitle?.[1] ?? contentTitle?.[1];
+
     const commitsValid =
       !!skill &&
       details.commits.length === 1 &&
       details.commits[0]?.messageHeadline === details.title;
+
     const shaValid =
       !!shaTitle &&
       details.assignees.some(({ login }) => login === "timmo001") &&
       details.autoMergeRequest?.mergeMethod === "SQUASH" &&
       !!skill &&
       isShaOnlySkillPatch(patch, skill);
+
     const contentValid =
       !!contentTitle &&
       details.state === "OPEN" &&
@@ -721,6 +813,7 @@ export const validatePullRequestPolicy = Effect.fn(
       !!skill &&
       !isShaOnlySkillPatch(patch, skill) &&
       isScopedSkillPatch(patch, skill);
+
     if (!commitsValid || (!shaValid && !contentValid))
       return yield* new SkillUpdatesAgentError({
         operation: "pull-request.policy",
@@ -728,6 +821,7 @@ export const validatePullRequestPolicy = Effect.fn(
       });
   }
 });
+
 const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
   function* (
     config: SkillUpdatesAgentConfig,
@@ -737,9 +831,11 @@ const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
   ) {
     const executor = yield* CommandExecutor;
     let last = "No model was attempted";
+
     for (const [index, model] of config.opencodeModels.entries()) {
       const name = skillUpdatesAgentModelArgument(model);
       const output: string[] = [];
+
       const result = yield* Effect.exit(
         executor
           .stream(
@@ -768,17 +864,19 @@ const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
             ),
           ),
       );
+
       if (
-        result._tag === "Success" &&
+        Exit.isSuccess(result) &&
         skillUpdatesAgentResultStatus(output.join("\n")) === "success"
       )
         return;
-      last =
-        result._tag === "Failure"
-          ? `Model ${name} failed: ${String(Cause.squash(result.cause))}`
-          : `Model ${name} returned no valid success status line`;
+      last = Exit.isFailure(result)
+        ? `Model ${name} failed: ${String(Cause.squash(result.cause))}`
+        : `Model ${name} returned no valid success status line`;
+
       if (index < config.opencodeModels.length - 1) {
         yield* requireRepositoryState(states);
+
         if ((yield* latestPullRequestNumber()) > initialPr)
           return yield* new SkillUpdatesAgentError({
             operation: "opencode.partial",
@@ -786,6 +884,7 @@ const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
           });
       }
     }
+
     return yield* new SkillUpdatesAgentError({
       operation: "opencode.models",
       message: last,
@@ -800,9 +899,11 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
         operation: "config.resolve",
         message: "--config is required",
       });
+
     const locked = yield* Config.Boolean("SKILL_MAINTENANCE_AGENT_LOCKED").pipe(
       Config.withDefault(false),
     );
+
     if (runId && !locked) {
       const github = yield* GitHub;
       yield* github
@@ -835,8 +936,10 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
           ),
           Stream.runForEach((chunk) =>
             Effect.callback<void, SkillUpdatesAgentError>((resume) => {
-              const output =
-                chunk._tag === "Stdout" ? process.stdout : process.stderr;
+              const output = GhChunk.guards.Stdout(chunk)
+                ? process.stdout
+                : process.stderr;
+
               output.write(chunk.text, (error) =>
                 resume(
                   error
@@ -853,22 +956,26 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
           ),
         );
     }
+
     const config = yield* loadConfig(configPath);
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const executor = yield* CommandExecutor;
     const primaryRepository = config.repositories[0];
+
     if (!primaryRepository)
       return yield* new SkillUpdatesAgentError({
         operation: "config.decode",
         message: "At least one repository is required",
       });
+
     if (!locked) {
       yield* fs.makeDirectory(path.dirname(config.stateFile), {
         recursive: true,
       });
       const lockFile = `${config.stateFile}.lock`;
       yield* migrateLegacyLock(lockFile);
+
       const code = yield* executor.inherit("flock", [
         "--nonblock",
         "--conflict-exit-code",
@@ -883,6 +990,7 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
         configPath,
         ...(runId ? ["--run-id", runId] : []),
       ]);
+
       if (code !== 0)
         return yield* new SkillUpdatesAgentError({
           operation: code === 75 ? "run.lock" : "run.child",
@@ -891,16 +999,21 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
               ? "Another skill updates agent run is active"
               : `Locked skill updates agent exited with code ${code}`,
         });
+
       return;
     }
+
     const run = yield* fetchRun(config, runId);
+
     if (
       (yield* fs.exists(config.stateFile)) &&
       (yield* fs.readFileString(config.stateFile)).trim() === String(run.id)
     ) {
       yield* Console.log(`Workflow run ${run.id} has already been processed`);
+
       return;
     }
+
     const states = yield* requireCleanRepositories(config.repositories);
     const initialPr = yield* latestPullRequestNumber();
     yield* processWithFallback(
@@ -926,6 +1039,7 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
 export const migrateLegacyLock = Effect.fn("UpdatesAgent.migrateLegacyLock")(
   function* (lockFile: string) {
     const fs = yield* FileSystem.FileSystem;
+
     if (
       (yield* fs.exists(lockFile)) &&
       (yield* fs.stat(lockFile)).type === "Directory"

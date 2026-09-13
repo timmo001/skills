@@ -27,11 +27,14 @@ export const importSkill = Effect.fn("ImportSkill.run")(function* (
   },
 ) {
   let metadata = yield* getImport(root, name);
+
   if (options.reviewedSha) {
     yield* writeReviewedSha(root, name, options.reviewedSha);
     metadata = yield* getImport(root, name);
   }
+
   const path = yield* Path.Path;
+
   if (options.metadataOnly) {
     return yield* materialiseMetadata(
       trackedSkillPath(root, name, metadata, path),
@@ -39,9 +42,11 @@ export const importSkill = Effect.fn("ImportSkill.run")(function* (
       metadata,
     );
   }
+
   return yield* withFetched(root, name, metadata, (candidate, sha) =>
     Effect.gen(function* () {
       const target = path.dirname(trackedSkillPath(root, name, metadata, path));
+
       if (
         metadata.localEdits.length > 0 &&
         (yield* directoriesMatch(target, candidate))
@@ -49,13 +54,16 @@ export const importSkill = Effect.fn("ImportSkill.run")(function* (
         yield* Console.error(
           `${name}: adapted import exactly matches its source; reimport with: mise exec npm:skills -- skills add '${metadata.origin}' --global`,
         );
+
         return yield* new ImportError({
           message: `${name}: adapted import exactly matches its source`,
         });
       }
+
       if (options.apply) {
         return yield* applyClean(root, name, metadata, candidate, sha);
       }
+
       yield* Console.log(yield* comparison(root, name, metadata, candidate));
     }),
   );

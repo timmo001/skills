@@ -1,14 +1,11 @@
-import {
-  Gh,
-  type GhChunk,
-  type GhError,
-  type GhOptions,
-} from "@timmo001/effect-gh";
+import { Gh, GhChunk, type GhError, type GhOptions } from "@timmo001/effect-gh";
 import {
   Config,
   Context,
   Effect,
   Layer,
+  Match,
+  Option,
   Redacted,
   Schedule,
   Schema,
@@ -61,11 +58,13 @@ export interface GitHubService {
 
 const statusFromStderr = (stderr: string) => {
   const match = stderr.match(/(?:HTTP|status(?: code)?)\s*(\d{3})/i);
+
   return match?.[1] ? Number(match[1]) : null;
 };
 
 const isRetryable = (stderr: string) => {
   const lower = stderr.toLowerCase();
+
   return [
     "rate limit",
     "secondary rate",
@@ -83,25 +82,40 @@ const isRetryable = (stderr: string) => {
 };
 
 const fromGhError = (command: string, error: GhError, stderr?: string) => {
-  const detail =
-    error._tag === "GhCommandError"
-      ? (stderr ?? error.stderr).trim()
-      : error._tag === "GhTimeoutError"
-        ? `Command timed out after ${error.timeoutMs}ms`
-        : String(error.cause);
+  const details = Match.value(error).pipe(
+    Match.tags({
+      GhCommandError: (error) => {
+        const detail = (stderr ?? error.stderr).trim();
+
+        return {
+          exitCode: error.exitCode,
+          stderr: detail,
+          retryable: isRetryable(detail),
+        };
+      },
+      GhTimeoutError: (error) => ({
+        exitCode: -1,
+        stderr: `Command timed out after ${error.timeoutMs}ms`,
+        retryable: true,
+      }),
+      GhDecodeError: (error) => ({
+        exitCode: 0,
+        stderr: String(error.cause),
+        retryable: false,
+      }),
+      GhPlatformError: (error) => {
+        const detail = String(error.cause);
+
+        return { exitCode: -1, stderr: detail, retryable: isRetryable(detail) };
+      },
+    }),
+    Match.exhaustive,
+  );
+
   return new GitHubError({
     command,
-    exitCode:
-      error._tag === "GhCommandError"
-        ? error.exitCode
-        : error._tag === "GhDecodeError"
-          ? 0
-          : -1,
-    stderr: detail,
-    status: statusFromStderr(detail),
-    retryable:
-      error._tag === "GhTimeoutError" ||
-      (error._tag !== "GhDecodeError" && isRetryable(detail)),
+    ...details,
+    status: statusFromStderr(details.stderr),
   });
 };
 
@@ -126,22 +140,24 @@ export class GitHub extends Context.Service<GitHub, GitHubService>()(
     Effect.gen(function* () {
       const gh = yield* Gh;
       const token = yield* Config.option(Config.Redacted("GH_TOKEN"));
+
       const fallbackToken = yield* Config.option(
         Config.Redacted("GITHUB_TOKEN"),
       );
+
       const retries = yield* Config.Int(
         "SKILL_MAINTENANCE_GITHUB_RETRIES",
       ).pipe(
         Config.withDefault(2),
         Config.map((value) => Math.max(0, value)),
       );
-      const env = token.pipe((value) =>
-        value._tag === "Some"
-          ? { GH_TOKEN: Redacted.value(value.value) }
-          : fallbackToken._tag === "Some"
-            ? { GH_TOKEN: Redacted.value(fallbackToken.value) }
-            : undefined,
+
+      const env = token.pipe(
+        Option.orElse(() => fallbackToken),
+        Option.map((value) => ({ GH_TOKEN: Redacted.value(value) })),
+        Option.getOrUndefined,
       );
+
       const stream: GitHubService["stream"] = (args, options) =>
         gh
           .stream(args, { ...options, ...(env && { env }) })
@@ -150,20 +166,22 @@ export class GitHub extends Context.Service<GitHub, GitHubService>()(
               fromGhError(`gh ${args.join(" ")}`, error),
             ),
           );
+
       const run = Effect.fn("GitHub.run")(
         function* (args: readonly string[], _options?: GitHubRunOptions) {
           // Keep full stderr for status and retry classification, beyond the SDK error tail.
           let stderr = "";
+
           return yield* gh.stream(args, env ? { env } : {}).pipe(
             Stream.tap((chunk) =>
               Effect.sync(() => {
-                if (chunk._tag === "Stderr") stderr += chunk.text;
+                if (GhChunk.guards.Stderr(chunk)) stderr += chunk.text;
               }),
             ),
             Stream.runFold(
               () => "",
               (output, chunk) =>
-                chunk._tag === "Stdout" ? output + chunk.text : output,
+                GhChunk.guards.Stdout(chunk) ? output + chunk.text : output,
             ),
             Effect.mapError((error) =>
               fromGhError(`gh ${args.join(" ")}`, error, stderr),
@@ -179,6 +197,7 @@ export class GitHub extends Context.Service<GitHub, GitHubService>()(
             }),
           ),
       );
+
       const json = Effect.fn("GitHub.json")(function* (
         args: readonly string[],
         options?: GitHubRunOptions,
@@ -188,6 +207,7 @@ export class GitHub extends Context.Service<GitHub, GitHubService>()(
           yield* run(args, options),
         );
       });
+
       const api = Effect.fn("GitHub.api")(function* (
         endpoint: string,
         options?: GitHubApiOptions,
@@ -203,6 +223,7 @@ export class GitHub extends Context.Service<GitHub, GitHubService>()(
           { readOnly: true },
         )).trim();
       });
+
       const apiJson = Effect.fn("GitHub.apiJson")(function* (
         endpoint: string,
         options?: GitHubApiOptions,
@@ -212,6 +233,7 @@ export class GitHub extends Context.Service<GitHub, GitHubService>()(
           yield* api(endpoint, options),
         );
       });
+
       const isAvailable = Effect.fn("GitHub.isAvailable")(function* () {
         return yield* gh.execute(["--version"]).pipe(
           Effect.as(true),
@@ -219,6 +241,7 @@ export class GitHub extends Context.Service<GitHub, GitHubService>()(
           Effect.mapError((error) => fromGhError("gh --version", error)),
         );
       });
+
       return GitHub.of({ run, stream, json, api, apiJson, isAvailable });
     }),
   );
