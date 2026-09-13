@@ -69,6 +69,7 @@ export class CommandExecutor extends Context.Service<
     CommandExecutor,
     Effect.gen(function* () {
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+
       const make = (
         command: string,
         args: readonly string[],
@@ -79,15 +80,18 @@ export class CommandExecutor extends Context.Service<
           env: options?.env,
           extendEnv: true,
         });
+
       const capture = Effect.fn("CommandExecutor.capture")(function* (
         command: string,
         args: readonly string[],
         options?: CommandOptions,
       ) {
         const label = `${command} ${args.join(" ")}`;
+
         return yield* Effect.scoped(
           Effect.gen(function* () {
             const handle = yield* spawner.spawn(make(command, args, options));
+
             const [stdout, stderr, exitCode] = yield* Effect.all(
               [
                 collectText(handle.stdout),
@@ -96,6 +100,7 @@ export class CommandExecutor extends Context.Service<
               ],
               { concurrency: "unbounded" },
             );
+
             return {
               stdout,
               stderr: stderr.trim(),
@@ -108,12 +113,14 @@ export class CommandExecutor extends Context.Service<
           ),
         );
       });
+
       const run = Effect.fn("CommandExecutor.run")(function* (
         command: string,
         args: readonly string[],
         options?: CommandOptions,
       ) {
         const result = yield* capture(command, args, options);
+
         if (result.exitCode !== 0) {
           return yield* new CommandError({
             command: `${command} ${args.join(" ")}`,
@@ -121,8 +128,10 @@ export class CommandExecutor extends Context.Service<
             stderr: result.stderr,
           });
         }
+
         return result.stdout;
       });
+
       const exitCode = Effect.fn("CommandExecutor.exitCode")(function* (
         command: string,
         args: readonly string[],
@@ -135,8 +144,10 @@ export class CommandExecutor extends Context.Service<
               error(`${command} ${args.join(" ")}`, cause),
             ),
           );
+
         return Number(code);
       });
+
       const inherit = Effect.fn("CommandExecutor.inherit")(function* (
         command: string,
         args: readonly string[],
@@ -158,18 +169,22 @@ export class CommandExecutor extends Context.Service<
               error(`${command} ${args.join(" ")}`, cause),
             ),
           );
+
         return Number(code);
       });
+
       const stream = (
         command: string,
         args: readonly string[],
         options?: CommandOptions,
       ) => {
         const label = `${command} ${args.join(" ")}`;
+
         return spawner.spawn(make(command, args, options)).pipe(
           Effect.mapError((cause) => error(label, cause)),
           Effect.map((handle) => {
             const output: string[] = [];
+
             const lines = handle.all.pipe(
               Stream.decodeText(),
               Stream.splitLines,
@@ -180,6 +195,7 @@ export class CommandExecutor extends Context.Service<
               ),
               Stream.mapError((cause) => error(label, cause)),
             );
+
             const completed = Stream.fromEffect(handle.exitCode).pipe(
               Stream.flatMap((exitCode) =>
                 Number(exitCode) === 0
@@ -196,11 +212,13 @@ export class CommandExecutor extends Context.Service<
                 cause instanceof CommandError ? cause : error(label, cause),
               ),
             );
+
             return lines.pipe(Stream.concat(completed));
           }),
           Stream.unwrap,
         );
       };
+
       return CommandExecutor.of({ capture, run, exitCode, inherit, stream });
     }),
   );

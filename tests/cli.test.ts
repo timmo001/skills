@@ -31,11 +31,13 @@ describe("CLI specification", () => {
       () =>
         Effect.gen(function* () {
           const executor = yield* CommandExecutor;
+
           const output = yield* executor.run(
             "./dist/skill-maintenance",
             ["--completions", shell],
             { cwd: process.cwd() },
           );
+
           expect(output).toContain("updates-agent");
           expect(output).toContain("github");
           expect(output).toContain("device");
@@ -52,11 +54,13 @@ describe("CLI specification", () => {
   it.effect("reports domain failures without compiled stack traces", () =>
     Effect.gen(function* () {
       const executor = yield* CommandExecutor;
+
       const result = yield* executor.capture(
         "./dist/skill-maintenance",
         ["check", "--skill", "definitely-not-a-skill"],
         { cwd: process.cwd() },
       );
+
       expect(result.exitCode).toBe(1);
       expect(result.stderr).toContain(
         "Imported skill not found: definitely-not-a-skill",
@@ -69,11 +73,13 @@ describe("CLI specification", () => {
   it.effect("requires the device config during CLI parsing", () =>
     Effect.gen(function* () {
       const executor = yield* CommandExecutor;
+
       const result = yield* executor.capture(
         "./dist/skill-maintenance",
         ["updates-agent", "device"],
         { cwd: process.cwd() },
       );
+
       expect(result.exitCode).toBe(1);
       expect(`${result.stdout}\n${result.stderr}`).toContain(
         "Missing required flag: --config",

@@ -1,6 +1,6 @@
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
-import { Effect, FileSystem, Layer, Path, Stream } from "effect";
+import { Effect, Exit, FileSystem, Layer, Path, Stream } from "effect";
 import { importSkill } from "../src/commands/Import.js";
 import {
   check,
@@ -38,28 +38,34 @@ const snapshotExecutorLayer = (content: string, originExists = true) =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+
       return CommandExecutor.of({
         capture: () => Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
         run: (command, args, options) =>
           Effect.gen(function* () {
             if (command === "git" && args.includes("--format=%H"))
               return "b".repeat(40);
+
             if (command === "mise") {
               const sourceName = args[args.indexOf("--skill") + 1];
+
               if (!options?.cwd || !sourceName)
                 return yield* Effect.die("invalid skills add fixture");
+
               const generated = path.join(
                 options.cwd,
                 ".agents",
                 "skills",
                 sourceName,
               );
+
               yield* fs.makeDirectory(generated, { recursive: true });
               yield* fs.writeFileString(
                 path.join(generated, "SKILL.md"),
                 content,
               );
             }
+
             return "";
           }).pipe(Effect.orDie),
         exitCode: () => Effect.succeed(originExists ? 0 : 1),
@@ -79,7 +85,9 @@ const importedMetadata = (
     license: metadata.license,
     localEdits,
   };
+
   if (distribution) example.distribution = distribution;
+
   return JSON.stringify({
     version: 1,
     imports: { example },
@@ -91,9 +99,11 @@ describe("import snapshots", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+
       const root = yield* fs.makeTempDirectoryScoped({
         prefix: "skill-import-test-",
       });
+
       const file = path.join(root, "SKILL.md");
       yield* fs.writeFileString(
         file,
@@ -112,11 +122,14 @@ describe("import snapshots", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+
       const root = yield* fs.makeTempDirectoryScoped({
         prefix: "skill-compare-test-",
       });
+
       const local = path.join(root, "local");
       const upstream = path.join(root, "upstream");
+
       for (const dir of [local, upstream]) {
         yield* fs.makeDirectory(path.join(dir, "references"), {
           recursive: true,
@@ -126,6 +139,7 @@ describe("import snapshots", () => {
           "same\n",
         );
       }
+
       yield* fs.writeFileString(
         path.join(local, "SKILL.md"),
         `---\nname: example\ndescription: Example\n# origin: old\n# upstream-sha: ${"a".repeat(40)}\n# local-edits:\n#   - adapted\n---\nBody\n#   - retained body comment\n`,
@@ -154,9 +168,11 @@ describe("import snapshots", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+
       const root = yield* fs.makeTempDirectoryScoped({
         prefix: "skill-apply-test-",
       });
+
       const snapshot = path.join(root, "snapshot");
       yield* fs.makeDirectory(path.join(snapshot, "references"), {
         recursive: true,
@@ -187,10 +203,12 @@ describe("import snapshots", () => {
           path.join(root, "example", "references", "added.md"),
         ),
       ).toBe("added\n");
+
       const official = {
         ...metadata,
         distribution: "official-source" as const,
       };
+
       yield* applyClean(root, "example", official, snapshot, "a".repeat(40));
       expect(
         yield* fs.exists(
@@ -219,6 +237,7 @@ describe("import snapshots", () => {
           "a".repeat(40),
         ),
       );
+
       expect(exit._tag).toBe("Failure");
     }).pipe(Effect.provide(NodeServices.layer)),
   );
@@ -227,9 +246,11 @@ describe("import snapshots", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+
       const root = yield* fs.makeTempDirectoryScoped({
         prefix: "skill-sha-test-",
       });
+
       const before = [
         "{",
         '  "version": 1,',
@@ -240,6 +261,7 @@ describe("import snapshots", () => {
         "}",
         "",
       ].join("\n");
+
       yield* fs.writeFileString(path.join(root, "imports.json"), before);
       yield* writeReviewedSha(root, "example", "b".repeat(40));
       expect(yield* fs.readFileString(path.join(root, "imports.json"))).toBe(
@@ -254,9 +276,11 @@ describe("import snapshots", () => {
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
+
         const root = yield* fs.makeTempDirectoryScoped({
           prefix: "skill-metadata-test-",
         });
+
         const file = path.join(root, "imports.json");
         yield* fs.writeFileString(
           file,
@@ -280,9 +304,11 @@ describe("import snapshots", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+
       const root = yield* fs.makeTempDirectoryScoped({
         prefix: "skill-metadata-only-test-",
       });
+
       yield* fs.writeFileString(
         path.join(root, "imports.json"),
         importedMetadata([], "wholesale"),
@@ -311,9 +337,11 @@ describe("import snapshots", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+
       const root = yield* fs.makeTempDirectoryScoped({
         prefix: "skill-exact-match-test-",
       });
+
       yield* fs.writeFileString(
         path.join(root, "imports.json"),
         importedMetadata(["adapted"]),
@@ -323,14 +351,17 @@ describe("import snapshots", () => {
         path.join(root, "example", "SKILL.md"),
         `---\nname: example\ndescription: Example\nlicense: MIT\n# origin: ${metadata.origin}\n# upstream-sha: ${metadata.upstreamSha}\n# local-edits:\n#   - adapted\n---\nBody\n`,
       );
+
       const result = yield* Effect.exit(
         importSkill(root, "example", {
           apply: false,
           metadataOnly: false,
         }),
       );
+
       expect(result._tag).toBe("Failure");
-      if (result._tag === "Failure")
+
+      if (Exit.isFailure(result))
         expect(String(result.cause)).toContain("exactly matches its source");
     }).pipe(
       Effect.scoped,
@@ -355,9 +386,11 @@ describe("import snapshots", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+
       const root = yield* fs.makeTempDirectoryScoped({
         prefix: "skill-check-match-test-",
       });
+
       yield* fs.writeFileString(
         path.join(root, "imports.json"),
         importedMetadata(["adapted"]),
@@ -367,6 +400,7 @@ describe("import snapshots", () => {
         path.join(root, "example", "SKILL.md"),
         `---\nname: example\ndescription: Example\nlicense: MIT\n# origin: ${metadata.origin}\n# upstream-sha: ${metadata.upstreamSha}\n# local-edits:\n#   - adapted\n---\nBody\n`,
       );
+
       const failure = yield* Effect.flip(
         check(root, {
           skill: "example",
@@ -374,6 +408,7 @@ describe("import snapshots", () => {
           openOpencode: false,
         }),
       );
+
       expect(failure).toBeInstanceOf(CheckError);
       expect(failure.message).toContain("exactly match upstream");
     }).pipe(
@@ -391,13 +426,16 @@ describe("import snapshots", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+
       const root = yield* fs.makeTempDirectoryScoped({
         prefix: "skill-check-unknown-test-",
       });
+
       yield* fs.writeFileString(
         path.join(root, "imports.json"),
         importedMetadata(["adapted"]),
       );
+
       const failure = yield* Effect.flip(
         check(root, {
           skill: "missing",
@@ -405,6 +443,7 @@ describe("import snapshots", () => {
           openOpencode: false,
         }),
       );
+
       expect(failure).toBeInstanceOf(CheckError);
       expect(failure.message).toBe("Imported skill not found: missing");
     }).pipe(
@@ -418,13 +457,16 @@ describe("import snapshots", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+
       const root = yield* fs.makeTempDirectoryScoped({
         prefix: "skill-check-clean-test-",
       });
+
       yield* fs.writeFileString(
         path.join(root, "imports.json"),
         importedMetadata([], "wholesale"),
       );
+
       const failure = yield* Effect.flip(
         check(root, {
           skill: "example",
@@ -432,6 +474,7 @@ describe("import snapshots", () => {
           openOpencode: false,
         }),
       );
+
       expect(failure).toBeInstanceOf(CheckError);
       expect(failure.message).toBe("example: imported skill is not adapted");
     }).pipe(
@@ -445,9 +488,11 @@ describe("import snapshots", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+
       const root = yield* fs.makeTempDirectoryScoped({
         prefix: "skill-check-deleted-test-",
       });
+
       yield* fs.writeFileString(
         path.join(root, "imports.json"),
         importedMetadata(["retained after upstream deletion"]),

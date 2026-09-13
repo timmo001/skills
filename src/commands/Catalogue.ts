@@ -1,4 +1,4 @@
-import { Console, Effect, FileSystem, Path, Schema } from "effect";
+import { Console, Effect, FileSystem, Path, Result, Schema } from "effect";
 import { parseFrontmatter } from "../lib/frontmatter.js";
 
 export const CATALOGUE_FILE = "SKILLS.md";
@@ -27,12 +27,16 @@ export const listTopLevelSkills = Effect.fn("Catalogue.listTopLevelSkills")(
     const path = yield* Path.Path;
     const entries = yield* fs.readDirectory(root);
     const skillNames: string[] = [];
+
     for (const entry of entries.sort()) {
       const entryInfo = yield* fs.stat(path.join(root, entry));
+
       if (entryInfo.type !== "Directory") continue;
+
       if (!(yield* fs.exists(path.join(root, entry, "SKILL.md")))) continue;
       skillNames.push(entry);
     }
+
     return skillNames;
   },
 );
@@ -44,14 +48,18 @@ export const readSkillDescriptions = Effect.fn(
   const path = yield* Path.Path;
   const descriptions = new Map<string, string>();
   const failures: string[] = [];
+
   for (const name of skillNames) {
     const text = yield* fs.readFileString(path.join(root, name, "SKILL.md"));
     const parsed = parseFrontmatter(text);
+
     for (const failure of parsed.failures) failures.push(`${name}: ${failure}`);
     const description = (parsed.fields.get("description") ?? "").trim();
+
     if (!description) failures.push(`${name}: missing non-empty description`);
     else descriptions.set(name, description);
   }
+
   return { descriptions, failures };
 });
 
@@ -61,10 +69,12 @@ export const renderSkillsCatalogue = Effect.fn(
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const skillNames = yield* listTopLevelSkills(root);
+
   const { descriptions, failures } = yield* readSkillDescriptions(
     root,
     skillNames,
   );
+
   const catalogResult = yield* Effect.result(
     fs.readFileString(path.join(root, "skills.sh.json")).pipe(
       Effect.flatMap((text) =>
@@ -76,7 +86,8 @@ export const renderSkillsCatalogue = Effect.fn(
       Effect.flatMap(Schema.decodeUnknownEffect(CatalogFile)),
     ),
   );
-  if (catalogResult._tag === "Failure")
+
+  if (Result.isFailure(catalogResult))
     return yield* new CatalogueError({
       failures: [
         ...failures,
@@ -87,23 +98,29 @@ export const renderSkillsCatalogue = Effect.fn(
   const catalogNames = catalog.groupings.flatMap(({ skills }) => skills);
   const missing = skillNames.filter((name) => !catalogNames.includes(name));
   const extra = catalogNames.filter((name) => !skillNames.includes(name));
+
   if (missing.length)
     failures.push(
       `skills.sh.json: missing skills: ${missing.sort().join(", ")}`,
     );
+
   if (extra.length)
     failures.push(`skills.sh.json: unknown skills: ${extra.sort().join(", ")}`);
+
   for (const name of catalogNames) {
     if (!descriptions.has(name) && skillNames.includes(name))
       failures.push(`${name}: missing description for catalogue`);
   }
+
   if (failures.length > 0) return yield* new CatalogueError({ failures });
 
   const sections = catalog.groupings.map((group) => {
     const rows = group.skills.map((name) => {
       const description = escapeCell(descriptions.get(name) ?? "");
+
       return `| [\`${name}\`](./${name}/) | ${description} |`;
     });
+
     return [
       `## ${group.title}`,
       "",
@@ -149,6 +166,7 @@ export const checkSkillsCatalogue = Effect.fn("Catalogue.checkSkillsCatalogue")(
     const path = yield* Path.Path;
     const file = path.join(root, CATALOGUE_FILE);
     const rendered = yield* renderSkillsCatalogue(root);
+
     if (!(yield* fs.exists(file)))
       return yield* new CatalogueError({
         failures: [
@@ -156,6 +174,7 @@ export const checkSkillsCatalogue = Effect.fn("Catalogue.checkSkillsCatalogue")(
         ],
       });
     const existing = yield* fs.readFileString(file);
+
     if (existing !== rendered)
       return yield* new CatalogueError({
         failures: [

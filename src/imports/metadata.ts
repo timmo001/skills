@@ -14,6 +14,7 @@ export const ImportMetadata = Schema.Struct({
     Schema.Literals(["official-source", "wholesale"]),
   ),
 });
+
 export interface ImportMetadata extends Schema.Schema.Type<
   typeof ImportMetadata
 > {}
@@ -22,6 +23,7 @@ export const ImportsFile = Schema.Struct({
   version: Schema.Literal(1),
   imports: Schema.Record(Schema.String, ImportMetadata),
 });
+
 export interface ImportsFile extends Schema.Schema.Type<typeof ImportsFile> {}
 
 export class MetadataError extends Schema.TaggedError<MetadataError>()(
@@ -38,14 +40,17 @@ const metadataError = (operation: string) =>
 export const readImports = Effect.fn("Imports.read")(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
+
   const text = yield* fs
     .readFileString(path.join(root, "imports.json"))
     .pipe(metadataError("imports.read"));
+
   const json = yield* Effect.try({
     try: () => JSON.parse(text),
     catch: (cause) =>
       new MetadataError({ operation: "imports.json", message: String(cause) }),
   });
+
   return yield* Schema.decodeUnknownEffect(ImportsFile)(json).pipe(
     metadataError("imports.decode"),
   );
@@ -57,12 +62,14 @@ export const getImport = Effect.fn("Imports.get")(function* (
 ) {
   const imports = yield* readImports(root);
   const metadata = imports.imports[name];
+
   if (!metadata) {
     return yield* new MetadataError({
       operation: "imports.get",
       message: `unknown imported skill: ${name}`,
     });
   }
+
   if (
     metadata.distribution !== "official-source" &&
     metadata.distribution !== "wholesale" &&
@@ -73,6 +80,7 @@ export const getImport = Effect.fn("Imports.get")(function* (
       message: `${name}: imported skills must declare local edits`,
     });
   }
+
   return metadata;
 });
 
@@ -91,36 +99,46 @@ export const writeReviewedSha = Effect.fn("Imports.writeReviewedSha")(
     const decoded = yield* Schema.decodeUnknownEffect(Sha)(sha).pipe(
       metadataError("imports.sha"),
     );
+
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const file = path.join(root, "imports.json");
+
     const text = yield* fs
       .readFileString(file)
       .pipe(metadataError("imports.read"));
+
     const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const marker = new RegExp(`"${escapedName}"\\s*:\\s*\\{`);
     const match = marker.exec(text);
+
     if (!match) {
       return yield* new MetadataError({
         operation: "imports.write",
         message: `unknown imported skill: ${name}`,
       });
     }
+
     const start = match.index;
     const remaining = text.slice(start + match[0].length);
     const nextEntry = /,\s*"[^"]+"\s*:\s*\{/.exec(remaining);
+
     const end = nextEntry
       ? start + match[0].length + nextEntry.index
       : text.length;
+
     const entry = text.slice(start, end);
     const shaPattern = /("upstreamSha"\s*:\s*")[0-9a-f]+(")/;
+
     if (!shaPattern.test(entry)) {
       return yield* new MetadataError({
         operation: "imports.write",
         message: `${name}: missing upstream SHA`,
       });
     }
+
     const updated = entry.replace(shaPattern, `$1${decoded}$2`);
+
     if (updated === entry) return;
     yield* fs
       .writeFileString(file, text.slice(0, start) + updated + text.slice(end))

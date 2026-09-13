@@ -6,6 +6,7 @@ import {
   FileSystem,
   Layer,
   Path,
+  Predicate,
   Stream,
 } from "effect";
 import {
@@ -26,7 +27,10 @@ import {
   validatePullRequestPolicy,
   type SkillUpdatesAgentConfig,
 } from "../src/commands/UpdatesAgent.js";
-import { CommandExecutor } from "../src/services/CommandExecutor.js";
+import {
+  CommandError,
+  CommandExecutor,
+} from "../src/services/CommandExecutor.js";
 import {
   GitHub,
   GitHubError,
@@ -145,9 +149,11 @@ describe("updates agent policies", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+
       const root = yield* fs.makeTempDirectoryScoped({
         prefix: "updates-agent-sha-only-test-",
       });
+
       const oldSha = "a".repeat(40);
       const newSha = "b".repeat(40);
       const origin = "https://github.com/org/repo/tree/main/example";
@@ -172,11 +178,13 @@ describe("updates agent policies", () => {
         `---\nname: example\ndescription: Example\nlicense: MIT\n# origin: ${origin}\n# upstream-sha: ${oldSha}\n---\nSame body\n`,
       );
       const githubCalls: string[][] = [];
+
       const commandLayer = Layer.effect(
         CommandExecutor,
         Effect.gen(function* () {
           const fixtureFs = yield* FileSystem.FileSystem;
           const fixturePath = yield* Path.Path;
+
           return CommandExecutor.of({
             capture: () =>
               Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
@@ -184,18 +192,23 @@ describe("updates agent policies", () => {
               Effect.gen(function* () {
                 if (command === "git" && args.includes("--format=%H"))
                   return newSha;
+
                 if (command === "git" && args.includes("--cached"))
                   return shaOnlyPatch(oldSha, newSha);
+
                 if (command === "mise") {
                   const sourceName = args[args.indexOf("--skill") + 1];
+
                   if (!options?.cwd || !sourceName)
                     return yield* Effect.die("invalid SHA-only fixture");
+
                   const generated = fixturePath.join(
                     options.cwd,
                     ".agents",
                     "skills",
                     sourceName,
                   );
+
                   yield* fixtureFs.makeDirectory(generated, {
                     recursive: true,
                   });
@@ -204,6 +217,7 @@ describe("updates agent policies", () => {
                     "---\nname: upstream\ndescription: Example\n---\nSame body\n",
                   );
                 }
+
                 return "";
               }).pipe(Effect.orDie),
             exitCode: () => Effect.succeed(0),
@@ -212,6 +226,7 @@ describe("updates agent policies", () => {
           });
         }),
       );
+
       yield* runGitHubSkillUpdates(root).pipe(
         Effect.provide(commandLayer),
         Effect.provide(
@@ -220,6 +235,7 @@ describe("updates agent policies", () => {
             stream: () => Stream.empty,
             run: (args) => {
               githubCalls.push([...args]);
+
               return Effect.succeed(
                 args[0] === "pr" && args[1] === "create"
                   ? "https://github.com/timmo001/skills/pull/1"
@@ -263,6 +279,7 @@ describe("updates agent policies", () => {
         Effect.provide(
           githubLayer((args) => {
             calls.push([...args]);
+
             return Effect.succeed("");
           }),
         ),
@@ -298,6 +315,7 @@ describe("updates agent policies", () => {
         id: 42,
         url: "https://github.com/example/actions/runs/42",
       });
+
       expect(prompt).toContain(config.prompt);
       expect(prompt).toContain(config.dashboardIssue);
       expect(prompt).toContain("actions/runs/42");
@@ -356,6 +374,7 @@ describe("updates agent policies", () => {
     Effect.sync(() => {
       const oldSha = "a".repeat(40);
       const newSha = "b".repeat(40);
+
       const patch = [
         "diff --git a/upstream/example/UPSTREAM_SKILL.md b/upstream/example/UPSTREAM_SKILL.md",
         "--- a/upstream/example/UPSTREAM_SKILL.md",
@@ -370,6 +389,7 @@ describe("updates agent policies", () => {
         `-    "example": { "upstreamSha": "${oldSha}" },`,
         `+    "example": { "upstreamSha": "${newSha}" },`,
       ].join("\n");
+
       expect(isShaOnlySkillPatch(patch, "example")).toBe(true);
       expect(isScopedSkillPatch(patch, "example")).toBe(true);
     }),
@@ -379,6 +399,7 @@ describe("updates agent policies", () => {
     Effect.sync(() => {
       const oldSha = "a".repeat(40);
       const newSha = "b".repeat(40);
+
       const metadataPatch = [
         "diff --git a/example/SKILL.md b/example/SKILL.md",
         "--- a/example/SKILL.md",
@@ -393,6 +414,7 @@ describe("updates agent policies", () => {
         `-    "example": { "origin": "old", "upstreamSha": "${oldSha}" },`,
         `+    "example": { "origin": "new", "upstreamSha": "${newSha}" },`,
       ].join("\n");
+
       expect(isShaOnlySkillPatch(metadataPatch, "example")).toBe(false);
       expect(
         isShaOnlySkillPatch(
@@ -424,6 +446,7 @@ describe("updates agent policies", () => {
         githubLayer((args) => {
           if (args[0] === "pr" && args[1] === "diff")
             return Effect.succeed(shaOnlyPatch("a".repeat(40), "b".repeat(40)));
+
           if (args[0] === "pr" && args[1] === "view")
             return Effect.succeed(
               JSON.stringify({
@@ -435,6 +458,7 @@ describe("updates agent policies", () => {
                 commits: [{ messageHeadline: "[SHA-only] Update example" }],
               }),
             );
+
           return Effect.succeed('[{"number":5}]');
         }),
       ),
@@ -445,7 +469,8 @@ describe("updates agent policies", () => {
     Effect.gen(function* () {
       const failure = yield* Effect.flip(validatePullRequestPolicy(4));
       expect(failure).toBeInstanceOf(SkillUpdatesAgentError);
-      if (failure._tag === "SkillUpdatesAgentError")
+
+      if (Predicate.isTagged(failure, "SkillUpdatesAgentError"))
         expect(failure.operation).toBe("pull-request.policy");
     }).pipe(
       Effect.provide(
@@ -459,6 +484,7 @@ describe("updates agent policies", () => {
                 "diff --git a/imports.json b/imports.json",
               ].join("\n"),
             );
+
           if (args[0] === "pr" && args[1] === "view")
             return Effect.succeed(
               JSON.stringify({
@@ -470,6 +496,7 @@ describe("updates agent policies", () => {
                 commits: [{ messageHeadline: "Update skill: example" }],
               }),
             );
+
           return Effect.succeed('[{"number":5}]');
         }),
       ),
@@ -484,19 +511,18 @@ describe("updates agent policies", () => {
           const failure = yield* Effect.flip(
             runDeviceSkillUpdates("must-not-read.yml", "42"),
           );
+
           expect(failure).toMatchObject(
             exitCode === 1
-              ? {
-                  _tag: "SkillUpdatesAgentError",
+              ? new SkillUpdatesAgentError({
                   operation: "gh run watch 42",
                   message: "Command exited with code 1",
-                }
-              : {
-                  _tag: "CommandError",
+                })
+              : new CommandError({
                   command: "gh run watch 42",
                   exitCode: -1,
                   stderr: "spawn failed",
-                },
+                }),
           );
         }).pipe(
           Effect.provide(
@@ -531,9 +557,11 @@ describe("updates agent policies", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+
       const root = yield* fs.makeTempDirectoryScoped({
         prefix: "updates-agent-lock-test-",
       });
+
       const stateFile = path.join(root, "state", "last-run");
       const lockFile = `${stateFile}.lock`;
       const configFile = path.join(root, "agent.yml");
@@ -565,6 +593,7 @@ describe("updates agent policies", () => {
             exitCode: () => Effect.succeed(0),
             inherit: (command, args) => {
               calls.push([command, ...args]);
+
               return Effect.succeed(0);
             },
             stream: () => Stream.empty,
@@ -576,6 +605,7 @@ describe("updates agent policies", () => {
             (args, options) => {
               expect(options).toEqual({ cwd: process.cwd(), timeout: null });
               calls.push(["gh", ...args]);
+
               return Stream.empty;
             },
           ),
@@ -610,14 +640,18 @@ describe("updates agent policies", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+
       const root = yield* fs.makeTempDirectoryScoped({
         prefix: "updates-agent-restore-test-",
       });
+
       yield* fs.makeDirectory(path.join(root, ".git"));
+
       const failure = yield* Effect.flip(
         requireRepositoryState([{ path: root, branch: "main" }]),
       );
-      if (failure._tag === "SkillUpdatesAgentError")
+
+      if (Predicate.isTagged(failure, "SkillUpdatesAgentError"))
         expect(failure.operation).toBe("repository.branch");
     }).pipe(
       Effect.scoped,
@@ -646,9 +680,11 @@ describe("updates agent policies", () => {
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+
       const root = yield* fs.makeTempDirectoryScoped({
         prefix: "updates-agent-state-test-",
       });
+
       const stateFile = path.join(root, "state", "last-run");
       const configFile = path.join(root, "agent.yml");
       yield* fs.makeDirectory(path.join(root, ".git"));
@@ -680,6 +716,7 @@ describe("updates agent policies", () => {
       );
       let succeeds = false;
       let modelAttempt = 0;
+
       const executor = Layer.succeed(CommandExecutor, {
         capture: () => Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
         run: (_command, args) =>
@@ -700,6 +737,7 @@ describe("updates agent policies", () => {
             "--standalone",
           ]);
           modelAttempt += 1;
+
           return Stream.make(
             succeeds && modelAttempt === 2
               ? "STATUS: success"
@@ -707,6 +745,7 @@ describe("updates agent policies", () => {
           );
         },
       });
+
       const github = Layer.succeed(GitHub, {
         isAvailable: () => Effect.succeed(true),
         stream: () => Stream.empty,
@@ -729,6 +768,7 @@ describe("updates agent policies", () => {
               : "",
           ),
       });
+
       const run = runDeviceSkillUpdates(configFile, "42").pipe(
         Effect.provide(executor),
         Effect.provide(github),
@@ -741,6 +781,7 @@ describe("updates agent policies", () => {
           ),
         ),
       );
+
       expect((yield* Effect.exit(run))._tag).toBe("Failure");
       expect(yield* fs.exists(stateFile)).toBe(false);
       succeeds = true;

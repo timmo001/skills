@@ -21,6 +21,7 @@ const bool = (name: string, description: string) =>
     Flag.withDefault(false),
     Flag.withDescription(description),
   );
+
 const optional = <A>(value: Option.Option<A>) => Option.getOrUndefined(value);
 
 export const resolveSkillsRoot = (
