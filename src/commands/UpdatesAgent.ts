@@ -26,8 +26,9 @@ export const SkillUpdatesAgentModel = Schema.Struct({
   modelID: Schema.NonEmptyString,
   variant: Schema.optionalKey(Schema.NonEmptyString),
 });
-export interface SkillUpdatesAgentModel
-  extends Schema.Schema.Type<typeof SkillUpdatesAgentModel> {}
+export interface SkillUpdatesAgentModel extends Schema.Schema.Type<
+  typeof SkillUpdatesAgentModel
+> {}
 export const SkillUpdatesAgentConfig = Schema.Struct({
   workflowApi: Schema.NonEmptyString,
   dashboardIssue: Schema.NonEmptyString,
@@ -45,8 +46,9 @@ export const SkillUpdatesAgentConfig = Schema.Struct({
   ),
   prompt: Schema.NonEmptyString,
 });
-export interface SkillUpdatesAgentConfig
-  extends Schema.Schema.Type<typeof SkillUpdatesAgentConfig> {}
+export interface SkillUpdatesAgentConfig extends Schema.Schema.Type<
+  typeof SkillUpdatesAgentConfig
+> {}
 
 const WorkflowRun = Schema.Struct({
   id: Schema.Int.check(Schema.isGreaterThan(0)),
