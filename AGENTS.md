@@ -3,7 +3,7 @@
 ## Scope
 
 - `<name>/` at the repository root holds authored skills and distributed imported snapshots. Authored skills are edited here; imported skills are edited in their owning repositories. This preserves direct stow consumers that use the repository root as `~/.agents/skills`.
-- After any commit or reviewed upstream update in this repository, update and commit the `agents/.agents/skills` submodule pointer in `~/.config/dotfiles`. Do not leave the repositories out of sync.
+- Renovate owns the `agents/.agents/skills` submodule revision in dotfiles. Skills commits and update jobs must leave that pointer to Renovate unless the user explicitly requests a manual update.
 - Preserve imported history, provenance comments, and upstream licence material.
 - Do not create checked-in copies under `.agents/`, `.claude/`, `.cursor/`, or `.opencode/`.
 - Keep agent-specific packaging as metadata around the canonical skills, not forks of their content.
@@ -13,7 +13,7 @@
 - `timmo001/context` owns `.agents/skills/context-cli/` and `.agents/skills/context-mcp/`; `timmo001/notes` owns `.agents/skills/notes-cli/` and `.agents/skills/notes-mcp/`.
 - Import only `context-cli` and `notes-cli` here, as `wholesale` snapshots with no local content edits. Do not import either MCP skill. `git-context` and `handoff` own the surrounding Git and handoff workflows and route CLI operations to those imports.
 - `imports.json` records each origin and reviewed source commit; the imported `SKILL.md` carries the generated provenance comments.
-- Update order: source repository commit and push -> `./dist/skill-maintenance import <name> --apply` here -> catalogue regeneration and validation -> skills commit and push -> dotfiles `agents/.agents/skills` submodule update and `dot stow`.
+- Update order: source repository commit and push -> `./dist/skill-maintenance import <name> --apply` here -> catalogue regeneration and validation -> skills commit and push. Renovate handles the dotfiles submodule revision separately.
 - New imports need a published source revision containing the skill. Do not invent a revision or point at a commit that predates the skill. Commit and push steps require explicit user authorisation.
 
 ## Skill Changes
