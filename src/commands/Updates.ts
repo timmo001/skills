@@ -43,8 +43,9 @@ export const UpdateReportItem = Schema.Struct({
   localEdits: Schema.Array(Schema.String),
   reason: Schema.optionalKey(Schema.String),
 });
-export interface UpdateReportItem
-  extends Schema.Schema.Type<typeof UpdateReportItem> {}
+export interface UpdateReportItem extends Schema.Schema.Type<
+  typeof UpdateReportItem
+> {}
 export const UpdateReport = Schema.Struct({
   version: Schema.Literal(1),
   skills: Schema.Array(UpdateReportItem),

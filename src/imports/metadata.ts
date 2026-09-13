@@ -14,8 +14,9 @@ export const ImportMetadata = Schema.Struct({
     Schema.Literals(["official-source", "wholesale"]),
   ),
 });
-export interface ImportMetadata
-  extends Schema.Schema.Type<typeof ImportMetadata> {}
+export interface ImportMetadata extends Schema.Schema.Type<
+  typeof ImportMetadata
+> {}
 
 export const ImportsFile = Schema.Struct({
   version: Schema.Literal(1),
