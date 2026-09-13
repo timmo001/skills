@@ -7,6 +7,7 @@ import {
   Exit,
   FileSystem,
   Path,
+  Redacted,
   Schema,
   Stream,
 } from "effect";
@@ -856,9 +857,10 @@ const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
               [
                 ...(config.opencodeArgs ?? []),
                 "run",
-                "--standalone",
+                "--server",
+                session.server,
                 "--session",
-                session,
+                session.id,
                 "--auto",
                 "--agent",
                 config.opencodeAgent,
@@ -868,7 +870,10 @@ const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
                 "Scheduled skill updates",
                 prompt,
               ],
-              { cwd: config.repositories[0] },
+              {
+                cwd: config.repositories[0],
+                env: { OPENCODE_PASSWORD: Redacted.value(session.password) },
+              },
             )
             .pipe(
               Stream.runForEach((line) =>

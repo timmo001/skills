@@ -729,9 +729,24 @@ describe("updates agent policies", () => {
       const executor = Layer.succeed(CommandExecutor, {
         capture: () => Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
         run: (_command, args) => {
-          if (args.includes("agents"))
+          if (args.includes("service"))
             return Effect.succeed(
-              JSON.stringify([{ id: "build", permissions: [] }]),
+              args.includes("password")
+                ? "test-password\n"
+                : "http://127.0.0.1:49374\n",
+            );
+
+          if (
+            args.some((arg) => arg.startsWith("/api/plugin/await-activation?"))
+          )
+            return Effect.succeed("");
+
+          if (args.some((arg) => arg.startsWith("/api/agent/build?")))
+            return Effect.succeed(
+              JSON.stringify({
+                location: { directory: root },
+                data: { id: "build", permissions: [] },
+              }),
             );
 
           if (args.includes("api"))
@@ -759,11 +774,14 @@ describe("updates agent policies", () => {
         exitCode: () => Effect.succeed(0),
         inherit: () => Effect.succeed(0),
         stream: (_command, args) => {
-          expect(args.slice(0, 4)).toEqual([
+          expect(args.slice(0, 7)).toEqual([
             "--wrapped",
             "argument with spaces",
             "run",
-            "--standalone",
+            "--server",
+            "http://127.0.0.1:49374",
+            "--session",
+            "ses_test",
           ]);
           modelAttempt += 1;
 

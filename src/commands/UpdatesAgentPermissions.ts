@@ -1,4 +1,4 @@
-import { Effect, Schema } from "effect";
+import { Effect, Redacted, Schema } from "effect";
 import { CommandExecutor } from "../services/CommandExecutor.js";
 
 // OpenCode 2.0.3: session.create and Session.Info use this ordered ruleset.
@@ -20,9 +20,10 @@ export class SkillUpdatesPermissionsError extends Schema.TaggedError<SkillUpdate
   { message: Schema.String },
 ) {}
 
-const Agents = Schema.Array(
-  Schema.Struct({ id: Schema.String, permissions: Rules }),
-);
+const Agent = Schema.Struct({
+  location: Schema.Struct({ directory: Schema.String }),
+  data: Schema.Struct({ id: Schema.String, permissions: Rules }),
+});
 
 const Session = Schema.Struct({
   data: Schema.Struct({
@@ -59,38 +60,63 @@ export const createSkillUpdatesSession = Effect.fn(
       message: "A session location is required",
     });
 
-  const invoke = (args: readonly string[]) =>
+  const invoke = (
+    args: readonly string[],
+    password?: Redacted.Redacted<string>,
+  ) =>
     executor.run(
       config.opencodeCommand,
       [...(config.opencodeArgs ?? []), ...args],
       {
         cwd,
+        env: password
+          ? { OPENCODE_PASSWORD: Redacted.value(password) }
+          : undefined,
       },
     );
 
-  // debug agents resolves global, project and agent policy without prompting.
-  const agents = yield* Schema.decodeUnknownEffect(
-    Schema.fromJsonString(Agents),
-  )(yield* invoke(["debug", "agents"]));
+  const server = (yield* invoke(["service", "status"])).trim();
 
-  const agent = agents.find(({ id }) => id === config.opencodeAgent);
+  if (!/^https?:\/\/\S+$/.test(server))
+    return yield* new SkillUpdatesPermissionsError({
+      message: "The default OpenCode V2 server is not running",
+    });
 
-  if (!agent)
+  const password = Redacted.make(
+    (yield* invoke(["service", "get", "password"])).trim(),
+  );
+
+  const api = (args: readonly string[]) =>
+    invoke(["api", "--server", server, ...args], password);
+
+  const location = `?location[directory]=${encodeURIComponent(cwd)}`;
+
+  yield* api(["post", `/api/plugin/await-activation${location}`]);
+
+  const agent = yield* Schema.decodeEffect(Schema.fromJsonString(Agent))(
+    yield* api([
+      "get",
+      `/api/agent/${encodeURIComponent(config.opencodeAgent)}${location}`,
+    ]),
+  );
+
+  if (
+    agent.data.id !== config.opencodeAgent ||
+    agent.location.directory !== cwd
+  )
     return yield* new SkillUpdatesPermissionsError({
       message: `Cannot resolve permissions for agent ${config.opencodeAgent}`,
     });
 
   const permissions = skillUpdatesSessionPermissions(
     config.opencodePermissions,
-    agent.permissions,
+    agent.data.permissions,
   );
 
   const created = yield* Schema.decodeUnknownEffect(
     Schema.fromJsonString(Session),
   )(
-    yield* invoke([
-      "api",
-      "--standalone",
+    yield* api([
       "post",
       "/api/session",
       "--data",
@@ -103,17 +129,10 @@ export const createSkillUpdatesSession = Effect.fn(
     ]),
   );
 
-  // A second standalone process must see the same durable policy before run.
+  // A separate CLI process must see the same policy before run.
   const stored = yield* Schema.decodeUnknownEffect(
     Schema.fromJsonString(Session),
-  )(
-    yield* invoke([
-      "api",
-      "--standalone",
-      "get",
-      `/api/session/${created.data.id}`,
-    ]),
-  );
+  )(yield* api(["get", `/api/session/${created.data.id}`]));
 
   if (
     stored.data.id !== created.data.id ||
@@ -126,5 +145,5 @@ export const createSkillUpdatesSession = Effect.fn(
         "OpenCode did not retain the requested session location and permissions",
     });
 
-  return stored.data.id;
+  return { id: stored.data.id, server, password };
 });
