@@ -1,129 +1,53 @@
 ---
 name: code-review
 license: Apache-2.0
-description: Review code changes along two axes - Standards (does it follow the repo's conventions, plus a Fowler code-smell baseline?) and Spec (does it implement what the originating issue or spec asked for?). Use when reviewing a pull request, a branch, work-in-progress changes, or a diff.
+description: Review a pull request, branch, work-in-progress changes, or diff for concrete defects, unmet requirements, and repository convention violations. Keep findings scoped, evidenced, and proportionate.
 ---
 
 # Code Review
 
-Use this skill when reviewing code changes, pull requests, branch work, or diffs.
+Load `changeset-scope` first, then `effect` for Effect code or
+`effect-principles` for other code and independently matching specialist skills.
+Report only problems introduced or worsened by the changeset.
 
-Load and follow `changeset-scope` before reviewing, then load `effect` for Effect code or `effect-principles` for non-Effect code. Load independently matching specialist skills from their descriptions. Scope governs this skill and every companion. Read outside that boundary for context, but report only problems introduced or worsened by the changeset.
+## Review
 
-Lineage: locally authored. The Standards-axis Fowler smell baseline is adapted from mattpocock's `code-review` skill (<https://github.com/mattpocock/skills/tree/main/skills/engineering/code-review>), itself drawn from Martin Fowler, _Refactoring_, ch.3 "Bad Smells in Code".
+- Establish the intended behaviour from the user's request and available issue,
+  PR, or spec. State missing context rather than inventing requirements.
+- Read changed code and its callers to trace actual behaviour. Prioritise
+  correctness, compatibility, security, resource handling, and meaningful
+  performance risks where the change touches them.
+- Follow repository guidance and nearby patterns. In shared repos, consult the
+  user's recently merged work when style is unclear. Cite the rule or precedent
+  for convention findings; skip what linting and formatting already enforce.
+- Do not turn code-smell labels, personal preferences, or hypothetical reuse
+  into findings. Recommend structural changes only to resolve a concrete problem.
+- Use existing checks as evidence. Request extra tests only for a specific,
+  consequential regression gap or an explicit repository requirement.
+- Review directly by default. For requested delegation, use
+  `session-coordination`, give the reviewer the same boundary and applicable
+  skills, and independently verify its claims before reporting them.
 
-## Two Review Axes
+## Findings
 
-Review changes along two separate axes so one doesn't mask the other:
+Each finding needs:
 
-### Standards — does the code follow the repo's style?
+- A precise file and line in the change.
+- A concrete failure path or violated requirement, with the triggering conditions.
+- The impact and smallest useful fix direction.
 
-- In shared repos, use the user's own recently merged PRs as the style baseline rather than guessing from docs alone.
-- Check repo-level guidance (AGENTS.md, CONTRIBUTING.md, ADRs, lint/formatter configs) but don't re-check what tooling already enforces.
-- Cite the standard or precedent when flagging a violation.
+Quote code or include a short example only when it helps establish the problem.
+If the evidence is incomplete, state the unresolved question or verification
+limit instead of presenting speculation as a defect.
 
-On top of whatever the repo documents, the Standards axis always carries the **Fowler smell baseline** below - a fixed set of code smells that applies even when a repo documents nothing. Two rules bind it:
+## Delivery
 
-- **The repo overrides.** A documented repo standard always wins; where it endorses something the baseline would flag, suppress the smell.
-- **Always a judgement call.** Each smell is a labelled heuristic ("possible Feature Envy"), never a hard violation - and, like any standard here, skip anything tooling already enforces.
+Lead with findings ordered by severity, then material open questions or remaining
+risks. Keep requirements and repository conventions in view without forcing
+separate report sections. If there are no concrete findings, say so and briefly
+state any verification limits. Give an approval recommendation when requested.
 
-Each smell reads _what it is_ → _how to fix_; match it against the diff:
-
-- **Mysterious Name** — a function, variable, or type whose name doesn't reveal what it does or holds. → rename it; if no honest name comes, the design's murky.
-- **Duplicated Code** — the same logic shape appears in more than one hunk or file in the change. → extract the shared shape, call it from both.
-- **Feature Envy** — a method that reaches into another object's data more than its own. → move the method onto the data it envies.
-- **Data Clumps** — the same few fields or params keep travelling together (a type wanting to be born). → bundle them into one type, pass that.
-- **Primitive Obsession** — a primitive or string standing in for a domain concept that deserves its own type. → give the concept its own small type.
-- **Repeated Switches** — the same `switch`/`if`-cascade on the same type recurs across the change. → replace with polymorphism, or one map both sites share.
-- **Shotgun Surgery** — one logical change forces scattered edits across many files in the diff. → gather what changes together into one module.
-- **Divergent Change** — one file or module is edited for several unrelated reasons. → split so each module changes for one reason.
-- **Speculative Generality** — abstraction, parameters, or hooks added for needs the spec doesn't have. → delete it; inline back until a real need shows.
-- **Message Chains** — long `a.b().c().d()` navigation the caller shouldn't depend on. → hide the walk behind one method on the first object.
-- **Middle Man** — a class or function that mostly just delegates onward. → cut it, call the real target direct.
-- **Refused Bequest** — a subclass or implementer that ignores or overrides most of what it inherits. → drop the inheritance, use composition.
-
-### Spec — does the code do what was asked?
-
-- Find the originating issue, PRD, or spec from commit messages, PR description, or branch name.
-- Report: requirements that are missing/partial, behaviour that wasn't asked for (scope creep), requirements where the implementation looks wrong.
-- If no spec exists, skip this axis and note it.
-
-## What to Analyze
-
-When reviewing code changes, evaluate:
-
-1. **Code quality and style consistency** - Does it follow existing patterns?
-2. **Potential bugs or issues** - Edge cases, error handling, null checks
-3. **Performance implications** - N+1 queries, unnecessary iterations, memory leaks
-4. **Type safety** - Missing types, any casts, unsafe assertions
-5. **Breaking changes** - API changes, schema changes (flag these explicitly)
-6. **Security concerns** - Input validation, authentication, secrets exposure
-7. **Verification** - Do existing checks address the concrete regression risks? Request additional tests only for a specific gap with meaningful impact or an explicit repository requirement.
-8. **Documentation** - Are changes documented if needed?
-
-## Review Etiquette
-
-- Be direct, specific, and proportionate.
-- Explain why each finding matters.
-- Do not add praise, optional improvements, or nice-to-haves. If the changeset has no concrete finding, say so.
-
-## Finding Evidence
-
-Every finding must be independently inspectable:
-
-- Give the precise file and line, or the narrowest available location.
-- Quote the relevant code or minimally reproduce the observed behaviour.
-- Trace the concrete failure path, value flow, or violated requirement. Do not rely on preference or speculation.
-- State the user-visible or engineering impact and the conditions that trigger it.
-- Give the smallest fix direction needed to resolve the finding. Include a snippet only when it makes the correction materially clearer.
-
-Do not report a finding when the evidence does not establish a concrete problem. Record unresolved concerns as questions or residual risks instead.
-
-## Delegation
-
-- Give every delegated agent the resolved changeset boundary from `changeset-scope`; surrounding reads remain context only.
-- Review directly by default. When a separate session is justified, prefer a visible Herdr session and use native subagents only when explicitly requested.
-- A separate session does not inherit the reviewer's loaded skills. Give it the same applicable review and specialist skills, or include those criteria in its brief, and keep its work read-only.
-- The parent reviewer owns Standards and Spec classification, severity, fix direction, and overall assessment. Before reporting a delegated claim, independently verify its changed-line trace, failure path, scope, and impact.
-
-## Using GitHub CLI
-
-Use `gh` CLI for PR workflow operations:
-
-```bash
-# Get PR details and description
-gh pr view <PR_NUMBER>
-
-# See all changes in the PR
-gh pr diff <PR_NUMBER>
-
-# Check CI status (includes linter warnings)
-gh pr checks <PR_NUMBER>
-
-# View details of a specific workflow run (logs, status, jobs)
-gh run view <RUN_ID>
-
-# Checkout PR locally for deeper review
-gh pr checkout <PR_NUMBER>
-```
-
-For upstream code patterns, API usage examples, or GitHub-hosted documentation, prefer `grep` over `webfetch` or `gh repo view` of raw file content. For library or framework documentation, prefer `context7` tools.
-
-## Output Format
-
-When providing review feedback:
-
-1. Start with findings, ordered by severity, with file and line references
-2. Report **Standards** and **Spec** findings separately
-3. Include the evidence, impact, and fix direction for every finding
-4. Follow with open questions, assumptions, or residual risks
-5. End with a brief overview and **overall assessment**:
-   - Approve
-   - Request changes
-   - Comment (needs discussion)
-
-## Important
-
-- Do NOT post comments to GitHub directly unless explicitly asked
-- Do NOT make code changes during review
-- If checking out locally, ensure the checkout is up to date with remote
+Keep the review read-only unless edits are separately requested. Posting review
+comments, changing PR text, and switching the user's checkout each require the
+appropriate explicit authorisation. Use the available read-only GitHub tools for
+PR context; consult owning docs or source for uncertain API behaviour.
