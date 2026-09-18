@@ -79,7 +79,7 @@ These encode the current OpenCode, dotfiles, notes, or maintainer workflow. Comp
 | `import-external-skill` | Depends on this repository's imports.json and built skill-maintenance CLI, Git, mise, Skills CLI, authenticated GitHub CLI, and upstream access. |
 | `agent-oxlint` | Requires the `dot agent-oxlint` command, private `dot-git.yml` opt-ins, and its managed package cache. |
 | `install-tool` | Separate general installation policy from personal package manifests and overlays. |
-| `session-coordination` | Herdr-managed sessions or explicitly requested native child sessions, local lifecycle records, and current context warnings. |
+| `session-coordination` | Herdr-managed sessions or explicitly requested native child sessions; uses host background completion notifications when available. |
 | `task-focus` | Uses BTW or fresh sessions, context usage when available, and Herdr-managed workspaces/worktrees through the separately installed `herdr` skill. |
 
 ## Follow-Up
