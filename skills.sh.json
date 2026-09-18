@@ -57,7 +57,8 @@
         "pitchfork-dev-servers",
         "pkexec-root",
         "safe-process-signals",
-        "shared-workflows"
+        "shared-workflows",
+        "wrangler"
       ]
     },
     {

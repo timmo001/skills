@@ -7,7 +7,7 @@ Generated from each top-level skill's `SKILL.md` frontmatter (`name` and `descri
 # or: mise run catalogue
 ```
 
-This repository currently documents **56** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
+This repository currently documents **57** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
 
 ## Portable
 
@@ -68,6 +68,7 @@ Skills for named tools, services, and target repositories.
 | [`pkexec-root`](./pkexec-root/) | Use pkexec first for commands that need root directly or indirectly. |
 | [`safe-process-signals`](./safe-process-signals/) | Safe process killing and signal handling for agent/subprocess contexts. Use when running pkill, killall, kill, or any process termination command from a shell subprocess, automated script, or coding agent. |
 | [`shared-workflows`](./shared-workflows/) | Use, configure, maintain, or create reusable GitHub Actions workflows for personal and organisation repositories. Use when a task mentions shared workflows, reusable workflows, `workflow_call`, cross-repository workflow `uses:`, or the personal workflows repository; do not use for repository-specific or proof-of-concept CI unless evaluating whether it should be shared. |
+| [`wrangler`](./wrangler/) | Use the project's Wrangler CLI for Cloudflare development, configuration, and deployment. Load before running Wrangler or changing its configuration; retrieve exact flags and binding shapes from current docs and installed schemas. |
 
 ## Workflow-bound
 

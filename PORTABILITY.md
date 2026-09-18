@@ -63,6 +63,7 @@ These are agent-agnostic in format, but their workflows or specific branches dep
 | `release-oxlint-rules` | Writable central Oxlint rules checkout, mise, Bun, npm, and registry access; authenticated GitHub CLI and release access for publication. |
 | `safe-process-signals` | Linux shell process tools, including pgrep, pkill, killall, and timeout. |
 | `shared-workflows` | Authenticated GitHub access and consumer and owner-selected shared GitHub Actions workflow source, including pinned historical revisions. |
+| `wrangler` | Project-local Wrangler dependency, supported Node.js runtime, and Cloudflare authentication for remote operations. |
 
 ## Workflow-Bound
 
