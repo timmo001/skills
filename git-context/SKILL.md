@@ -56,14 +56,6 @@ Prefer the installed helpers over rebuilding default-branch operations with ad-h
 
 These commands are stowed from `scripts/.local/bin/`; the aliases are defined in `zsh/.zshrc`.
 
-## Resetting and Reapplying Changes
-
-When you need to rebase or reset but preserve your changes:
-
-1. Save the diff: `git diff <remote>/<default>...HEAD > /tmp/patch`
-2. Reset: `git reset --hard <remote>/<default>`
-3. Reapply staged: `git apply --index /tmp/patch`
-
 ## Checking PR Status
 
 If a PR exists for the branch:
