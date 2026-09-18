@@ -7,7 +7,7 @@ Generated from each top-level skill's `SKILL.md` frontmatter (`name` and `descri
 # or: mise run catalogue
 ```
 
-This repository currently documents **58** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
+This repository currently documents **57** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
 
 ## Portable
 
@@ -32,7 +32,6 @@ General engineering and writing skills that work across Agent Skills clients.
 | [`lit-rendering`](./lit-rendering/) | Lit rendering and picker callback-shape guidance for editing and reviewing Lit components. |
 | [`maintain-docs`](./maintain-docs/) | Keep documentation current and accurate with recent code changes, across in-code docs (docstrings, annotations, comments), in-repo docs sites, and external docs repositories. Use when asked to update docs, check docs accuracy, keep documentation current, document recent changes, refresh docstrings or annotations, or catch documentation up with the codebase. Matches the codebase's existing documentation density and stops before commit. |
 | [`plan`](./plan/) | Produce implementation-ready plans from the current conversation and repository context. Use when entering native plan mode, invoking /plan, or when a task needs concrete implementation sequencing before edits begin; do not use for round-based grilling. |
-| [`prototype`](./prototype/) | Build disposable code to answer one design question. Use when the user wants to test whether logic or a state model feels right, or compare materially different UI directions before production implementation. |
 | [`remove-single-use-functions`](./remove-single-use-functions/) | Safe inlining and removal of single-use functions during code review and refactoring. Use when a local, non-exported helper has exactly one real call site and inlining preserves behaviour and readability. |
 | [`research`](./research/) | Investigate a topic against primary sources and return cited findings, comparing credible maintainer and contributor perspectives when judgement is involved. Use when the user asks why, says show evidence, validate this, or use trusted sources; wants research, docs, API, or spec facts; needs external library or GitHub behaviour verified; compares competing views; or delegates reading legwork to a background agent. |
 | [`show-me`](./show-me/) | Explain the current topic with a concise visual such as a tree, diagram, diff, or focused HTML artefact. Use ONLY when the user explicitly asks to see, visualise, diagram, sketch, or be shown the preceding explanation. |
