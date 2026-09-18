@@ -7,7 +7,7 @@ Generated from each top-level skill's `SKILL.md` frontmatter (`name` and `descri
 # or: mise run catalogue
 ```
 
-This repository currently documents **57** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
+This repository currently documents **56** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
 
 ## Portable
 
@@ -27,7 +27,6 @@ General engineering and writing skills that work across Agent Skills clients.
 | [`effect-principles`](./effect-principles/) | Apply the Effect way of reasoning in codebases that do not use Effect, in any programming language. Use when editing or reviewing non-Effect code so dependencies, failures, state, boundaries, resources, time, and workflows stay explicit without adding Effect-shaped architecture or broader scope. |
 | [`evidence-first`](./evidence-first/) | Check questions and uncertain statements before answering, while following clear user choices and limits. Use in any agent mode when the user asks why or how something works, says things like I think, I remember, or I don't think, asks whether something is correct, requests advice, or gives a firm preference such as I don't want this, reduce the scope, or this is going too far. |
 | [`grilling`](./grilling/) | Grill the user about a plan, decision, or idea in dependency-ready rounds. Use when the user wants to stress-test their thinking or uses a grill trigger phrase. |
-| [`html`](./html/) | Writes and reviews semantic, accessible HTML and template markup that stays readable and low-noise. Use when creating or refactoring HTML or Svelte templates, cleaning up div soup, choosing better elements, improving form markup, fixing heading or landmark structure, or replacing custom controls with native HTML. |
 | [`human-step-guide`](./human-step-guide/) | Prepare a concise guide when progress is blocked by a genuinely human-only action. Use for approvals, physical actions, credential entry, or dashboard steps the agent cannot perform; do not use for work available tools can complete. |
 | [`lit-rendering`](./lit-rendering/) | Lit rendering and picker callback-shape guidance for editing and reviewing Lit components. |
 | [`maintain-docs`](./maintain-docs/) | Keep documentation current and accurate with recent code changes, across in-code docs (docstrings, annotations, comments), in-repo docs sites, and external docs repositories. Use when asked to update docs, check docs accuracy, keep documentation current, document recent changes, refresh docstrings or annotations, or catch documentation up with the codebase. Matches the codebase's existing documentation density and stops before commit. |

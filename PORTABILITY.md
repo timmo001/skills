@@ -22,7 +22,6 @@ These skills use general engineering concepts and ordinary agent capabilities. T
 | `effect-principles` | General engineering guidance. |
 | `evidence-first` | General evidence and decision guidance. |
 | `grilling` | General round-based decision protocol. |
-| `html` | General web platform guidance. |
 | `human-step-guide` | General workflow guidance. |
 | `lit-rendering` | Requires Lit in the target project. |
 | `maintain-docs` | Uses ordinary repository and documentation tools. |
