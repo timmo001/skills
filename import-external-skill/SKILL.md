@@ -61,14 +61,7 @@ If the import adapts body content beyond frontmatter, add a `# local-edits:` blo
 #   - SOME-FILE.md: framework-specific pattern replaced with local equivalent
 ```
 
-## Commit Format
-
-```text
-Skill title
-
-Origin:
-https://github.com/org/repo/tree/main/skills/skill-name
-```
+Commit only when requested, following `git-commit`. Keep upstream attribution in `imports.json` and the skill's source comments.
 
 ## User Context
 
