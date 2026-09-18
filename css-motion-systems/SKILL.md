@@ -8,6 +8,7 @@ license: UNLICENSED
 #   - description rewritten for local skill-selection clarity
 #   - body extensively restructured
 #   - references/LINEAR_EASING_PATTERNS.md headings simplified
+#   - SKILL.md: limit validation to affected viewports, interactions, and concrete performance concerns
 ---
 
 # CSS Motion Systems
@@ -167,6 +168,6 @@ See: [references/MOTION_TOKENS.css](references/MOTION_TOKENS.css)
 
 ### Validation
 
-- Tested on desktop and mobile viewport sizes
-- Tested in at least one lower-power or throttled scenario
-- No visual tearing, clipping, or timing drift in rapid interactions
+- Check affected viewport sizes and interactions; include desktop and mobile when the change affects both
+- Use a lower-power or throttled scenario when there is a concrete performance concern
+- Check rapid interactions for tearing, clipping, or timing drift when interruption or repeated input is affected
