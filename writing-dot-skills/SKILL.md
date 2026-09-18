@@ -6,83 +6,35 @@ description: Craft for authoring Agent Skills that select reliably and stay lean
 
 # Writing Agent Skills
 
-Craft guidance for writing and revising skills that follow the Agent Skills specification. It covers making a skill select at the right moment and stay easy to scan. Use the current client or repository documentation for installation, registration, and client-specific frontmatter extensions.
+Lineage: adapted from Matt Pocock's `writing-great-skills` and Trail of Bits'
+`designing-workflow-skills`.
 
-Lineage: adapted from mattpocock's `writing-great-skills` and trailofbits' designing-workflow-skills, reworked for this repo and trimmed to the parts `customize-opencode` does not cover.
+## Write
 
-## Goals
+- Make the description say what the skill does and when it should load. Name
+  distinct branches and concrete triggers; use explicit-only gating where needed.
+- Keep `SKILL.md` self-contained and focused on decisions, ordering, and traps
+  that change the agent's behaviour. Use exact commands for fragile operations;
+  leave easily retrieved syntax to current tooling and `--help`.
+- Reuse existing commands, validators, import tooling, and owning skills. Add a
+  script only when a repeated deterministic operation lacks an existing tool.
+- Link supporting files directly from `SKILL.md`, saying when to read them.
+  Split only substantial branch-specific detail; avoid reference chains.
+- Keep each rule in one place. Remove repeated checklists, obvious advice, and
+  fixed process or output quotas that do not serve the task.
 
-- The agent selects the skill correctly from its description alone.
-- `SKILL.md` stays short and practical.
-- Supporting files earn their place by cutting repeated complexity.
-- Every instruction changes behaviour enough to justify its attention cost.
+## Maintain
 
-## Workflow
-
-1. Clarify the job.
-   - State the task, the triggers, the scope, and any hard constraints.
-   - Reuse the name this repo already uses for the workflow instead of inventing one.
-2. Write the description for selection.
-   - The description is the only thing the agent reads when deciding whether to load the skill. Everything else is read only after it activates.
-   - Cover what the skill does and when to use it, and front-load the literal words, filenames, or request shapes that should trigger it.
-   - Make it distinct from neighbouring skills so auto-selection is reliable, and gate with "Use ONLY when..." if it should stay quiet on adjacent topics.
-   - Keep portable frontmatter to the Agent Skills specification unless a documented client extension is deliberate.
-   - Treat the description as a context pointer: name both the material it exposes and each distinct branch that should load it. Collapse synonyms that describe the same branch.
-3. Draft the body.
-   - Start with the minimum workflow that does the task well. Prefer direct rules and checklists over theory. Keep examples concrete and local.
-   - Match instruction freedom to how fragile the task is:
-     - Low freedom (exact commands) for fragile or destructive operations.
-     - Medium freedom (templates with parameters) for preferred patterns where variation is fine.
-     - High freedom (heuristics) for exploratory work like review or analysis.
-   - Number multi-step phases so execution order is reliable.
-   - End each step with a checkable completion condition. Prefer exhaustive bounds such as "every changed consumer accounted for" over vague bounds such as "understanding reached".
-   - Keep definitions, rules, and caveats for one concept together so reading one part brings the relevant neighbours with it.
-4. Decide whether to split.
-   - Keep `SKILL.md` self-contained by default.
-   - Move detail into `references/` only when it is large, rarely needed, or a separate domain.
-   - Keep every supporting file one hop from `SKILL.md`. No reference chains.
-   - Put material every branch needs in the main file. Move branch-specific detail behind a context pointer that says both what it exposes and when that branch should load it.
-   - Split by sequence only when seeing later steps is likely to rush the current one; otherwise keep the workflow together.
-5. Decide whether to add scripts.
-   - Add a script only for a deterministic operation the agent should not re-derive each run: validation, a fixed multi-step command, helper logic.
-   - Document when to run the script instead of generating code freehand.
-6. Wire it in.
-   - Keep the canonical skill in the repository's declared skill root; do not create client-specific copies unless packaging requires them.
-   - If the skill changes a convention, update the owning repository guidance and generated catalogue from their documented sources.
-   - Validate with the repository's skill validator and confirm the target client discovers it.
-7. Prune the result.
-   - Remove duplicated meanings and keep each rule in one authoritative place.
-   - Leave cheap facts in authoritative config, scripts, directory layout, or `--help`; document only conventions, reasons, and non-obvious traps the environment cannot reveal.
-   - Delete stale, irrelevant, or default behaviour that does not change how the target agent acts.
-   - Re-read descriptions and reference pointers last because their text consumes attention whenever it is visible.
-
-## Quality checks
-
-Review against three severities:
-
-- Critical (blocks loading or misfires): no `name` or `description`; invalid frontmatter; broken paths to supporting files.
-- Major (weak in practice): a vague description that will not trigger; a `SKILL.md` long enough that it should have been split; missing scope guidance on when to use it and when not to.
-- Minor (polish): formatting and optional wording. Change these only when they genuinely improve how the agent behaves.
-
-General checks:
-
-- The description is specific enough for correct auto-selection and distinct from nearby skills.
-- The workflow is short enough to scan.
-- Supporting files exist only where they cut noise in `SKILL.md`.
-- The skill matches current local tooling, paths, and names.
-- No stale upstream or tool-specific instructions remain after adapting.
-- Scripts, config, directory layout, and `--help` output remain authoritative. Repeat them only when the lookup is expensive; document the convention, reason, or gotcha the environment cannot reveal instead.
-- Each completion condition is observable and demanding enough to prevent premature completion.
-- Each pointer names the branch that should follow it, and each referenced file is reachable in one hop.
-- Removing any instruction would materially weaken selection, execution, safety, or verification.
-
-## Anti-patterns
-
-- The description summarises the workflow instead of naming the triggers.
-- A monolithic `SKILL.md` that should have moved detail into references.
-- Reference chains, where one supporting file points to another. Keep everything one hop from `SKILL.md`.
-- Instructions that assume a tool without naming it.
-- Unnumbered steps in a multi-step workflow, so the order is ambiguous.
-- Restating facts that an agent can retrieve cheaply from the repository or tool itself.
-- Repeating an instruction for emphasis instead of sharpening its single authoritative wording.
-- Negative instructions without a positive target behaviour, except where a hard guardrail genuinely requires both.
+1. Find the source of truth and repository instructions. Edit authored skills
+   there; change tool-owned imports in their owning repository. Preserve licences,
+   source attribution, and the established source-to-import update order.
+2. Use the repository's existing registration and import tools. Update callers
+   when renaming or removing a skill, and update compatibility metadata when its
+   runtime or tool assumptions change. Keep machine-specific values in private
+   configuration and shared instructions portable.
+3. Regenerate catalogues and other derived files through their owning tools.
+   Follow the repository's packaging, pinning, and stow rules; do not write into
+   installed copies or silently advance dependency pins.
+4. Run the existing skill/metadata validator and discovery check. Verify names,
+   frontmatter, referenced files, and generated output. Use client diagnostics
+   when changing client registration. Commit and publish only when requested.
