@@ -16,8 +16,7 @@ These skills use general engineering concepts and ordinary agent capabilities. T
 | `changeset-scope` | No repository-specific dependency. |
 | `chill` | Explicit-invocation workflow. |
 | `cleanup-unnecessary-variables` | General code guidance. |
-| `code-review` | Benefits from subagents but does not require a named runtime. |
-| `codebase-design` | General architecture guidance. |
+| `code-review` | General review workflow with optional delegation. |
 | `css-motion-systems` | Web platform guidance with colocated references. |
 | `diagnose` | General diagnosis workflow with optional client metadata. |
 | `domain-modeling` | General modelling workflow. |
@@ -59,7 +58,7 @@ These are agent-agnostic in format, but their workflows or specific branches dep
 | `home-assistant-lazy-context` | Home Assistant frontend source and conventions. |
 | `home-assistant-list-components` | Home Assistant frontend source and components. |
 | `home-assistant-lit-rendering` | Home Assistant frontend and Lit. |
-| `improve-codebase-architecture` | Subagent-capable client and a browser with network access for the HTML report's Tailwind and Mermaid CDNs. |
+| `improve-codebase-architecture` | Writable temporary directory and a browser with network access for the HTML report's Tailwind and Mermaid CDNs. |
 | `install-timmo-oxlint-rules` | JavaScript or TypeScript repository, Oxlint, and its package manager; copying uses Node.js. Wholesale import; compatibility frontmatter belongs upstream. |
 | `notes-cli` | Notes CLI, shell access, and a configured repository notes vault with CLI-managed Git persistence. Wholesale import owned by `timmo001/notes`. |
 | `opencode-effect` | OpenCode V2 plus mutually compatible plugin, client, SDK, and Effect package contracts. |

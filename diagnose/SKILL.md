@@ -7,6 +7,7 @@ license: MIT
 # local-edits:
 #   - SKILL.md: local name retained after upstream rename, condensed body, rewritten description, OpenCode tool guidance, no test-first workflow
 #   - hitl-loop.template.sh: retained upstream capture-safety warning
+#   - SKILL.md: removed subagent preference for codebase discovery
 ---
 
 # Diagnose
@@ -79,7 +80,6 @@ Use this skill for debugging work where ad-hoc inspection is likely to miss the 
 ## Tool Guidance
 
 - Start with narrow local reads and searches before broad exploration.
-- Use the `task` tool with an available local exploration subagent for wide codebase discovery.
 - Use Chrome DevTools tools only for browser-specific bugs.
 - Use tests, CLI commands, curl, small repro scripts, or harnesses to create deterministic loops.
 - Do not trim normal command output with `head` or `tail`. If a repro command is genuinely huge, capture output to a file and inspect targeted sections with `Grep` or `Read` offsets instead of re-running.

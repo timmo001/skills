@@ -7,7 +7,7 @@ Generated from each top-level skill's `SKILL.md` frontmatter (`name` and `descri
 # or: mise run catalogue
 ```
 
-This repository currently documents **61** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
+This repository currently documents **60** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
 
 ## Portable
 
@@ -22,7 +22,6 @@ General engineering and writing skills that work across Agent Skills clients.
 | [`chill`](./chill/) | Stop overengineering and reinventing the wheel. Use ONLY when the user explicitly invokes /chill or asks to simplify an approach that has become unnecessarily complex. |
 | [`cleanup-unnecessary-variables`](./cleanup-unnecessary-variables/) | Safe removal of unnecessary variables during code review and refactoring. Use when simplifying code, inlining temporary or single-use variables, or removing redundant aliases, while preserving runtime behaviour, evaluation order, and variables kept for readability or debugging. |
 | [`code-review`](./code-review/) | Review code changes along two axes - Standards (does it follow the repo's conventions, plus a Fowler code-smell baseline?) and Spec (does it implement what the originating issue or spec asked for?). Use when reviewing a pull request, a branch, work-in-progress changes, or a diff. |
-| [`codebase-design`](./codebase-design/) | Shared vocabulary for designing deep modules. Use when the user wants to design or improve a module's interface, find deepening opportunities, decide where a seam goes, make code more testable or AI-navigable, or when another skill needs the deep-module vocabulary. |
 | [`css-motion-systems`](./css-motion-systems/) | CSS motion design and implementation for web interfaces. Use when designing or building transitions, animations, `linear()` easing, transform strategy, View Transitions API patterns, motion tokens, or reviewing motion quality and accessibility. |
 | [`diagnose`](./diagnose/) | Disciplined workflow for diagnosing bugs - hard bugs, regressions, flaky behavior, and performance issues. Use when behavior is broken, failing, intermittent, or slower than expected and the agent needs a reproducible feedback loop before fixing. |
 | [`domain-modeling`](./domain-modeling/) | Build and sharpen a project's domain model. Use when the user wants to pin down domain terminology or a ubiquitous language, challenge or record a design decision, or when another skill needs to maintain the domain model. |
@@ -88,5 +87,5 @@ Skills coupled to the current OpenCode, dotfiles, notes, or maintainer workflow.
 | [`handoff`](./handoff/) | Compact the current conversation into a handoff document for another agent to pick up. |
 | [`import-external-skill`](./import-external-skill/) | Import skills from external repositories into this Agent Skills repository. Use when pulling in a public skill, reviewing an external skill set, or adapting upstream content into an existing skill. |
 | [`install-tool`](./install-tool/) | Install tools, applications, CLIs, runtimes, and packages. Use when an installation request should prefer mise for development tools, then fall back to pacman or yay for system-integrated software. |
-| [`session-coordination`](./session-coordination/) | Coordinate delegated agent sessions with bounded assignments, asynchronous background scheduling, soft concurrency caps, context-window rotation, independent review cycles, and logged cleanup across native child sessions and Herdr-managed agents. Use when managing multiple agents, panes, tabs, branches, stages, or long-running tasks while keeping the coordinating session small. |
+| [`session-coordination`](./session-coordination/) | Coordinate delegated agent sessions with bounded assignments, asynchronous background scheduling, soft concurrency caps, context-window rotation, independent review cycles, and logged cleanup across native child sessions and Herdr-managed agents. Use only when the user requests multi-agent coordination or selects a coordinator agent. |
 | [`task-focus`](./task-focus/) | Keep the original task on track when the user raises a side thought, side question, tentative branch idea, or explicit change of task. Use before diverting work, switching branches, or choosing between a BTW session, a fresh session, and the current conversation, especially with a large context window. |

@@ -1,6 +1,6 @@
 ---
 name: improve-codebase-architecture
-compatibility: Requires subagent support, a writable temporary directory, and a browser for the HTML report. Report styling and Mermaid diagrams load from CDNs and need network access.
+compatibility: Requires a writable temporary directory and a browser for the HTML report. Report styling and Mermaid diagrams load from CDNs and need network access.
 description: Scan a codebase for deepening opportunities, present them as a visual HTML report, then grill through whichever one you pick.
 license: MIT
 # origin: https://github.com/mattpocock/skills/tree/main/skills/engineering/improve-codebase-architecture
@@ -11,15 +11,16 @@ license: MIT
 #   - generalised ADR callout
 #   - HTML-REPORT.md: made architecture vocabulary additive to project terminology
 #   - SKILL.md: added compatibility metadata for concrete environment requirements
+#   - SKILL.md: removed subagent requirements from exploration and design comparison
+#   - SKILL.md and HTML-REPORT.md: removed dependency on the separate design skill and its glossary
 ---
 
 # Improve Codebase Architecture
 
 Surface architectural friction and propose **deepening opportunities** — refactors that turn shallow modules into deep ones. The aim is testability and AI-navigability.
 
-This command is _informed_ by the project's domain model and built on a shared design vocabulary:
+Use the project's existing terminology and design context:
 
-- Run the `/codebase-design` skill for the architecture vocabulary (**module**, **interface**, **depth**, **seam**, **adapter**, **leverage**, **locality**) and its principles (the deletion test, "the interface is the test surface", "one adapter = hypothetical seam, two = real"). Use those terms for architectural roles without renaming established domain concepts or framework constructs such as services, components, APIs, or boundaries; explain the mapping when it is not obvious.
 - If the project keeps a domain glossary or domain docs, the language there gives names to good seams; any recorded design decisions cover ground this command should not re-litigate. This repo uses no fixed `CONTEXT.md`/`docs/adr/` layout, so treat these as "if present" rather than required.
 
 ## Process
@@ -33,7 +34,7 @@ This command is _informed_ by the project's domain model and built on a shared d
 
 If the project keeps a domain glossary, domain docs, or recorded design decisions, read the ones covering the area you're touching first.
 
-Then spawn a sub-agent to walk the codebase. Don't follow rigid heuristics — explore organically and note where you experience friction:
+Then walk the codebase and note where you experience friction:
 
 - Where does understanding one concept require bouncing between many small modules?
 - Where are modules **shallow** — interface nearly as complex as the implementation?
@@ -60,7 +61,7 @@ For each candidate, render a card with:
 
 End the report with a **Top recommendation** section: which candidate you'd tackle first and why.
 
-**Use the project's own domain vocabulary for the domain (from its glossary or domain docs, if it keeps one), and the `/codebase-design` vocabulary for architectural roles.** If the project calls a concept the "Order service," keep that name and describe its architectural role precisely, for example: "the Order service is a shallow module whose interface leaks persistence details."
+**Use the project's own vocabulary, from its glossary or domain docs if present.** If the project calls a concept the "Order service," keep that name and describe the problem directly, for example: "the Order service exposes persistence details to its callers."
 
 **Recorded-decision conflicts**: if a candidate contradicts a design decision the project has already recorded, only surface it when the friction is real enough to warrant revisiting that decision. Mark it clearly in the card (e.g. a warning callout: _"contradicts a recorded decision — but worth reopening because…"_). Don't list every theoretical refactor a past decision forbids.
 
@@ -77,4 +78,4 @@ Side effects happen inline as decisions crystallize — run the `/domain-modelin
 - **Naming a deepened module after a concept the project's domain docs don't cover?** Record the term wherever the project keeps its domain vocabulary, if it keeps one. Don't stand up a glossary the project hasn't asked for.
 - **Sharpening a fuzzy term during the conversation?** Capture it in the same place, right there.
 - **User rejects the candidate with a load-bearing reason?** Offer to record the decision, framed as: _"Want me to note this so architecture reviews don't re-suggest it?"_ Only offer when the reason would help another reviewer avoid re-suggesting the same thing; skip ephemeral reasons ("not worth it") and self-evident ones.
-- **Want to explore alternative interfaces for the deepened module?** Run the `/codebase-design` skill and use its design-it-twice parallel sub-agent pattern.
+- **Want to explore alternative interfaces for the deepened module?** Compare designs against the project's constraints, caller needs, and implementation trade-offs.
