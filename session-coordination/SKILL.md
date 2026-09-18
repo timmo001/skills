@@ -1,15 +1,15 @@
 ---
 name: session-coordination
 license: Apache-2.0
-compatibility: Requires host-native child sessions or Herdr-managed agents, plus writable local cache storage for lifecycle records. Herdr operations require the separately installed herdr skill.
-description: Coordinate delegated agent sessions with bounded assignments, asynchronous background scheduling, soft concurrency caps, context-window rotation, independent review cycles, and logged cleanup across native child sessions and Herdr-managed agents. Use only when the user requests multi-agent coordination or selects a coordinator agent.
+compatibility: Requires Herdr-managed sessions or explicitly requested host-native child sessions, plus writable local cache storage for lifecycle records. Herdr operations require the separately installed herdr skill.
+description: Coordinate requested multi-agent work through visible Herdr sessions, bounded assignments, and owned-session cleanup. Use only when the user requests multi-agent coordination or selects a coordinator agent.
 ---
 
 # Session Coordination
 
-Manage scope, dependencies, ownership, approvals, blockers, and completion
-evidence. Delegate substantial investigation, implementation, execution,
-verification, review, and large reads.
+Manage scope, dependencies, ownership, blockers, and completion evidence.
+Delegate bounded work that benefits from a separate session. Keep small reads,
+decisions, and checks with the coordinator.
 
 ## Route To Owning Skills
 
@@ -36,18 +36,20 @@ verification, review, and large reads.
    coordinator-created background panes in the current Herdr tab. Queue excess
    work. Exceed either cap only with user approval, and never create topology
    merely to bypass a cap.
-3. Run independent or long-running work asynchronously. Native background
-   sessions are only for bounded baseline research. When coordinating inside
-   Herdr, use visible Herdr-managed sessions for implementation, execution,
-   verification, and review; keep their panes unfocused while they work. Advance
-   other ready work and join results only when a dependency needs them. Do not
-   poll or duplicate running work.
+3. Prefer visible Herdr-managed sessions for delegated work, including research.
+   Use native child sessions only when the user explicitly requests them. If
+   Herdr is unavailable, report the limitation rather than silently substituting
+   native subagents. Keep panes unfocused while they work. Advance other ready
+   work and join results when needed; do not duplicate running work or poll
+   when completion notifications are available.
 4. Keep conflicting work sequential unless the user approves separate topology.
    Reuse a session only for the same assignment, its review fixes, or unfinished
    verification. New scope or a new independently reviewable outcome gets a
    fresh session.
-5. Use a fresh read-only session for every review cycle. Route verified findings
-   to the owning implementation session, then use another fresh reviewer.
+5. Use an independent read-only reviewer only when requested or justified by a
+   concrete risk. Route verified findings to the implementation owner and check
+   the fixes directly. Do not launch another reviewer merely because fixes were
+   made.
 6. Honour an explicitly requested agent runtime. Keep runtime selection
    separate from the agent profile selected inside that runtime: never convert
    a runtime name into a native profile argument such as OpenCode's `--agent`.
@@ -59,10 +61,9 @@ verification, review, and large reads.
    exact launcher with `herdr pane run`, then use `herdr pane process-info` to
    confirm its foreground `argv` matches the launcher or its documented exec
    target before prompting the session. When the user does not choose a runtime,
-   match the coordinator's runtime. Outside Herdr, use host-native child
-   sessions. Inside Herdr, use Herdr-managed sessions except for the bounded
-   baseline research allowed above. In OpenCode, keep V2 parents on V2 children
-   and V1 parents on V1 children. Use Pi or another Herdr-supported agent kind
+   match the coordinator's runtime. Use the session route agreed above.
+   In OpenCode, keep V2 parents on V2 children and V1 parents on V1 children.
+   Use Pi or another Herdr-supported agent kind
    only when the user requests it.
 
 The assignment phase is complete when every ready item is either owned, queued
@@ -70,9 +71,8 @@ by the cap, or blocked on a named dependency or user decision.
 
 ## Control Context
 
-- Read only short briefs and targeted slices directly. Delegate full diffs,
-  transcripts, logs, generated output, long history, and broad searches. Keep
-  direct `context git` calls free of `--diff` and `--branch-diff` payloads.
+- Read relevant evidence directly. Search or slice large output; size alone is
+  not a reason to create another agent session.
 - Every delegated brief must require compact results and compliance with the
   active context warning system. At a warning, stop adding scope and rotate after
   the smallest safe unit. At critical, stop unless that would leave an unsafe
@@ -114,18 +114,17 @@ agent remains open and no lifecycle record created by the current run remains.
 
 ## Approvals And Delivery
 
-- Use direct read-only Git and GitHub commands only for concise management facts;
-  delegate detailed judgement. Delegate mutating Git and stack work to the owning
-  implementation session.
+- Keep Git mutations with the session that owns the changed files, using the
+  user's exact authorisation and scope.
 - The coordinator owns the workflow decision for consequential mutations. Pass
   the exact approved operation and scope to the child. Native children retain
   their own permissions, so runtime permission prompts may still appear.
 - Resolve conflicting conclusions and failed verification rather than forwarding
-  them without analysis. If a child fails, clarify or reassign the work instead
-  of absorbing its operational task.
-- Report completion only when implementation, independent review, and required
-  verification satisfy the acceptance criteria. State skipped work and pending
-  approvals explicitly.
+  them without analysis. If a child fails, clarify its blocker before deciding
+  whether to continue directly or reassign it.
+- Report completion when implementation and required verification satisfy the
+  acceptance criteria. Include independent review when it was requested or
+   justified above. State skipped work and pending approvals explicitly.
 
 Delivery is complete when every requested assignment is accepted, explicitly
 deferred, or reported blocked, and all settled owned sessions pass cleanup.
