@@ -31,4 +31,20 @@ panes, tabs, or workspaces as an agent.
 5. **Verify the change.** Run the consumer's typecheck and relevant tests against
    its resolved packages. For live checks, target the intended Herdr server and
    exercise the changed operation and resource cleanup. Report checked revisions,
-   docs used, and any verification blocked by unavailable dependencies or runtime.
+    docs used, and any verification blocked by unavailable dependencies or runtime.
+
+## Coordination Integrations
+
+- Use the SDK's agent prompt/wait operations for one-shot coordination and its
+  event streams for long-lived observation. Do not build polling loops or a
+  second lifecycle state machine around them. A prompt timeout can follow
+  delivery, so inspect state before deciding whether to retry.
+- Subscriptions are live-only. For a cached view, follow Herdr's
+  [subscribe-before-snapshot ordering](https://herdr.dev/docs/socket-api/#raw-methods)
+  using the resolved SDK's supported acquisition mechanism. Resynchronise after
+  reconnecting, and keep stream consumption within the owning Effect scope.
+- Keep assignment decisions in the consumer and live state in Herdr. Metadata
+  tokens are transient display data, not durable task records or semantic agent
+  state. Native session references are optional pointers to runtime history.
+- Check the resolved SDK's protocol support against the running server. Upstream
+  docs can describe operations newer than the installed package or server.
