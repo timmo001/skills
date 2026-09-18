@@ -58,7 +58,7 @@ When reviewing code changes, evaluate:
 4. **Type safety** - Missing types, any casts, unsafe assertions
 5. **Breaking changes** - API changes, schema changes (flag these explicitly)
 6. **Security concerns** - Input validation, authentication, secrets exposure
-7. **Test coverage** - Are new code paths tested? Are edge cases covered?
+7. **Verification** - Do existing checks address the concrete regression risks? Request additional tests only for a specific gap with meaningful impact or an explicit repository requirement.
 8. **Documentation** - Are changes documented if needed?
 
 ## Review Etiquette
@@ -82,8 +82,8 @@ Do not report a finding when the evidence does not establish a concrete problem.
 ## Delegation
 
 - Give every delegated agent the resolved changeset boundary from `changeset-scope`; surrounding reads remain context only.
-- Skills loaded by the parent are not inherited by a fresh subagent. Use `explore` for evidence gathering, not the complete review or final judgement.
-- If a subagent is asked to make review judgements, use a skill-capable read-only agent and require it to load the same applicable review and specialist skills, or include those criteria explicitly in its prompt.
+- Review directly by default. When a separate session is justified, prefer a visible Herdr session and use native subagents only when explicitly requested.
+- A separate session does not inherit the reviewer's loaded skills. Give it the same applicable review and specialist skills, or include those criteria in its brief, and keep its work read-only.
 - The parent reviewer owns Standards and Spec classification, severity, fix direction, and overall assessment. Before reporting a delegated claim, independently verify its changed-line trace, failure path, scope, and impact.
 
 ## Using GitHub CLI
