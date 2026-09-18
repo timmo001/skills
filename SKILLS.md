@@ -7,7 +7,7 @@ Generated from each top-level skill's `SKILL.md` frontmatter (`name` and `descri
 # or: mise run catalogue
 ```
 
-This repository currently documents **60** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
+This repository currently documents **59** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
 
 ## Portable
 
@@ -62,7 +62,6 @@ Skills for named tools, services, and target repositories.
 | [`home-assistant-lazy-context`](./home-assistant-lazy-context/) | Home Assistant frontend lazy-context, memoization, and `hass` removal guidance. Use when migrating Lit components from `hass!: HomeAssistant`, `.hass=${...}`, or broad `hass` access to context slices. |
 | [`home-assistant-list-components`](./home-assistant-list-components/) | Home Assistant list component migration and usage guidance. Use when editing ha-list, ha-list-item, ha-md-list, or migrating to ha-list-nav, ha-list-selectable, ha-list-item-button, ha-list-item-option, or ha-list-item-base. |
 | [`home-assistant-lit-rendering`](./home-assistant-lit-rendering/) | Home Assistant Lit rendering extensions for HA components and context-aware picker callback shape. |
-| [`improve-codebase-architecture`](./improve-codebase-architecture/) | Scan a codebase for deepening opportunities, present them as a visual HTML report, then grill through whichever one you pick. |
 | [`add-oxlint-rule`](./add-oxlint-rule/) | Create or revise a centrally maintained rule in @timmo001/oxlint-rules. Use for requests to add an Oxlint anti-slop rule, change an existing central rule, or promote a repository-specific lint preference into the shared package. |
 | [`install-timmo-oxlint-rules`](./install-timmo-oxlint-rules/) | Install or copy @timmo001/oxlint-rules into a JavaScript or TypeScript repository. Use when adding the shared anti-slop Oxlint config, enabling its Effect rules, or replacing a local anti-slop copy. |
 | [`release-oxlint-rules`](./release-oxlint-rules/) | Create and publish a major, minor, or patch release of @timmo001/oxlint-rules. Use when asked to create, cut, prepare, or publish an oxlint-rules release, including its version bump and npm and JSR publication. |

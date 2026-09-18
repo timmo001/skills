@@ -52,7 +52,6 @@
         "home-assistant-lazy-context",
         "home-assistant-list-components",
         "home-assistant-lit-rendering",
-        "improve-codebase-architecture",
         "add-oxlint-rule",
         "install-timmo-oxlint-rules",
         "release-oxlint-rules",
