@@ -7,86 +7,51 @@ description: Apply local safeguards for Herdr session recovery and transferring 
 
 # Herdr Workflows
 
-Load `herdr` first. It is the sole source of truth for Herdr commands, command
-semantics, topology, identifiers, targeting, agent lifecycle, output reading,
-and general safety. Do not restate, override, or infer those rules here. This
-companion adds only the local exceptions and transfer ordering below.
+Load `herdr` for control and current CLI discovery. This companion covers recovery
+and preserving work when moving between checkouts; `session-coordination` owns
+assignments and collecting worker results.
 
-## Session Routing
+## Recover Live Context
 
-- When diagnosing session routing, inspect the inherited `HERDR_SOCKET_PATH`.
-  Do not assume the default socket identifies the current pane's server.
-- Do not recover a stopped or unreachable shared session by running
-  `herdr server` directly. Use `herdr session attach default`; its attach path
-  safely starts the default server when absent.
+- Check the inherited `HERDR_SOCKET_PATH` before assuming the default server.
+  Explicit session selection overrides that socket; use it only for the intended
+  session. Recover an absent default server through `herdr session attach default`,
+  not a manually launched `herdr server` process.
+- Use targeted agent/pane get and list calls to recover known work. Use
+  `herdr api snapshot` when topology across the session is genuinely needed.
+  Live state establishes what exists, not who authorised or owns it.
+- Get optional native session references from Herdr's `agent_session` fields and
+  use the owning runtime's supported history/resume tools. A missing reference
+  is not evidence of lost work. Read the agent output and current Git state.
+- Pass a short continuation brief directly to the host agent. Use a durable
+  handoff only when the work must survive beyond available session history.
 
-## Worktree Transfer
+## Transfer A Linked Worktree
 
-Treat checkout removal and work transfer as separate operations. Use the
-`herdr` skill and current CLI to determine the available worktree operations;
-this workflow only decides when removal is safe.
+Herdr's `worktree.remove` removes the checkout and retains its branch. It does not
+merge or copy work. Closing a workspace and removing a checkout are different
+operations; consult the installed `herdr worktree` commands.
 
-### Establish Both Checkouts
+1. Identify source and host through Herdr and Git worktree metadata. The host is
+   the primary non-linked checkout, whatever its branch is. Inspect staged,
+   unstaged, and untracked changes in both. Coordinate outside the checkout that
+   will be removed; moving a session label does not move its process or cwd.
+2. Preserve the reviewed source outside that checkout before removal:
+   - For committed work, verify the source branch and commits are reachable from
+     the host repository.
+   - For uncommitted work, reproduce it in the host or create a verified transfer
+     file. Include untracked content and staging state; `git diff` alone is not
+     a complete transfer. Compare content, not just filenames.
+   - Preserve unrelated host changes. Stop on conflicts or missing content rather
+     than resetting, restoring, or implicitly stashing to force the transfer.
+3. Recheck both checkouts immediately before removal. Remove only the identified
+   linked workspace through Herdr once every intended change is preserved. A
+   force flag does not replace preservation or authorisation.
+4. Verify Herdr and Git no longer list the removed checkout and its branch still
+   exists. If continuing on that branch is requested, switch the host only when
+   Git can preserve its current changes; stop if it cannot.
+5. Confirm the host's branch, changed content, and staging state. Rerun checks only
+   when the checkout or generated state could affect their result. Report the
+   host path, preservation method, verification, and any unfinished work.
 
-1. Identify the linked source workspace, branch, checkout path, and exact Git
-   state. Identify the repository's primary non-linked checkout as the host;
-   "host" does not imply that its current branch is named `main`.
-2. Use Herdr and Git's worktree metadata to establish paths and workspace IDs.
-   Confirm whether the host checkout already has staged, unstaged, or untracked
-   work.
-3. Keep the final coordinator outside the linked checkout being removed. If the
-   current agent runs inside that checkout, use an existing host workspace or
-   open the host checkout with Herdr, then coordinate from that host workspace.
-   Do not remove the checkout containing the coordinator's running process.
-4. Give the host-side coordinator compacted knowledge from the linked-worktree
-   session: the user's intent, reviewed scope, material decisions, current Git
-   and preservation state, validation evidence, and any further requested work.
-   Do not rely on the host coordinator reconstructing that context from files or
-   terminal output.
-
-### Preserve The Reviewed State
-
-1. Record the exact reviewed source scope: staged files, unstaged files,
-   untracked files, base commit, and branch. Verification from an earlier turn
-   is stale until both checkouts are checked again immediately before removal.
-2. Make the reviewed content durable outside the linked checkout using the
-   smallest non-destructive method appropriate to its state:
-   - If the host already contains the intended files, verify their paths and
-     content are byte-for-byte identical to the reviewed source.
-   - If work is committed on the linked branch, verify the commit and branch
-     are reachable from the host repository.
-   - If work exists only as an uncommitted linked-checkout diff, reproduce it in
-     the host checkout or create and verify a complete transfer artefact before
-     removal. Account separately for staged, unstaged, and untracked content;
-     an ordinary `git diff` does not include untracked files.
-3. Preserve unrelated host changes. A matching file name is not evidence that
-   the contents match, and a clean source after a copy is not evidence that the
-   host copy is complete.
-4. Stop on conflicts, missing files, differing content, an unexpected base, or
-   a host branch switch that would overwrite changes. Do not use reset,
-   checkout restoration, or an implicit stash to make the transfer proceed.
-
-Every source change must have a verified durable counterpart outside the
-checkout that will be removed.
-
-### Hand Off To The Host
-
-1. From the host-side coordinator, recheck both worktrees and confirm the
-   linked workspace ID to remove. Do not begin removal until deleting the source
-   checkout cannot destroy the only copy of any intended change.
-2. Use the `herdr` skill's current removal process to remove only that linked
-   workspace.
-3. Confirm Herdr and Git no longer list the linked checkout, and confirm the
-   source branch still exists before proceeding.
-4. Switch the host checkout to the source branch. Dirty host changes
-   may follow the switch only when Git accepts it without overwriting content.
-   If the switch fails, stop and preserve the current host state.
-5. Reverify the host branch, changed-file set, content, staging state, and any
-   prior test evidence. Rerun checks when checkout context or generated state
-   could affect their result.
-6. If the user requested further work, continue it from the host checkout.
-   Otherwise, stop and report the completed transfer.
-
-Report the source workspace removed, final host path and branch, preservation
-method, final changed-file state, and verification run. Do not report a
-transfer complete merely because the linked workspace disappeared.
+Reference: [Herdr socket and worktree contracts](https://herdr.dev/docs/socket-api/).
