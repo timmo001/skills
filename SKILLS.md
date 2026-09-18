@@ -7,7 +7,7 @@ Generated from each top-level skill's `SKILL.md` frontmatter (`name` and `descri
 # or: mise run catalogue
 ```
 
-This repository currently documents **59** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
+This repository currently documents **58** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
 
 ## Portable
 
@@ -24,7 +24,6 @@ General engineering and writing skills that work across Agent Skills clients.
 | [`code-review`](./code-review/) | Review code changes along two axes - Standards (does it follow the repo's conventions, plus a Fowler code-smell baseline?) and Spec (does it implement what the originating issue or spec asked for?). Use when reviewing a pull request, a branch, work-in-progress changes, or a diff. |
 | [`css-motion-systems`](./css-motion-systems/) | CSS motion design and implementation for web interfaces. Use when designing or building transitions, animations, `linear()` easing, transform strategy, View Transitions API patterns, motion tokens, or reviewing motion quality and accessibility. |
 | [`diagnose`](./diagnose/) | Investigate bugs using source, observed failures, and proportionate verification. Use for regressions, intermittent failures, incorrect behaviour, or performance problems whose cause needs investigation. |
-| [`domain-modeling`](./domain-modeling/) | Build and sharpen a project's domain model. Use when the user wants to pin down domain terminology or a ubiquitous language, challenge or record a design decision, or when another skill needs to maintain the domain model. |
 | [`effect-principles`](./effect-principles/) | Apply the Effect way of reasoning in codebases that do not use Effect, in any programming language. Use when editing or reviewing non-Effect code so dependencies, failures, state, boundaries, resources, time, and workflows stay explicit without adding Effect-shaped architecture or broader scope. |
 | [`evidence-first`](./evidence-first/) | Check questions and uncertain statements before answering, while following clear user choices and limits. Use in any agent mode when the user asks why or how something works, says things like I think, I remember, or I don't think, asks whether something is correct, requests advice, or gives a firm preference such as I don't want this, reduce the scope, or this is going too far. |
 | [`grilling`](./grilling/) | Grill the user about a plan, decision, or idea in dependency-ready rounds. Use when the user wants to stress-test their thinking or uses a grill trigger phrase. |

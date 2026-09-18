@@ -19,7 +19,6 @@ These skills use general engineering concepts and ordinary agent capabilities. T
 | `code-review` | General review workflow with optional delegation. |
 | `css-motion-systems` | Web platform guidance with colocated references. |
 | `diagnose` | General diagnosis workflow with optional client metadata. |
-| `domain-modeling` | General modelling workflow. |
 | `effect-principles` | General engineering guidance. |
 | `evidence-first` | General evidence and decision guidance. |
 | `grilling` | General round-based decision protocol. |
