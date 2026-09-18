@@ -1,16 +1,20 @@
 ---
 name: browser-control
 compatibility: Requires a Chromium-family browser with the Browser Control extension, its local relay, and CLI or MCP access. CDP recording also requires ffmpeg.
-description: Control the user's existing Chromium-family browser through the Browser Control extension and local relay with deterministic Playwright. Use when asked to inspect, automate, test, or interact with a visible browser tab; continue an authenticated browser workflow; handle 2FA, passkeys, CAPTCHAs, or payment confirmation; record browser behaviour; or capture an authenticated network flow.
+description: Drive the user's existing Chromium-family browser with deterministic Playwright. Use when asked to inspect, automate, test, or interact with a visible browser tab; continue an authenticated browser workflow; handle 2FA, passkeys, CAPTCHAs, or payment confirmation; record browser behavior; or capture an authenticated network flow.
 license: MIT
 # origin: https://github.com/anomalyco/browser-control/tree/main/skills/browser-control
-# upstream-sha: bb6b3d279f0c0b279cb244a207c3ca4374caf99c
+# upstream-sha: 1cdd1e4c697197440ee9a7a9cdbf337d9e7a9f51
 # local-edits:
-#   - SKILL.md: description expanded to cover visible browser automation and local relay usage
-#   - SKILL.md: added compatibility metadata for concrete environment requirements
+#   - SKILL.md: added compatibility metadata and browser-access routing; distinguish other browser drivers
+#   - SKILL.md: create or update project todos only when requested
 ---
 
 # Browser Control
+
+Apply `browser-access` before browser interaction. This skill describes the
+Browser Control extension and relay; for another browser driver, use that
+driver's tool contract rather than these session selectors and helpers.
 
 Browser Control is a **driver**, not an agent. The calling agent decides what to
 do; Browser Control runs deterministic Playwright code in the user's visible
@@ -35,6 +39,10 @@ browser-control execute 'return { url: page.url(), title: await page.title() }'
 Use `browser-control doctor` only when setup or runtime behavior is unclear.
 `status` and `doctor` are observational and never start the relay.
 
+MCP startup, tool discovery, `skill`, and `session_current` do not contact the
+relay. The first operational tool call starts it if needed; relay-backed
+observational tools report unavailability instead of starting it.
+
 Ordinary CLI/MCP/SDK calls never replace a running relay. On a build mismatch,
 coordinate with other agents before running `browser-control relay restart`.
 It preserves browser tabs and durable sessions but resets JavaScript state and
@@ -50,6 +58,12 @@ Completion: one execute returns a page result and a readable session id, or
 `doctor` identifies the concrete setup failure.
 
 ### 2. Choose The Page Deliberately
+
+The bundled shim 0.0.25 verifies debugger ownership during reconnection. Reload
+the unpacked extension after installing this shim update. DevTools-attached tabs
+are excluded from Browser Control's inventory. `page.title()` reads time out
+after five seconds if the page execution context remains unavailable; the read
+timeout does not close or replace the tab.
 
 A bare CLI execute creates a fresh session-owned page and prints the exact
 `--session <id>` continuation command. Every later CLI call must pass that id or
@@ -73,6 +87,13 @@ it for sticky reuse:
 browser-control execute --target-url github.com 'return page.url()'
 browser-control session adopt --target-url github.com --session github
 ```
+
+`execute --target-url` selects a page for that call only. Continuing with just
+`--session` uses the session's default page, which may still be `about:blank`.
+For a multi-step task in an existing user tab, adopt it first. Always include
+`page.url()` when diagnosing an empty snapshot. Snapshot labels are compact
+descriptions; use `ref()` for actions rather than assuming their text is an
+exact Playwright accessible name.
 
 `targetUrl` and `targetIndex` select existing attached pages; they never
 navigate. A URL selector must match exactly one page, and URL and index selectors
@@ -232,6 +253,11 @@ Use the least expensive view that answers the question:
   the same page concurrently.
 - `screenshotWithLabels({ page, path? })` adds visual labels and metadata when
   layout matters.
+- `screenshotDiff({ baseline, path?, threshold?, fullPage? })` compares a saved
+  PNG (absolute path or Buffer) with the current session page at CSS-pixel scale.
+  It returns `matches`, `changedPixels`, `changedRatio` (0..1), dimensions, and a
+  red-highlighted PNG. Omit `path` to return the image as execute media; otherwise
+  supply a fresh absolute `.png` path. Existing output files are never overwritten.
 
 ```js
 return await snapshot({ within: "main", maxItems: 200 })
@@ -241,6 +267,21 @@ return await screenshotWithLabels({ page })
 
 Saving an image and returning only `"ok"` proves file creation, not visual
 correctness. Return screenshot buffers through MCP when visual evidence matters.
+
+For visual regression checks, save a baseline before changing the UI:
+
+```ts
+await page.screenshot({ path: "/absolute/before.png", scale: "css" })
+// After the intended UI change, in the same viewport:
+return await screenshotDiff({ baseline: "/absolute/before.png" })
+```
+
+The threshold defaults to 0.1 and controls per-pixel color tolerance, not the
+allowed changed area. Set it to 0 for exact pixels. Antialiasing changes count.
+Settle animations yourself and use the same viewport and `fullPage` setting for
+both captures. Dimension mismatches fail explicitly; images are never resized.
+Comparisons are limited to PNGs of 32 MiB / 16 megapixels each. Screenshots and
+diffs include visible page content: inspect for private information before sharing.
 
 ## Execute Interface
 
@@ -389,9 +430,34 @@ browser-control recording status --session github
 browser-control recording stop --session github
 ```
 
+Start, stop, and status accept `--json`. CDP stop/status results include a
+`quality` receipt: output dimensions/rate, source and retained-image counts/rates,
+coalesced/dropped frames, and `screenshotFallback`. The fallback means no
+compositor frames arrived and the video holds one stop-time screenshot; do not
+present that as recorded motion. Source counters count compositor events, not
+visually distinct frames. Low rates can be normal on a static page. Tab capture
+and older relays omit quality telemetry rather than inventing measurements.
+
+Explicit frame rates must be integers from 1 through 60 in either mode; invalid
+values fail instead of silently clamping. The start result reports the chosen rate.
+
 `--mode auto` uses tab capture for user-owned tabs and CDP for relay-owned tabs.
 Tab capture can include audio; CDP requires `ffmpeg` and has no audio. Use the
 command's `--help` for format and cursor options.
+
+CDP recordings preserve the starting CSS viewport (not a fixed 720p canvas),
+use high-quality source frames, and default to 60 fps. Use `--frame-rate 30`
+for smaller files. Actual motion still depends on Chrome delivering new frames;
+60 fps output does not guarantee 60 distinct frames. Larger viewports cost more
+CPU, transport bandwidth, and storage. Set the viewport before recording and do
+not change viewport/emulation mid-recording. Odd dimensions round down to even.
+
+Inspect an encoded frame at native size before sharing: the whole viewport must
+fill the frame, small text must be readable, and motion must not be a repeated
+still image. Do not crop and upscale a low-resolution capture to call it HD.
+On an older installed relay that shrinks the page into a padded corner, record
+the defect and coordinate a recorder update; changing the file's resolution is
+not a repair.
 
 Completion: stop the recorder, inspect the resulting media rather than only its
 existence, and report the viewport, state, and interaction path actually tested.
@@ -452,8 +518,8 @@ For deeper relay diagnosis, restart with `BROWSER_CONTROL_DEBUG=1`. Debug traces
 must never include expressions, arguments, results, headers, cookies, or form
 values.
 
-Whenever Browser Control fails, wedges, replaces a page/session, or behaves
-unexpectedly, create or update a `browser-control` project todo with the Browser
-Control version, safe session/page context, exact error, deterministic
-reproduction, expected versus actual behavior, and recovery attempted. Never
-include credentials, form values, or private account data.
+If the user requests a project todo for a Browser Control failure, include the
+Browser Control version, safe session/page context, exact error, deterministic
+reproduction, expected versus actual behavior, and recovery attempted. Otherwise,
+report the failure in the current conversation. Never include credentials, form
+values, or private account data.
