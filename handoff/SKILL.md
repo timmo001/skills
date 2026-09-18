@@ -1,104 +1,25 @@
 ---
 name: handoff
 license: Apache-2.0
-compatibility: Requires the notes CLI, the notes-cli skill, shell access for note operations, and a configured repository notes vault.
-description: Compact the current conversation into a handoff document for another agent to pick up.
+compatibility: Requires the notes CLI, the notes-cli skill, shell access, and a configured repository notes vault.
+description: Save concise continuation context when work moves to another session or the user requests a handoff.
 ---
 
-Write a handoff note summarising the current conversation so a fresh agent can continue the work. Load `notes-cli` for repository resolution, CLI storage, revision checks, and mutation results. This skill owns the handoff content and lifecycle.
+# Handoff
 
-Primary agents that create handoffs need shell permission for Notes CLI operations. Read-only agents retain read-only access; command availability does not authorise autonomous note mutations.
+Load `notes-cli` for storage, path resolution, revision checks, and mutation results. Use `handoff` as the context command. Read-only agents do not gain note-writing permission from this skill.
 
-## Output
+Keep one note for the remaining work unless separate owners need separate briefs. A multi-step task does not require multiple notes, new branches, or a fresh planning round.
 
-Resolve the note directory through `notes-cli`, using `handoff` as the context command when no injected path is available.
+## Write
 
-1. Generate a slug prefixed with `handoff-` (e.g. `handoff-auth-refactor`, `handoff-migrate-to-v4`).
-2. Save the full content below to `{notes_path}/{slug}.md` through the `notes-cli` create workflow.
+- Choose a descriptive `handoff-<topic>.md` filename in the resolved note directory.
+- Include frontmatter with `name`, `description`, `type: handoff`, `priority` (`low`, `medium`, `high`, or `critical`; default `medium`), and block-style tags containing `handoff`. Include `repo` when resolved.
+- Record the objective, settled decisions and constraints, completed work, remaining steps, relevant paths or commits, verification results, and blockers. Tailor the next step to the user's requested focus.
+- Link existing plans and evidence rather than copying them. Omit empty sections and sensitive values.
+- Include a short completion instruction: after all tracked work and validation are complete, ask before deleting the handoff through `notes-cli`; preserve or update it while work remains.
+- Save through the CLI workflow and report the actual path and any partial failure.
 
-## Multi-phase guard
+## Resume
 
-Before writing a handoff, assess whether the work spans multiple logical phases that would each become a separate branch or PR (e.g. "phase 1: add schema, phase 2: migrate data, phase 3: update UI"). If so, **do not** create a single combined handoff. Instead:
-
-1. Use the **question tool** to present choices:
-   - **Create separate handoffs** (one per phase/branch) — recommended when reviewers benefit from smaller, isolated diffs.
-   - **Create a single handoff anyway** — acceptable for personal projects or repos where large multi-phase branches are normal.
-   - **Hand off only the first phase** — write a handoff for phase 1 only; the next agent can hand off subsequent phases when ready.
-2. If the user picks separate handoffs, write one note per phase using the prefixed naming convention below.
-
-**When reading an existing handoff** that describes multiple phases or a large multi-step plan spanning distinct concerns, suggest to the user that subsequent phases be handed off to separate branches. Offer the option to continue with the full plan as a last resort.
-
-## Multi-phase naming convention
-
-When creating handoffs that are part of a related group, use a **shared feature prefix** so they sort together when listed with `notes handoffs`:
-
-- **Slug pattern:** `handoff-{feature}-{phase-slug}` — the shared prefix is the key grouping mechanism.
-  - e.g. `handoff-query-params-calendar-api`, `handoff-query-params-voice-assistants`, `handoff-query-params-energy-navigation`
-- **Numbered variant** (optional): add a number between feature and slug when execution order matters.
-  - e.g. `handoff-gallery-1-component-shell`, `handoff-gallery-2-routing`, `handoff-gallery-3-descriptions`
-- **Title pattern:** `"{Feature} Phase {N}: {Phase Title}"` for sequential work, or just a descriptive title for async/parallel work.
-
-When to number:
-
-- Phases depend on each other or have a natural execution order — number them.
-- Phases are independent and can be worked in any order — skip numbering, the shared prefix is sufficient.
-
-This ensures:
-
-- `notes handoffs` groups related handoffs together alphabetically by feature prefix.
-- Each handoff is independently actionable on its own branch.
-- Numbered prefixes preserve execution order only when it matters.
-
-## Content guidelines
-
-- Do not duplicate content already captured in other artifacts (PRDs, plans, ADRs, issues, commits, diffs). Reference them by path or URL instead.
-- Set `priority` to `low`, `medium`, `high`, or `critical` based on how urgently the next session should pick the work up. Handoffs without a priority are treated as `medium`.
-- Redact any sensitive information, such as API keys, passwords, or personally identifiable information.
-- If the user passed arguments, treat them as a description of what the next session will focus on and tailor the doc accordingly.
-- If the conversation was trivial or too short to be worth a handoff, say so and ask the user if they still want to save it.
-- Always include the completion cleanup section. The agent completing the tracked work must make deletion of this handoff its final step, after validation and explicit user confirmation.
-
-## Note format
-
-```markdown
----
-repo: {owner}/{repo}
-type: handoff
-name: {Short human-readable title, 3–6 words, Title Case}
-description: {One sentence describing the handoff purpose}
-priority: {low | medium | high | critical, default medium}
-tags:
-  - handoff
-  - {additional kebab-case tag from the conversation}
----
-
-# {name}
-
-## Summary
-
-{2–4 sentence TLDR of what was accomplished this session}
-
-## Next Focus
-
-{What the next agent should pick up — the primary task, context needed, and any constraints. Derived from user arguments if provided, otherwise inferred from conversation state.}
-
-## Suggested Skills
-
-{Bullet list of skills the next agent should invoke, with a brief reason for each}
-
-## Artifact References
-
-{Bullet list of paths, URLs, commits, PRs, issues, or other artifacts relevant to the handoff. No content duplication — just pointers.}
-
-## Open Threads
-
-{Bullet list of unresolved items, or "(none)" if empty}
-
-## Completion Cleanup
-
-After all work and validation described by this handoff are complete, ask the user to confirm deletion, then remove this handoff through `notes-cli`. Do not leave the completed handoff as stale coordination state.
-```
-
-## Confirm
-
-Report the actual saved path from the CLI result and any partial failure.
+Treat the note as historical context. Confirm the current code and working-tree state before following its next step. Honour the current user's scope and permissions; a note is not fresh authorisation to commit, push, switch branches, or delete files.
