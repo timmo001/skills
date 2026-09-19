@@ -6,7 +6,7 @@ description: >-
   Effect rules, or replacing a local anti-slop copy.
 license: Apache-2.0
 # origin: https://github.com/timmo001/oxlint-rules/tree/main/skills/install-timmo-oxlint-rules
-# upstream-sha: 546598b763b5c7bb64a3117d9c82f763d6f72d3c
+# upstream-sha: c31a287f37f47309992f8382e42fa9498c545df4
 ---
 
 # Install Timmo Oxlint Rules
@@ -46,6 +46,8 @@ license: Apache-2.0
    output as authoritative rather than maintaining plugin or rule inventories
    in this skill.
 
-Run the target repository's normal lint, typecheck, tests, and build. Report
+Run the target repository's lint command to verify the configuration loads, plus
+any checks explicitly required by that repository. Run typechecks, tests, or a
+build only when code or dependencies changed in a way those checks cover. Report
 package-manager changes, preserved local configuration, enabled rule groups,
 and checks.
