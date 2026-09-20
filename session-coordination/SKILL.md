@@ -2,7 +2,7 @@
 name: session-coordination
 license: Apache-2.0
 compatibility: Requires Herdr-managed sessions and the separately installed herdr skill, or explicitly requested host-native child sessions.
-description: Coordinate requested multi-agent work through visible Herdr sessions, bounded assignments, and owned-session cleanup. Use only when the user requests multi-agent coordination or selects a coordinator agent.
+description: Assess and coordinate parallel work through visible Herdr sessions, bounded assignments, and owned-session cleanup. Use when substantial plans or tasks contain independent work that could benefit from parallel workers, when the user requests coordination, or when a coordinator agent is selected. Ask before launching workers.
 ---
 
 # Session Coordination
@@ -10,6 +10,30 @@ description: Coordinate requested multi-agent work through visible Herdr session
 Keep scope, assignments, decisions, and accepted results in the coordinator's
 conversation or existing task list. Use Herdr for live identity and state rather
 than maintaining a second session registry in files.
+
+## Agree The Split
+
+- Keep small or tightly coupled work in the current session. Propose Herdr workers
+  when substantial independent investigation, checks, or disjoint implementation
+  can run in parallel with a clear owner for shared decisions and files.
+- Apply `evidence-first` before proposing sessions. Use findings from the current
+  task to explain why the work is independent and how parallel workers would help.
+  Name the assignments, repositories or areas, intended panes or workspaces, and
+  proposed concurrency. Task size alone is not evidence that a split will help.
+- Ask through the question tool whether to use that Herdr split or continue
+  directly. Wait for explicit agreement before creating worker sessions or their
+  panes. A previous user instruction covering those launches is sufficient;
+  selecting a coordinator profile, loading a skill, or expressing a general
+  preference for parallel work is not.
+- Coordinate from the current agent and conversation after agreement. No profile
+  switch is required. Keep the agreed scope in the conversation: it may authorise
+  multiple sessions and later launches or replacements within that scope without
+  repeated questions. Ask again before exceeding its assignments, locations, or
+  concurrency. Approval is not standing permission for unrelated work or another
+  conversation. If declined, continue directly.
+- During planning, workers may investigate but must not implement. Agreement to
+  parallel planning does not authorise implementation; keep each worker within
+  the current phase and the user's approved scope.
 
 ## Assign
 

@@ -16,6 +16,7 @@ Produce a plain, implementation-ready plan that shows what code will change and 
 4. Load `staged-implementation` only when repository inspection finds separate, independently reviewable changes. Otherwise write one dependency-ordered implementation sequence. Do not introduce stages, handoffs, checkpoints, or phase artefacts for a small change.
 5. Load `writing-style` as the prose reference for the visible plan. Apply its plain, concise, concrete, human voice, UK English, and no-em-dash rules. Do not apply its commit-message, pull-request, issue, or action-authorisation instructions to plan structure.
 6. Ask only the minimum necessary follow-up questions through the `question` tool when a requirement or trade-off cannot be inferred and would materially alter the implementation. Resolve those decisions before submitting the plan. Leave an open question in the submitted plan only when execution can safely proceed without resolving it. Do not run a grilling session while planning.
+7. When substantial independent investigation or planned implementation could benefit from parallel workers, load `session-coordination` to propose a bounded Herdr split and ask first. Keep coordination in the current agent. Planning workers remain read-only; record any agreed implementation split in the plan and launch those workers only once execution is authorised.
 
 ## Prepare Privately
 

@@ -40,7 +40,7 @@ Use this workflow when finishing the whole request in one uninterrupted change w
 
 ## Delegate Safely
 
-- Work directly by default. For justified delegation, prefer visible Herdr sessions; use native subagents only when explicitly requested.
+- For substantial independent work within the active stage, load `session-coordination` to propose a Herdr split and obtain agreement before launching workers. Coordinate from the current agent; keep small or tightly coupled work direct. Use native subagents only when explicitly requested.
 - Parallelise independent discovery, tests, or disjoint implementation only. Keep ordered reasoning and shared mutable files with one integrator.
 - Define shared contracts before delegation. Workers consume them; they do not independently redesign them.
 - Give each worker a bounded brief: objective, authoritative inputs, exact file scope, prohibited shared files, expected output, verification, and required concise summary.
