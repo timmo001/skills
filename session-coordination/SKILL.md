@@ -59,17 +59,27 @@ Honour the requested runtime; otherwise match the coordinator's runtime and
 version. A runtime is separate from its internal agent profile. Herdr's
 `agent start --kind` selects the integration's default executable.
 
+For an approved repository workspace, use the host's repository-launch skill when
+configured. Prefer its shared opener to recreating workspace selection and agent
+startup. Check live state to reuse the right workspace, retain the target pane ID,
+and distinguish newly created panes from reused shells for cleanup. Follow the
+opener's focus behaviour and restore the caller for background work when needed.
+
 For an alternate runtime, verify the configured exact launcher in the coordinator
-before creating a pane. Launch it with `herdr pane run`, then verify the foreground
-`argv` with `herdr pane process-info` against that launcher or its documented exec
-target before prompting. Do not substitute a same-named executable from `PATH`
-or discover launchers inside the target pane. Keep machine-specific launcher paths
-in the host's configuration.
+before creating a pane. Use the host opener when it verifies that runtime and
+delivers the prompt after readiness. Otherwise launch without a prompt through
+the opener or `herdr pane run`, then verify the foreground `argv` with
+`herdr pane process-info` against the launcher or its documented exec target before
+prompting. Do not substitute a same-named executable from `PATH` or discover
+launchers inside the target pane. Keep machine-specific launcher paths in the
+host's configuration.
 
 ## Work And Collect
 
-- Send the brief directly with `herdr agent prompt`. For a dependent result, use
-  its `--wait` with a bounded timeout. For parallel work, run the waiting command
+- If the verified host opener already delivered the brief, do not send it again;
+  use `herdr agent wait` when its result is needed. Otherwise send it directly with
+  `herdr agent prompt`, using `--wait` for a dependent result. Bound both waits with
+  a timeout. For parallel work, run the waiting command
   through the host's background shell facility when it provides completion
   notifications; continue other ready work and inspect the result on notification.
 - If the host lacks that facility, submit without waiting, do independent work,
