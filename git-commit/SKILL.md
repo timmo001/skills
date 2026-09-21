@@ -103,8 +103,14 @@ dot git-commit -m "<subject>" --dry-run       # preview, change nothing
   `home-assistant/frontend`. This also applies to a fork kept for upstream PRs
   (foreign `upstream` remote): work on a feature branch, not the fork's base
   branch. A takeover fork with no foreign remote, and every non-base branch, are
-  fine. The base branch is resolved from `origin/HEAD`, not assumed. Move to a
-  feature branch and open a PR; do not try to work around the guard.
+  fine. The base branch is resolved from `origin/HEAD`, not assumed.
+- A maintained fork can explicitly allow its maintenance branch with
+  `git config --local dot.maintainedForkBranch <branch>`. Configure this only
+  after the user approves treating that branch as a maintained fork. The
+  branch must match exactly and every `origin` fetch and push target must belong
+  to an owner in `dot.owner`; global settings are ignored. This keeps a foreign
+  `upstream` remote without disabling protection for contribution forks. If the
+  guard still rejects the commit, use a feature branch rather than bypassing it.
 
 ## 6. Push (only when asked)
 
