@@ -1,7 +1,7 @@
 ---
 name: github-repository-setup
 license: Apache-2.0
-description: Create GitHub repositories with the preferred feature and squash-merge settings, offer CI and automerge workflows, and finish first-push setup with a Development ruleset. Use when creating a GitHub repository, using gh repo create, applying repository defaults, or completing a new repository's initial GitHub setup.
+description: Create GitHub repositories with the preferred settings, enable watching during creation or induction, offer CI and automerge workflows, and finish first-push setup with a Development ruleset. Use when creating or inducting a GitHub repository, using gh repo create or dot repo-induct, applying repository defaults, or completing initial GitHub setup.
 compatibility: Requires authenticated GitHub CLI, Git, jq, repository creation or settings write access, and the shared-workflows and github-development-rulesets skills for their setup steps.
 ---
 
@@ -9,16 +9,32 @@ compatibility: Requires authenticated GitHub CLI, Git, jq, repository creation o
 
 Use these defaults for personal repositories. Resolve the authenticated account and destination owner at runtime. For organisation repositories, follow the owner's policy rather than automatically imposing personal settings.
 
+For induction of an existing GitHub repository, resolve its actual host and owner/name from the selected remote and complete **Watch the repository** after induction succeeds. Induction alone does not request the creation, settings, CI or ruleset steps below.
+
 ## Workflow
 
 1. **Resolve the destination and visibility before creation.** Establish the host, owner, repository name and local source. Use an explicitly requested public/private choice, or infer it only from unambiguous task context such as a stated private project. An account's other repositories, a local directory, or GitHub's defaults do not establish visibility. If visibility is unspecified and cannot be inferred, ask public or private with the question tool before creating anything; fall back to chat when unavailable. Record the chosen visibility and its basis.
-2. **Create the repository and apply the defaults.** Check current `gh repo create --help` and `gh repo edit --help`. Pass the resolved owner/name and an explicit visibility flag to creation, with `--disable-wiki`. For an existing local repository, use its actual source and selected remote without overwriting another remote. A creation request alone does not authorise committing or pushing: use `--push` only when a push was explicitly requested. Apply the settings below as part of the requested setup and read them back. Report unsupported settings or policy/plan restrictions rather than claiming success.
+2. **Create the repository and apply the defaults.** Check current `gh repo create --help` and `gh repo edit --help`. Pass the resolved owner/name and an explicit visibility flag to creation, with `--disable-wiki`. For an existing local repository, use its actual source and selected remote without overwriting another remote. A creation request alone does not authorise committing or pushing: use `--push` only when a push was explicitly requested. Apply the settings below as part of the requested setup and read them back. Complete **Watch the repository** once the repository exists, even if the first push is deferred. Report unsupported settings or policy/plan restrictions rather than claiming success.
 3. **Offer missing workflows using relevant evidence.** Inspect the destination's workflows, language, package manager, build/test commands, deployment targets and Renovate configuration. If CI is missing, offer to set it up. Base the recommendation on a small sample of related or heavily used repositories in the user's personal account: prefer matching stacks and release/deployment needs, recent successful runs and sustained maintenance. Show the source repositories, workflow paths and why they fit. A recent timestamp or high star count alone is not evidence of personal use. Resolve candidates dynamically rather than maintaining a hardcoded repository list. Keep private repository details and configuration out of public files.
    - Apply `shared-workflows` for reusable workflow selection and caller setup. Inspect the selected contracts at their pinned revisions and adapt to the destination's real commands. Offer relevant lint, build, test and release/deployment workflows, without copying unrelated jobs or inventing required secrets. Implement the accepted selection and validate it locally.
    - Inspect existing automerge workflows by behaviour, including `.github/workflows/renovate-automerge.yml`, reusable workflow calls and other workflows using `gh pr merge --auto --squash`. If missing, offer the matching automation. For personal setup using `timmo001/workflows`, source Renovate automation from its maintained [reusable Renovate automerge workflow](https://github.com/timmo001/workflows/blob/master/.github/workflows/renovate-automerge.yml). Resolve the current default-branch SHA, inspect the contract at that exact revision and create a minimal job-level `uses:` caller pinned to it. Do not bundle a snapshot of its implementation in this skill. Confirm Renovate is configured or include its setup in the offer. Other automerge workflows should follow the owner-selected shared source's eligibility rules, triggers and token requirements. Reuse an existing shared caller; migrate an inline equivalent when replacing it is in scope.
 4. **Complete the first push and Development ruleset in order.** When a push is authorised, push the initial code and selected CI workflows, then establish successful CI on the pushed revision. Apply `github-development-rulesets` for ruleset selection, permissions, observed required-check identities and verification. If the first push already happened, resume here using the latest pushed revision. If CI is absent, make the workflow offer first; defer CI-backed enforcement until real checks exist. Keep test-check selection and policy decisions with the ruleset skill. Do not copy required-check names from another repository.
 5. **Activate and verify selected automerge automation.** The repository's auto-merge switch enables the capability; workflows opt eligible PRs into it. Put required checks and the Development ruleset in place before activating a new automerge workflow. `--auto` waits for merge requirements, not every workflow merely present in the repository. Preserve squash merging, bot/PR eligibility checks and required permissions. For the reusable Renovate workflow, use a `pull_request_target` caller with `contents: write` and `pull-requests: write`; its current contract needs no inputs or extra secrets. Let the shared workflow own bot filtering, merge commands and concurrency. Verify these details against the selected revision. Keep this privileged workflow metadata-only: no checkout or execution of PR code. Validate the selected workflows and confirm their behaviour on the next eligible PR when one is available; do not create or merge a PR just to test setup.
-6. **Report the result.** Include repository URL and visibility, verified settings, workflows added or retained with source refs, first-push/CI evidence, ruleset result, and any declined or deferred setup. If no push was authorised, clearly identify the post-push steps still pending.
+6. **Report the result.** Include repository URL and visibility, verified settings and watching status with the authenticated account, workflows added or retained with source refs, first-push/CI evidence, ruleset result, and any declined or deferred setup. If no push was authorised, clearly identify the post-push steps still pending.
+
+## Watch The Repository
+
+Watching is part of creation and induction by default. Resolve the authenticated user on the selected `HOST`; the subscription belongs to that account, not the repository owner. Enable watching with notifications unignored, then read the subscription back:
+
+```bash
+gh api --hostname "$HOST" user --jq .login
+gh api --hostname "$HOST" --method PUT "repos/$REPO/subscription" \
+  -F subscribed=true -F ignored=false
+gh api --hostname "$HOST" "repos/$REPO/subscription" \
+  --jq '{subscribed, ignored}'
+```
+
+Require `subscribed: true` and `ignored: false` before reporting the repository as watched. Report authentication or API failures as incomplete setup. Honour an explicit request not to watch; do not assume repository ownership or creation automatically subscribes the user.
 
 ## Repository Defaults
 
@@ -71,4 +87,5 @@ Compare every field with the table. The squash setting must read back as `squash
 - [GitHub CLI repository creation](https://cli.github.com/manual/gh_repo_create)
 - [GitHub CLI repository settings](https://cli.github.com/manual/gh_repo_edit)
 - [GitHub repository API](https://docs.github.com/en/rest/repos/repos#update-a-repository)
+- [GitHub repository watching API](https://docs.github.com/en/rest/activity/watching)
 - [GitHub CLI PR merging](https://cli.github.com/manual/gh_pr_merge)
