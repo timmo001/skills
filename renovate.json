@@ -12,13 +12,27 @@
       "groupSlug": "effect"
     },
     {
+      "description": "Use the shorter release delay for Effect dependencies.",
+      "matchPackageNames": [
+        "effect",
+        "@effect/platform-*",
+        "@effect/vitest",
+        "@effect/tsgo"
+      ],
+      "minimumReleaseAge": "2 hours"
+    },
+    {
       "description": "Group GitHub Actions.",
       "groupName": "github actions",
       "matchManagers": ["github-actions"]
     },
     {
-      "description": "Update first-party workflows without a release delay.",
-      "matchPackageNames": ["timmo001/workflows"],
+      "description": "Update first-party dependencies without a release delay.",
+      "matchPackageNames": [
+        "@timmo001/**",
+        "timmo001/**",
+        "https://github.com/timmo001/**"
+      ],
       "minimumReleaseAge": null
     }
   ]
