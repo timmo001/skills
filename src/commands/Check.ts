@@ -74,12 +74,7 @@ export const check = Effect.fn("Check.run")(function* (
         if (options.openOpencode) {
           yield* executor.inherit(
             "opencode",
-            [
-              "--prompt",
-              `Review this imported skill diff:\n${diff}`,
-              "--agent",
-              "plan",
-            ],
+            ["--prompt", `Review this imported skill diff:\n${diff}`],
             { cwd: root },
           );
         }
