@@ -1,6 +1,6 @@
 [tools]
 bun = "1.4.2"
-node = "26.9.0"
+node = "26.10.0"
 "npm:skills" = "1.7.0"
 
 [tasks.build]
