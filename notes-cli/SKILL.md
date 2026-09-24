@@ -4,7 +4,7 @@ description: Use the notes CLI to find, read, create, update, and delete reposit
 compatibility: Requires the notes CLI, shell access, and a configured notes vault. The CLI owns note paths, revision checks, timestamps, and Git persistence.
 license: Apache-2.0
 # origin: https://github.com/timmo001/notes/tree/main/.agents/skills/notes-cli
-# upstream-sha: 69e94b79f36b8fc9f3ce3aff0ff9ec911df36ee6
+# upstream-sha: 095e3b9ece988cc3b61f3846b914f55e6c4272dd
 ---
 
 # Notes CLI
@@ -12,6 +12,8 @@ license: Apache-2.0
 Use the `notes` CLI for vault access. Run it from the target repository so context and listings resolve the right scope. Check a subcommand's `--help` when its flags are uncertain.
 
 Use the CLI when a note command, skill, or explicit user request calls for a note operation. Tool availability alone does not authorise note mutations.
+
+Note bodies are free-form Markdown written mostly for later agent reading. A few paragraphs with no headings is a valid note; keep `name`, `description`, and `tags` useful because listings rely on them.
 
 ## Workflow
 
