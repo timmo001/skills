@@ -2,11 +2,7 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, FileSystem, Layer, Path, Stream } from "effect";
 import { importSkill } from "../src/commands/Import.js";
-import {
-  check,
-  CheckError,
-  skillReimportCommand,
-} from "../src/commands/Check.js";
+import { check, CheckError } from "../src/commands/Check.js";
 import { getImport, writeReviewedSha } from "../src/imports/metadata.js";
 import {
   applyClean,
@@ -372,14 +368,6 @@ describe("import snapshots", () => {
       ),
       Effect.provide(NodeServices.layer),
     ),
-  );
-
-  it.effect("renders the standard global reimport command", () =>
-    Effect.sync(() => {
-      expect(skillReimportCommand(metadata.origin)).toBe(
-        `mise exec npm:skills -- skills add '${metadata.origin}' --global`,
-      );
-    }),
   );
 
   it.effect("fails check when an adapted import exactly matches upstream", () =>

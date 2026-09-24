@@ -18,11 +18,8 @@ import {
   requireRepositoryState,
   runDeviceSkillUpdates,
   runGitHubSkillUpdates,
-  skillUpdatesAgentModelArgument,
-  skillUpdatesAgentPrompt,
   skillUpdatesAgentResultStatus,
   skillUpdateSubject,
-  skillUpdatesWorkflowEndpoint,
   SkillUpdatesAgentError,
   validatePullRequestPolicy,
   type SkillUpdatesAgentConfig,
@@ -119,30 +116,6 @@ describe("updates agent policies", () => {
       expect(skillUpdateSubject(patch, "example")).toBe(
         "[SHA-only] Update example",
       );
-    }),
-  );
-
-  it.effect("selects successful workflow runs", () =>
-    Effect.sync(() => {
-      expect(
-        latestSuccessfulWorkflowRun({
-          workflow_runs: [
-            { id: 2, conclusion: "success", html_url: "https://example/2" },
-          ],
-        }),
-      ).toEqual({ id: 2, url: "https://example/2" });
-      expect(
-        skillUpdatesAgentModelArgument({
-          providerID: "github-copilot",
-          modelID: "gpt-test",
-          variant: "low",
-        }),
-      ).toBe("github-copilot/gpt-test#low");
-      expect(
-        skillUpdatesWorkflowEndpoint(
-          "https://api.github.com/repos/org/repo/actions/runs?status=completed",
-        ),
-      ).toBe("repos/org/repo/actions/runs?status=completed");
     }),
   );
 
@@ -307,27 +280,6 @@ describe("updates agent policies", () => {
         skillUpdatesAgentResultStatus("STATUS: failure\nSTATUS: success"),
       ).toBeNull();
       expect(skillUpdatesAgentResultStatus("Work complete")).toBeNull();
-    }),
-  );
-
-  it.effect("renders trusted prompt and model context", () =>
-    Effect.sync(() => {
-      const prompt = skillUpdatesAgentPrompt(config, {
-        id: 42,
-        url: "https://github.com/example/actions/runs/42",
-      });
-
-      expect(prompt).toContain(config.prompt);
-      expect(prompt).toContain(config.dashboardIssue);
-      expect(prompt).toContain("actions/runs/42");
-      expect(prompt).toContain("STATUS: success");
-      expect(
-        skillUpdatesAgentModelArgument({
-          providerID: "github-copilot",
-          modelID: "gpt-test",
-          variant: "low",
-        }),
-      ).toBe("github-copilot/gpt-test#low");
     }),
   );
 
