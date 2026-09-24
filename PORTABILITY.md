@@ -30,6 +30,7 @@ These skills use general engineering concepts and ordinary agent capabilities. T
 | `research` | Capability-based primary-source research workflow. |
 | `show-me` | Uses ordinary text diagrams and an optional HTML artefact. |
 | `staged-implementation` | General implementation sequencing. |
+| `testing` | General test-selection and verification policy based on concrete regression value. |
 | `to-questionnaire` | General channel-aware questionnaire drafting. |
 | `types-enforce-ts` | Requires TypeScript in the target project. |
 | `writing-dot-skills` | General Agent Skills authoring guidance. |

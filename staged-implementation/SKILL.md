@@ -6,7 +6,7 @@ description: Execute broad changes one coherent, independently verifiable stage 
 
 # Staged Implementation
 
-Use this workflow when finishing the whole request in one uninterrupted change would create several independently reviewable changes. A stage is one coherent purpose with its tests and documentation, not an arbitrary file or line limit.
+Use this workflow when finishing the whole request in one uninterrupted change would create several independently reviewable changes. A stage is one coherent purpose with any required verification and documentation, not an arbitrary file or line limit.
 
 ## Boundaries
 
@@ -24,7 +24,7 @@ Use this workflow when finishing the whole request in one uninterrupted change w
    - For package or release work, choose the validation source up front: committed remote source, the current worktree, or a prepared source tree overlaid with local changes.
 2. Split by coherent purpose and dependency order.
    - Separate prerequisites, contract changes, consumer migration, implementation replacement, generated output, and packaging when each can stand alone.
-   - Keep tests and documentation with the behaviour they prove or explain.
+   - Apply `testing` before adding tests. Keep worthwhile test edits and documentation with the behaviour they prove or explain; splitting work into stages does not itself justify more tests.
    - When a public contract must change, define its final shape and rollout order before parallel work. Migrate tolerant consumers first only when old and new shapes genuinely need to coexist.
 3. Define the active stage contract.
    - Goal and observable acceptance.

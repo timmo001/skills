@@ -9,6 +9,7 @@ license: MIT
 #   - hitl-loop.template.sh: retained upstream capture-safety warning
 #   - SKILL.md: removed subagent preference for codebase discovery
 #   - SKILL.md: allow source-led diagnosis and proportionate verification without a mandatory reproducer or hypothesis quota
+#   - SKILL.md: route test additions through the shared value-based testing policy
 ---
 
 # Diagnose
@@ -58,8 +59,8 @@ Use this skill for debugging work where ad-hoc inspection is likely to miss the 
     - Tag temporary debug logs with a unique prefix so they are easy to remove.
 5. Fix with lightweight verification.
     - Prefer the smallest verification that proves the real failure path is fixed.
-    - Add or adapt a regression test only for a concrete regression risk or an explicit user or repository requirement. An existing test helper alone does not justify another test.
-    - If no good test seam exists, do not force one just for process. Call out the missing seam as an architecture follow-up when it matters.
+    - Apply `testing`: add regression coverage when it catches a meaningful failure that existing checks miss. Explain the benefit; an ordinary case can qualify without being a rare edge case.
+    - If no good test seam exists, use another practical verification rather than forcing one or proposing architecture changes for an optional test.
 6. Verify the fix and clean up.
     - Re-run the original check when available. Otherwise state what source or recorded evidence supports the fix and what remains unverified.
     - Remove temporary instrumentation and throwaway harnesses unless they remain intentionally useful.
@@ -78,6 +79,6 @@ Use this skill for debugging work where ad-hoc inspection is likely to miss the 
 
 - The original failure is reproduced or the missing repro constraint is stated clearly.
 - The fix is checked against the original failure where possible, with any verification limits stated.
-- Any added regression coverage is justified by an existing seam or clear reuse value.
+- Any added regression coverage meets `testing` and names the meaningful failure or important behaviour it protects, or the explicit requirement.
 - Temporary debug instrumentation is removed.
 - Any remaining uncertainty or follow-up risk is called out explicitly.

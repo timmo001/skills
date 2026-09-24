@@ -60,7 +60,8 @@ Apply these cross-project engineering preferences without overriding explicit re
 
 ### Test Boundaries
 
-- Keep test infrastructure changes in dedicated work. Install error tracking before navigation, assert rendered content rather than wrappers, and never let report-merging failures suppress the original failed-suite result.
+- Apply `testing` alongside `ha-frontend-testing` and, for reviews, `ha-frontend-review`. Add tests for meaningful failures or important logic, with a concrete benefit rather than coverage for its own sake. Honour explicit requirements and the repository's rendering-test prohibition.
+- Keep maintenance of existing test infrastructure in dedicated work. Install error tracking before navigation and never let report-merging failures suppress the original failed-suite result.
 - Prefer watched background development servers while iterating, but treat CI as final verification when local and CI environments may differ.
 
 ## Sibling Repositories

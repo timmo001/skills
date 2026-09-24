@@ -22,8 +22,8 @@ Report only problems introduced or worsened by the changeset.
   for convention findings; skip what linting and formatting already enforce.
 - Do not turn code-smell labels, personal preferences, or hypothetical reuse
   into findings. Recommend structural changes only to resolve a concrete problem.
-- Use existing checks as evidence. Request extra tests only for a specific,
-  consequential regression gap or an explicit repository requirement.
+- Apply `testing` when choosing checks or considering test requests. Missing
+  coverage alone is not a finding; explain the meaningful failure left unprotected.
 - Review directly by default. For requested delegation, use
   `session-coordination`, give the reviewer the same boundary and applicable
   skills, and independently verify its claims before reporting them.

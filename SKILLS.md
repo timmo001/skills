@@ -7,7 +7,7 @@ Generated from each top-level skill's `SKILL.md` frontmatter (`name` and `descri
 # or: mise run catalogue
 ```
 
-This repository currently documents **57** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
+This repository currently documents **58** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
 
 ## Portable
 
@@ -35,6 +35,7 @@ General engineering and writing skills that work across Agent Skills clients.
 | [`research`](./research/) | Investigate a topic against primary sources and return cited findings, comparing credible maintainer and contributor perspectives when judgement is involved. Use when the user asks why, says show evidence, validate this, or use trusted sources; wants research, docs, API, or spec facts; needs external library or GitHub behaviour verified; compares competing views; or delegates reading legwork to a background agent. |
 | [`show-me`](./show-me/) | Explain the current topic with a concise visual such as a tree, diagram, diff, or focused HTML artefact. Use ONLY when the user explicitly asks to see, visualise, diagram, sketch, or be shown the preceding explanation. |
 | [`staged-implementation`](./staged-implementation/) | Execute broad changes one coherent, independently verifiable stage at a time. Use when work spans multiple independently reviewable changes, or when contracts, producer-consumer migrations, generated artefacts, or release packaging create an ordered multi-stage rollout; skip small single-purpose changes. |
+| [`testing`](./testing/) | Choose tests for their concrete regression value and avoid low-value coverage. Use during implementation, fixes, planning, diagnosis, and code review when choosing verification, adding or changing tests, or considering a missing-test finding. |
 | [`to-questionnaire`](./to-questionnaire/) | Turn a decision the user cannot answer alone into a channel-aware questionnaire draft for one other person. Use when missing knowledge belongs to a colleague, maintainer, or domain expert and the user needs questions for GitHub, Slack, Discord, or a document. |
 | [`types-enforce-ts`](./types-enforce-ts/) | TypeScript type-safety guidance for editing and reviewing `.ts`, `.tsx`, `.mts`, and `.cts` files. |
 | [`writing-dot-skills`](./writing-dot-skills/) | Craft for authoring Agent Skills that select reliably and stay lean. Use when creating or revising a skill's description, workflow, references, scripts, or structure. |
