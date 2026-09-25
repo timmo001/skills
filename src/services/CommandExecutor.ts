@@ -79,6 +79,8 @@ export class CommandExecutor extends Context.Service<
           cwd: options?.cwd,
           env: options?.env,
           extendEnv: true,
+          // An open stdin pipe makes CLIs such as `opencode run` wait for input.
+          stdin: "ignore",
         });
 
       const capture = Effect.fn("CommandExecutor.capture")(function* (
