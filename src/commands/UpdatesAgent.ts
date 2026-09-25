@@ -107,6 +107,15 @@ export class SkillUpdatesAgentError extends Schema.TaggedError<SkillUpdatesAgent
   { operation: Schema.String, message: Schema.String },
 ) {}
 
+/** A checkout is in use, so the run waits for a later attempt. */
+export class SkillUpdatesDeferredError extends Schema.TaggedError<SkillUpdatesDeferredError>()(
+  "SkillUpdatesDeferredError",
+  { message: Schema.String },
+) {}
+
+/** Exit status the service monitor maps to a warning. */
+export const SKILL_UPDATES_DEFERRED_EXIT_CODE = 2;
+
 export interface SuccessfulWorkflowRun {
   readonly id: number;
   readonly url: string;
@@ -795,7 +804,7 @@ const requireCleanRepositories = Effect.fn(
       })).trim()
     )
       return yield* new SkillUpdatesAgentError({
-        operation: "repository.check",
+        operation: "repository.dirty",
         message: `Refusing to run with uncommitted changes in ${repository}`,
       });
 
@@ -1286,6 +1295,11 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
         ...(runId ? ["--run-id", runId] : []),
       ]);
 
+      if (code === SKILL_UPDATES_DEFERRED_EXIT_CODE)
+        return yield* new SkillUpdatesDeferredError({
+          message: "Skill updates deferred to a later run",
+        });
+
       if (code !== 0)
         return yield* new SkillUpdatesAgentError({
           operation: code === 75 ? "run.lock" : "run.child",
@@ -1297,6 +1311,27 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
 
       return;
     }
+
+    // Local work in a checkout is not a failure: defer before claiming the run.
+    yield* requireCleanRepositories(config.repositories).pipe(
+      Effect.catchTag(
+        "SkillUpdatesAgentError",
+        (
+          error,
+        ): Effect.Effect<
+          never,
+          SkillUpdatesAgentError | SkillUpdatesDeferredError
+        > =>
+          error.operation === "repository.dirty" ||
+          error.operation === "repository.branch"
+            ? Effect.fail(
+                new SkillUpdatesDeferredError({
+                  message: `${error.message}; deferring skill updates`,
+                }),
+              )
+            : Effect.fail(error),
+      ),
+    );
 
     const run = yield* fetchRun(config, runId);
 

@@ -99,6 +99,8 @@ Recovery requires the current token and uses the same non-forced transition. A s
 
 Device configuration requires `opencodePermissions`, a non-empty array of OpenCode V2 `{ action, resource, effect }` rules using `allow` or `deny`. Keep machine-specific paths and command selections in that configuration. The runner prepends default-deny, then appends the selected agent's resolved explicit denials so job allowances cannot override them. Use `~/` for home-relative read, edit and external-directory resources; shell patterns are literal command text.
 
+If a configured checkout has uncommitted changes or is off its default branch, the runner defers before claiming the workflow run and exits with status 2, which service monitors can treat as a warning. The next run tries again.
+
 Before starting a model, the runner fast-forwards the primary repository and builds the update report. If every pending update already has an open pull request whose `imports.json` change sets the current upstream SHA, it skips the model and records the run as processed. Skills whose upstream no longer exists count as nothing to do; errors and invalid origins still start the model.
 
 After a model run passes the pull request policy, the runner appends an "Agent run" section to each pull request that run opened. It lists every attempt's model and variant (without the provider), result, time, cost and token counts from the OpenCode session, so models can be compared. Failing to add it is logged and does not fail the run.

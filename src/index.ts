@@ -4,6 +4,10 @@ import { layer as ghLayer } from "@timmo001/effect-gh";
 import { Effect, Layer } from "effect";
 import { CliConfig, CliError, Command } from "effect/unstable/cli";
 import { skillMaintenanceCommand } from "./cli/spec.js";
+import {
+  SKILL_UPDATES_DEFERRED_EXIT_CODE,
+  SkillUpdatesDeferredError,
+} from "./commands/UpdatesAgent.js";
 import { CommandExecutor } from "./services/CommandExecutor.js";
 import { GitHub } from "./services/GitHub.js";
 
@@ -33,7 +37,10 @@ const program = Command.runWith(skillMaintenanceCommand, { version: "1.0.0" })(
         console.error(error instanceof Error ? error.message : String(error));
       }
 
-      process.exitCode = 1;
+      process.exitCode =
+        error instanceof SkillUpdatesDeferredError
+          ? SKILL_UPDATES_DEFERRED_EXIT_CODE
+          : 1;
     }),
   ),
 );
