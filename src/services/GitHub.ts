@@ -1,4 +1,10 @@
-import { Gh, GhChunk, type GhError, type GhOptions } from "@timmo001/effect-gh";
+import {
+  Api,
+  Gh,
+  GhChunk,
+  type GhError,
+  type GhOptions,
+} from "@timmo001/effect-gh";
 import {
   Config,
   Context,
@@ -25,6 +31,8 @@ export class GitHubError extends Schema.TaggedError<GitHubError>()(
 
 export interface GitHubApiOptions {
   readonly jq?: string | undefined;
+  readonly method?: "POST" | "PATCH";
+  readonly body?: Schema.Json;
 }
 
 export interface GitHubRunOptions {
@@ -212,6 +220,19 @@ export class GitHub extends Context.Service<GitHub, GitHubService>()(
         endpoint: string,
         options?: GitHubApiOptions,
       ) {
+        if (options?.method)
+          return (yield* Api.raw({
+            endpoint,
+            method: options.method,
+            ...(options.body !== undefined && { body: options.body }),
+            ...(env && { options: { env } }),
+          }).pipe(
+            Effect.provideService(Gh, gh),
+            Effect.mapError((error) =>
+              fromGhError(`gh api ${endpoint}`, error),
+            ),
+          )).stdout.trim();
+
         return (yield* run(
           [
             "api",

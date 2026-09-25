@@ -20,6 +20,7 @@ import {
 import { importSkill } from "./Import.js";
 import { CommandError, CommandExecutor } from "../services/CommandExecutor.js";
 import { GitHub } from "../services/GitHub.js";
+import { withSkillUpdatesClaim } from "./UpdatesAgentCoordination.js";
 import {
   createSkillUpdatesSession,
   SkillUpdatesPermissions,
@@ -1026,26 +1027,22 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
 
     const run = yield* fetchRun(config, runId);
 
-    if (
-      (yield* fs.exists(config.stateFile)) &&
-      (yield* fs.readFileString(config.stateFile)).trim() === String(run.id)
-    ) {
-      yield* Console.log(`Workflow run ${run.id} has already been processed`);
-
-      return;
-    }
-
-    const states = yield* requireCleanRepositories(config.repositories);
-    const initialPr = yield* latestPullRequestNumber();
-    yield* processWithFallback(
-      config,
-      skillUpdatesAgentPrompt(config, run),
-      states,
-      initialPr,
+    yield* withSkillUpdatesClaim(
+      run.id,
+      Effect.gen(function* () {
+        const states = yield* requireCleanRepositories(config.repositories);
+        const initialPr = yield* latestPullRequestNumber();
+        yield* processWithFallback(
+          config,
+          skillUpdatesAgentPrompt(config, run),
+          states,
+          initialPr,
+        );
+        yield* requireRepositoryState(states);
+        yield* validatePullRequestPolicy(initialPr);
+        yield* refreshDashboard(primaryRepository);
+      }),
     );
-    yield* requireRepositoryState(states);
-    yield* validatePullRequestPolicy(initialPr);
-    yield* refreshDashboard(primaryRepository);
     yield* fs.makeDirectory(path.dirname(config.stateFile), {
       recursive: true,
     });

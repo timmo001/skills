@@ -15,6 +15,7 @@ import {
   runGitHubSkillUpdates,
 } from "../commands/UpdatesAgent.js";
 import { validate } from "../commands/Validate.js";
+import { recoverSkillUpdatesClaim } from "../commands/UpdatesAgentCoordination.js";
 
 const bool = (name: string, description: string) =>
   Flag.Boolean(name).pipe(
@@ -156,8 +157,32 @@ export const deviceAgentCommand = Command.make(
   Command.withDescription("Process one completed update workflow locally"),
 );
 
+export const recoverAgentCommand = Command.make(
+  "recover",
+  {
+    claim: Flag.String("claim").pipe(
+      Flag.withDescription("Exact abandoned claim token"),
+    ),
+    outcome: Flag.Literals("outcome", ["retry", "processed"]),
+    confirmStopped: bool(
+      "confirm-stopped",
+      "Confirm the owning runner and its OpenCode session have stopped",
+    ),
+  },
+  ({ claim, outcome, confirmStopped }) =>
+    recoverSkillUpdatesClaim(claim, outcome, confirmStopped),
+).pipe(
+  Command.withDescription(
+    "Recover an abandoned device claim after inspecting partial work",
+  ),
+);
+
 export const updatesAgentCommand = Command.make("updates-agent").pipe(
-  Command.withSubcommands([githubAgentCommand, deviceAgentCommand]),
+  Command.withSubcommands([
+    githubAgentCommand,
+    deviceAgentCommand,
+    recoverAgentCommand,
+  ]),
   Command.withDescription("Run scheduled skill update automation"),
 );
 

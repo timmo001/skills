@@ -33,6 +33,8 @@ import {
   GitHubError,
   type GitHubService,
 } from "../src/services/GitHub.js";
+import { recoverSkillUpdatesClaim } from "../src/commands/UpdatesAgentCoordination.js";
+import { coordinationGitHub } from "./helpers/coordination-github.js";
 
 const config: SkillUpdatesAgentConfig = {
   workflowApi: "https://api.github.com/example",
@@ -745,17 +747,21 @@ describe("updates agent policies", () => {
         },
       });
 
+      const shared = coordinationGitHub();
+
       const github = Layer.succeed(GitHub, {
         isAvailable: () => Effect.succeed(true),
         stream: () => Stream.empty,
-        api: () =>
-          Effect.succeed(
-            JSON.stringify({
-              id: 42,
-              conclusion: "success",
-              html_url: "https://github.com/example/actions/runs/42",
-            }),
-          ),
+        api: (endpoint, options) =>
+          endpoint.includes("/git/")
+            ? shared.api(endpoint, options)
+            : Effect.succeed(
+                JSON.stringify({
+                  id: 42,
+                  conclusion: "success",
+                  html_url: "https://github.com/example/actions/runs/42",
+                }),
+              ),
         apiJson: () => Effect.succeed({}),
         json: () => Effect.succeed({}),
         run: (args) =>
@@ -783,11 +789,22 @@ describe("updates agent policies", () => {
 
       expect((yield* Effect.exit(run))._tag).toBe("Failure");
       expect(yield* fs.exists(stateFile)).toBe(false);
+      const failedClaim = shared.state().claim;
+      expect(shared.state().processed).toEqual([]);
+
+      if (!failedClaim) return yield* Effect.die("Missing failed claim");
+      yield* recoverSkillUpdatesClaim(failedClaim.token, "retry", true).pipe(
+        Effect.provide(github),
+      );
       succeeds = true;
       modelAttempt = 0;
       yield* run;
       expect(modelAttempt).toBe(2);
       expect(yield* fs.readFileString(stateFile)).toBe("42\n");
+      expect(shared.state()).toEqual({ claim: null, processed: [42] });
+      yield* fs.remove(stateFile);
+      yield* run;
+      expect(modelAttempt).toBe(2);
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
   );
 });

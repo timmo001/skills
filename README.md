@@ -75,7 +75,27 @@ The shared update entrypoint runs in either environment:
 ./dist/skill-maintenance updates-agent device --config /path/to/skill-updates-agent.yml --run-id 123456
 ```
 
-GitHub Actions builds this repository's executable and uses its `github` mode for scheduled checks, clean update pull requests, validation dispatches, and dashboard refreshes. A local device uses `device` mode to invoke its configured OpenCode processor. Repeated device calls are safe because the processor records the last completed workflow run.
+GitHub Actions builds this repository's executable and uses its `github` mode for scheduled checks, clean update pull requests, validation dispatches, and dashboard refreshes. A local device uses `device` mode to invoke its configured OpenCode processor.
+
+### Cross-device coordination
+
+Device runners share `refs/heads/automation/skill-update-state` in `timmo001/skills`, using the existing `gh` authentication with Contents write access. The first call creates this branch through the Git API. Its commit messages hold versioned JSON containing an opaque claim token, run ID, start time and all completed run IDs. No machine paths, hostnames or private configuration are stored there.
+
+Each state change creates a commit whose only parent is the observed state head, then requests a [fast-forward-only ref update](https://docs.github.com/en/rest/git/refs#update-a-reference). Concurrent candidates are siblings, so only one can win. A single claim covers all device runs, including different workflow IDs. Success records the completed run and clears its claim in the same atomic transition, after repository, PR policy and dashboard checks. Older completed runs stay recorded when newer runs finish.
+
+Failed ref writes are reconciled against the candidate SHA before retrying. Transient failures get at most three attempts with the same candidate; uncertain ownership stops processing. Shared state read failures also stop processing. Local `flock` still serialises a device, and `stateFile` remains a local completion cache; it cannot bypass shared coordination. Old local markers are not automatically imported into shared history.
+
+Claims do not expire. A failure, interruption or crash retains the claim because the OpenCode session or partially published changes may survive the CLI. The claim token is printed on acquisition and in subsequent busy errors. To recover:
+
+1. Stop the owning device runner and its OpenCode session. Confirm neither can resume, then inspect partial changes, PRs and repository cleanup.
+2. Use `retry` to allow another attempt, or `processed` only after confirming the run's work and cleanup are complete:
+
+   ```bash
+   ./dist/skill-maintenance updates-agent recover --claim <token> --outcome retry --confirm-stopped
+   ./dist/skill-maintenance updates-agent recover --claim <token> --outcome processed --confirm-stopped
+   ```
+
+Recovery requires the current token and uses the same non-forced transition. A stale release cannot clear a replacement claim. Never delete, reset, force-update or merge the state branch: its history is the coordination record. Update all device runners together before resuming automation; older binaries do not participate in this protocol. Review previously completed local runs when first adopting shared history. No new external service or private configuration field is required.
 
 Device configuration requires `opencodePermissions`, a non-empty array of OpenCode V2 `{ action, resource, effect }` rules using `allow` or `deny`. Keep machine-specific paths and command selections in that configuration. The runner prepends default-deny, then appends the selected agent's resolved explicit denials so job allowances cannot override them. Use `~/` for home-relative read, edit and external-directory resources; shell patterns are literal command text.
 

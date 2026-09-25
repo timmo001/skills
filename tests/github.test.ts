@@ -107,6 +107,47 @@ const fixture = Effect.fn("Test.githubFixture")(function* (
 });
 
 describe("GitHub SDK boundary", () => {
+  it.effect("sends ref mutations as JSON without automatic retries", () =>
+    Effect.gen(function* () {
+      let input = "";
+
+      const fake = yield* fixture(
+        () =>
+          Effect.succeed({
+            stdin: Sink.forEach((chunk: Uint8Array) =>
+              Effect.sync(() => {
+                input += new TextDecoder().decode(chunk);
+              }),
+            ),
+            stderr: text("HTTP 503"),
+            exitCode: exit(1),
+          }),
+        { GH_TOKEN: "test-token" },
+      );
+
+      expect(
+        yield* Effect.flip(
+          fake.github.api("repos/org/repo/git/refs/heads/state", {
+            method: "PATCH",
+            body: { sha: "abc", force: false },
+          }),
+        ),
+      ).toMatchObject({ status: 503, retryable: true });
+      expect(fake.commands).toHaveLength(1);
+      expect(fake.commands[0]?.args).toEqual([
+        "api",
+        "--method",
+        "PATCH",
+        "--input",
+        "-",
+        "--",
+        "repos/org/repo/git/refs/heads/state",
+      ]);
+      expect(fake.commands[0]?.options.env?.GH_TOKEN).toBe("test-token");
+      expect(JSON.parse(input)).toEqual({ sha: "abc", force: false });
+    }),
+  );
+
   it.effect(
     "preserves literal API queries, jq, pagination and JSON decoding",
     () =>
