@@ -4,7 +4,7 @@ compatibility: Requires a Chromium-family browser with the Browser Control exten
 description: Drive the user's existing Chromium-family browser with deterministic Playwright. Use when asked to inspect, automate, test, or interact with a visible browser tab; continue an authenticated browser workflow; handle 2FA, passkeys, CAPTCHAs, or payment confirmation; record browser behavior; or capture an authenticated network flow.
 license: MIT
 # origin: https://github.com/anomalyco/browser-control/tree/main/skills/browser-control
-# upstream-sha: 1cdd1e4c697197440ee9a7a9cdbf337d9e7a9f51
+# upstream-sha: 9a5ab7b10a78cf4f5bd9b5ad8fd674685d171613
 # local-edits:
 #   - SKILL.md: added compatibility metadata and browser-access routing; distinguish other browser drivers
 #   - SKILL.md: create or update project todos only when requested
@@ -218,6 +218,12 @@ without `start`. The default timeout is ten minutes.
 Completion: the prompt was presented only after WAIT was registered, the action
 settled, and the authenticated result was independently verified.
 
+To turn a user-demonstrated flow into reusable Playwright, use `demonstrate()`.
+It records clicks, edits, checkbox/select changes, and same-tab navigations,
+then returns editable code. Review selectors and add outcome assertions before
+reusing it. Password fields become secret-source comments rather than copied
+values.
+
 ### Password Manager Prompts
 
 Ordinary webpage fields and accessible open-shadow-root controls remain usable.
@@ -246,6 +252,10 @@ Use the least expensive view that answers the question:
 - `snapshot({ diff: true })` reports semantic changes from the compatible prior
   baseline. A diff invalidates earlier refs and exposes refs only for added or
   changed current lines.
+- `snapshot({ delta: true })` returns a full first baseline and compact deltas
+  afterward while keeping compatible refs usable.
+- `snapshot({ find: "checkout", context: 2 })` searches the bounded semantic
+  snapshot and returns matching lines with nearby context and actionable refs.
 - `ariaSnapshot(target?, { timeout })` returns Playwright's detailed YAML aria
   tree when the compact snapshot omits needed structure. Native text-control
   values, custom ARIA range values, and editable content are omitted so they do
@@ -306,6 +316,12 @@ Playwright downloads are unavailable through extension-backed tabs because
 Chromium blocks download artifact control through `chrome.debugger`. If the
 page exposes the payload through fetch or an API response, read the bytes in the
 page and write them with `fs`. Do not retry `page.waitForEvent("download")`.
+
+Pages with WebMCP enabled can expose structured page tools. Discover and call
+them through `webmcp.list()` and `webmcp.call()`. Discovery covers all frames;
+when names collide, pass the exact reported frame label. Browser Control
+re-discovers the tool immediately before invoking it so stale registrations
+fail directly.
 
 ## Safety
 
@@ -455,6 +471,11 @@ not change viewport/emulation mid-recording. Odd dimensions round down to even.
 Inspect an encoded frame at native size before sharing: the whole viewport must
 fill the frame, small text must be readable, and motion must not be a repeated
 still image. Do not crop and upscale a low-resolution capture to call it HD.
+
+For failures that are hard to reproduce, use `browser-control flight-recorder`
+to keep a bounded rolling CDP frame buffer and save recent history after the
+problem occurs. Saving does not stop buffering. Recording and flight recording
+are mutually exclusive on the same tab.
 On an older installed relay that shrinks the page into a padded corner, record
 the defect and coordinate a recorder update; changing the file's resolution is
 not a repair.
