@@ -146,6 +146,72 @@ export const createSkillUpdatesSession = Effect.fn(
   return { id: stored.data.id, server, password };
 });
 
+const SessionUsage = Schema.Struct({
+  data: Schema.Struct({
+    cost: Schema.Number,
+    tokens: Schema.Struct({
+      input: Schema.Number,
+      output: Schema.Number,
+      reasoning: Schema.Number,
+      cache: Schema.Struct({ read: Schema.Number, write: Schema.Number }),
+    }),
+    time: Schema.Struct({
+      created: Schema.Number,
+      updated: Schema.Number,
+      idle: Schema.optionalKey(Schema.Number),
+    }),
+  }),
+});
+
+export interface SkillUpdatesSessionUsage {
+  readonly cost: number;
+  readonly durationMs: number;
+  readonly tokens: typeof SessionUsage.Type.data.tokens;
+}
+
+export const readSkillUpdatesSessionUsage = Effect.fn(
+  "UpdatesAgent.readSessionUsage",
+)(function* (
+  config: {
+    readonly opencodeCommand: string;
+    readonly opencodeArgs?: readonly string[];
+    readonly repositories: readonly string[];
+  },
+  session: {
+    readonly id: string;
+    readonly server: string;
+    readonly password: Redacted.Redacted<string>;
+  },
+) {
+  const executor = yield* CommandExecutor;
+
+  const { data } = yield* Schema.decodeUnknownEffect(
+    Schema.fromJsonString(SessionUsage),
+  )(
+    yield* executor.run(
+      config.opencodeCommand,
+      [
+        ...(config.opencodeArgs ?? []),
+        "api",
+        "--server",
+        session.server,
+        "get",
+        `/api/session/${session.id}`,
+      ],
+      {
+        cwd: config.repositories[0],
+        env: { OPENCODE_PASSWORD: Redacted.value(session.password) },
+      },
+    ),
+  );
+
+  return {
+    cost: data.cost,
+    durationMs: (data.time.idle ?? data.time.updated) - data.time.created,
+    tokens: data.tokens,
+  } satisfies SkillUpdatesSessionUsage;
+});
+
 /** Stop a session's server-side execution so its side effects can be inspected. */
 export const stopSkillUpdatesSession = Effect.fn("UpdatesAgent.stopSession")(
   function* (

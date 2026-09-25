@@ -15,6 +15,7 @@ import {
   isScopedSkillPatch,
   isShaOnlySkillPatch,
   latestSuccessfulWorkflowRun,
+  renderSkillUpdatesBenchmark,
   requireRepositoryState,
   runDeviceSkillUpdates,
   runGitHubSkillUpdates,
@@ -23,6 +24,7 @@ import {
   skillUpdateSubject,
   SkillUpdatesAgentError,
   validatePullRequestPolicy,
+  withSkillUpdatesBenchmark,
   type SkillUpdatesAgentConfig,
 } from "../src/commands/UpdatesAgent.js";
 import {
@@ -318,6 +320,41 @@ describe("updates agent policies", () => {
           ),
         ).toEqual(["broken"]);
       }),
+  );
+
+  it.effect("adds agent run details to a pull request body once", () =>
+    Effect.sync(() => {
+      const section = renderSkillUpdatesBenchmark(
+        [
+          { model: "gpt-6-luna#high", succeeded: false, usage: null },
+          {
+            model: "gpt-6-sol#medium",
+            succeeded: true,
+            usage: {
+              cost: 0.4213,
+              durationMs: 89_400,
+              tokens: {
+                input: 55_139,
+                output: 839,
+                reasoning: 281,
+                cache: { read: 247_982, write: 0 },
+              },
+            },
+          },
+        ],
+        { agent: "build", runUrl: "https://example/1", pullRequests: 1 },
+      );
+
+      expect(section).toContain(
+        "| 2 | `gpt-6-sol#medium` | Succeeded | 1m 29s | $0.421 | 55,139 | 247,982 | 0 | 839 | 281 |",
+      );
+      expect(section).not.toContain("github-copilot");
+
+      const once = withSkillUpdatesBenchmark("Summary", section);
+
+      expect(once).toBe(`Summary\n\n${section}\n`);
+      expect(withSkillUpdatesBenchmark(once, section)).toBe(once);
+    }),
   );
 
   it.effect("requires exactly one explicit status line", () =>
