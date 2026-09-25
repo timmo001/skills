@@ -690,11 +690,6 @@ describe("updates agent policies", () => {
                 : "http://127.0.0.1:49374\n",
             );
 
-          if (
-            args.some((arg) => arg.startsWith("/api/plugin/await-activation?"))
-          )
-            return Effect.succeed("");
-
           if (args.some((arg) => arg.startsWith("/api/agent/build?")))
             return Effect.succeed(
               JSON.stringify({

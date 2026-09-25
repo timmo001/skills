@@ -91,8 +91,6 @@ export const createSkillUpdatesSession = Effect.fn(
 
   const location = `?location[directory]=${encodeURIComponent(cwd)}`;
 
-  yield* api(["post", `/api/plugin/await-activation${location}`]);
-
   const agent = yield* Schema.decodeEffect(Schema.fromJsonString(Agent))(
     yield* api([
       "get",
