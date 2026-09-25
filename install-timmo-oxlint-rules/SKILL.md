@@ -6,7 +6,7 @@ description: >-
   Effect rules, or replacing a local anti-slop copy.
 license: Apache-2.0
 # origin: https://github.com/timmo001/oxlint-rules/tree/main/skills/install-timmo-oxlint-rules
-# upstream-sha: c31a287f37f47309992f8382e42fa9498c545df4
+# upstream-sha: 05c84299d080e5e0dde79a7b0e5cff9a20cc7408
 ---
 
 # Install Timmo Oxlint Rules
@@ -17,8 +17,12 @@ license: Apache-2.0
    instructions, and normal checks. Use the current working directory unless
    the user names another target.
 3. Preserve existing ignores, overrides, plugins, and repository-owned rules.
-   Confirm `oxlint` and `@oxlint/plugins` use the same exact version supported
-   by the selected package version.
+   Verify the official npm `latest` versions of `oxlint` and `@oxlint/plugins`.
+   They must match each other and the exact peers of the selected rules release.
+   Support is latest-only: if the published peer contract has not caught up,
+   report the pending rules release instead of widening peers or bypassing
+   package-manager failures. Do not force upgrades of Vite Plus's transitive
+   dependencies or assume its bundled plugins satisfy this contract.
 
 ## Package
 
@@ -31,6 +35,10 @@ license: Apache-2.0
    instead only when `effect` is a direct dependency or the user explicitly
    requests it.
 4. Keep dependency and config edits visible. Do not delegate them to a script.
+5. For type-aware linting, explicitly pin the latest `oxlint-tsgolint` that
+   satisfies Oxlint's peer requirement and was validated with the rules release.
+   Enable `options.typeAware` in the target config and verify type-aware linting
+   alongside the shared rules.
 
 ## Copy rules
 

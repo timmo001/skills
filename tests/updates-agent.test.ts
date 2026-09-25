@@ -15,13 +15,16 @@ import {
   isScopedSkillPatch,
   isShaOnlySkillPatch,
   latestSuccessfulWorkflowRun,
+  renderSkillUpdatesBenchmark,
   requireRepositoryState,
   runDeviceSkillUpdates,
   runGitHubSkillUpdates,
   skillUpdatesAgentResultStatus,
+  skillUpdatesNeedingWork,
   skillUpdateSubject,
   SkillUpdatesAgentError,
   validatePullRequestPolicy,
+  withSkillUpdatesBenchmark,
   type SkillUpdatesAgentConfig,
 } from "../src/commands/UpdatesAgent.js";
 import {
@@ -269,6 +272,88 @@ describe("updates agent policies", () => {
           "timmo001/skills",
         ],
       ]);
+    }),
+  );
+
+  it.effect(
+    "skips only updates with an open PR for the current upstream SHA",
+    () =>
+      Effect.sync(() => {
+        const current = "b".repeat(40);
+
+        const patch = (sha: string) =>
+          [
+            "diff --git a/imports.json b/imports.json",
+            `-    "example": { "upstreamSha": "${"a".repeat(40)}", "localEdits": [] },`,
+            `+    "example": { "upstreamSha": "${sha}", "localEdits": [] },`,
+          ].join("\n");
+
+        const skills = [
+          {
+            name: "example",
+            state: "manual-review",
+            upstreamSha: current,
+          },
+          { name: "gone", state: "origin-gone", upstreamSha: null },
+          { name: "fresh", state: "up-to-date", upstreamSha: current },
+        ] as const;
+
+        expect(
+          skillUpdatesNeedingWork(skills, [
+            { title: "Update skill: example", patch: patch(current) },
+          ]),
+        ).toEqual([]);
+        expect(
+          skillUpdatesNeedingWork(skills, [
+            { title: "Update skill: example", patch: patch("c".repeat(40)) },
+          ]),
+        ).toEqual(["example"]);
+        expect(
+          skillUpdatesNeedingWork(skills, [
+            { title: "Update skill: other", patch: patch(current) },
+          ]),
+        ).toEqual(["example"]);
+        expect(
+          skillUpdatesNeedingWork(
+            [{ name: "broken", state: "error", upstreamSha: null }],
+            [],
+          ),
+        ).toEqual(["broken"]);
+      }),
+  );
+
+  it.effect("adds agent run details to a pull request body once", () =>
+    Effect.sync(() => {
+      const section = renderSkillUpdatesBenchmark(
+        [
+          { model: "gpt-6-luna#high", succeeded: false, usage: null },
+          {
+            model: "gpt-6-sol#medium",
+            succeeded: true,
+            usage: {
+              cost: 0.4213,
+              durationMs: 89_400,
+              tokens: {
+                input: 55_139,
+                output: 839,
+                reasoning: 281,
+                cache: { read: 247_982, write: 0 },
+              },
+            },
+          },
+        ],
+        { agent: "build", runUrl: "https://example/1", pullRequests: 1 },
+      );
+
+      expect(section).toContain(
+        "| 2 | `gpt-6-sol#medium` | Succeeded | 1m 29s | $0.421 | 55,139 | 247,982 | 0 | 839 | 281 |",
+      );
+      expect(section).not.toContain("github-copilot");
+
+      const once = withSkillUpdatesBenchmark("Summary", section);
+
+      expect(once).toBe(`Summary\n\n${section}\n`);
+      expect(withSkillUpdatesBenchmark(once, section)).toBe(once);
     }),
   );
 
@@ -648,7 +733,18 @@ describe("updates agent policies", () => {
       yield* fs.makeDirectory(path.join(root, ".git"));
       yield* fs.writeFileString(
         path.join(root, "imports.json"),
-        '{"version":1,"imports":{}}',
+        // An invalid origin still needs attention, so the model runs.
+        JSON.stringify({
+          version: 1,
+          imports: {
+            example: {
+              origin: "not-a-github-url",
+              upstreamSha: "a".repeat(40),
+              license: "MIT",
+              localEdits: [],
+            },
+          },
+        }),
       );
       yield* fs.writeFileString(
         configFile,

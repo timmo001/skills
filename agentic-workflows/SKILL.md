@@ -4,7 +4,7 @@ compatibility: Requires GitHub CLI with the gh aw extension and network access t
 description: Design, create, update, debug, audit, or upgrade GitHub Agentic Workflows with the `gh aw` extension. Use when work involves workflow Markdown, compiled `.lock.yml` files, agent engines, MCP tools, safe outputs, or `gh aw` commands.
 license: MIT
 # origin: https://github.com/github/gh-aw/tree/main/.github/skills/agentic-workflows
-# upstream-sha: 9a9eaa12bd36efb80b223d6670a22c9f5d0029cb
+# upstream-sha: 9587a1cb9f8e49b5c741815fb626508930f83537
 # local-edits:
 #   - SKILL.md: made the upstream router self-contained and replaced unavailable repository-relative prompt loading with official source lookup
 #   - SKILL.md: added compatibility metadata for concrete environment requirements
@@ -27,6 +27,7 @@ compiled to GitHub Actions lock files.
    `.github/aw/` guidance for the task type instead of guessing syntax:
    - design: `designer.md`
    - create: `create-agentic-workflow.md`
+   - campaign workflows: `campaign.md`
    - update: `update-agentic-workflow.md`
    - optimise: `optimize-agentic-workflow.md`
    - debug or audit: `debug-agentic-workflow.md`
@@ -35,6 +36,13 @@ compiled to GitHub Actions lock files.
    - agent runtime, Docker, gVisor, Docker sbx, ARC DinD, self-hosted
      runners, or runtime installation: `agent-runtime-instructions.md`
    - shared workflows or MCP wrappers: `create-shared-agentic-workflow.md`
+   - agentic chat: `agentic-chat.md`
+   - evaluations and experiments: `evals.md` and `experiments.md`
+   - jobs and reusable workflow structure: `jobs.md` and `reuse.md`
+   - loops: `loop.md`
+   - language-server integration: `lsp.md`
+   - Playwright integration: `playwright.md`
+   - release workflows: `release-workflow.md`
    - drive-backed workflow memory: `drive-memory.md`
    - declarative skills or agent plugins: `skills.md`
    - report generation: `report.md`

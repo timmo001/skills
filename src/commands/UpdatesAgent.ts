@@ -27,8 +27,10 @@ import {
 } from "./UpdatesAgentCoordination.js";
 import {
   createSkillUpdatesSession,
+  readSkillUpdatesSessionUsage,
   SkillUpdatesPermissions,
   stopSkillUpdatesSession,
+  type SkillUpdatesSessionUsage,
 } from "./UpdatesAgentPermissions.js";
 
 const SUCCESS_PREFIX = "STATUS: success";
@@ -82,6 +84,13 @@ const PullRequestNumbers = Schema.Array(
   Schema.Struct({ number: Schema.Int.check(Schema.isGreaterThan(0)) }),
 );
 
+const PullRequestTitles = Schema.Array(
+  Schema.Struct({
+    number: Schema.Int.check(Schema.isGreaterThan(0)),
+    title: Schema.String,
+  }),
+);
+
 const PullRequestPolicy = Schema.Struct({
   title: Schema.String,
   state: Schema.String,
@@ -131,6 +140,106 @@ export const cleanSkillUpdateNames = (
 
 export const skillUpdatesAgentModelArgument = (model: SkillUpdatesAgentModel) =>
   `${model.providerID}/${model.modelID}${model.variant ? `#${model.variant}` : ""}`;
+
+export interface SkillUpdatesAttempt {
+  /** Model and variant without the provider, so hosts compare equally. */
+  readonly model: string;
+  readonly succeeded: boolean;
+  readonly usage: SkillUpdatesSessionUsage | null;
+}
+
+const BENCHMARK_MARKER = "<!-- skill-updates-agent:benchmark -->";
+
+const formatDuration = (ms: number) => {
+  const seconds = Math.round(ms / 1000);
+
+  return seconds >= 60
+    ? `${Math.floor(seconds / 60)}m ${seconds % 60}s`
+    : `${seconds}s`;
+};
+
+const formatTokens = (count: number) => count.toLocaleString("en-GB");
+
+export const renderSkillUpdatesBenchmark = (
+  attempts: readonly SkillUpdatesAttempt[],
+  context: {
+    readonly agent: string;
+    readonly runUrl: string;
+    readonly pullRequests: number;
+  },
+) =>
+  [
+    BENCHMARK_MARKER,
+    "## Agent run",
+    "",
+    "| Attempt | Model | Result | Time | Cost | Input | Cache read | Cache write | Output | Reasoning |",
+    "| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |",
+    ...attempts
+      .map(({ model, succeeded, usage }, index) =>
+        [
+          String(index + 1),
+          `\`${model}\``,
+          succeeded ? "Succeeded" : "Failed",
+          ...(usage
+            ? [
+                formatDuration(usage.durationMs),
+                `$${usage.cost.toFixed(3)}`,
+                formatTokens(usage.tokens.input),
+                formatTokens(usage.tokens.cache.read),
+                formatTokens(usage.tokens.cache.write),
+                formatTokens(usage.tokens.output),
+                formatTokens(usage.tokens.reasoning),
+              ]
+            : Array.from({ length: 7 }, () => "unknown")),
+        ].join(" | "),
+      )
+      .map((row) => `| ${row} |`),
+    "",
+    `Agent \`${context.agent}\`, for [this workflow run](${context.runUrl}). Figures cover the whole session, which opened ${context.pullRequests} pull request${context.pullRequests === 1 ? "" : "s"}.`,
+  ].join("\n");
+
+/** Add or replace the benchmark section at the end of a pull request body. */
+export const withSkillUpdatesBenchmark = (body: string, section: string) => {
+  const index = body.indexOf(BENCHMARK_MARKER);
+  const base = (index === -1 ? body : body.slice(0, index)).trimEnd();
+
+  return base ? `${base}\n\n${section}\n` : `${section}\n`;
+};
+
+const skillUpdateTitles = (skill: string) => [
+  `Update skill: ${skill}`,
+  `[SHA-only] Update ${skill}`,
+];
+
+const setsUpstreamSha = (patch: string, skill: string, sha: string) =>
+  patch
+    .split("\n")
+    .some(
+      (line) =>
+        line.startsWith("+") &&
+        line.slice(1).trimStart().startsWith(`"${skill}":`) &&
+        line.includes(`"upstreamSha": "${sha}"`),
+    );
+
+/** Pending updates without an open pull request for their current upstream SHA. */
+export const skillUpdatesNeedingWork = (
+  skills: readonly Pick<UpdateReportItem, "name" | "state" | "upstreamSha">[],
+  pulls: readonly { readonly title: string; readonly patch: string }[],
+) =>
+  skills.flatMap(({ name, state, upstreamSha }) => {
+    if (state === "up-to-date" || state === "origin-gone") return [];
+
+    const covered =
+      (state === "manual-review" || state === "update-available") &&
+      upstreamSha !== null &&
+      pulls.some(
+        ({ title, patch }) =>
+          skillUpdateTitles(name).includes(title) &&
+          setsUpstreamSha(patch, name, upstreamSha),
+      );
+
+    return covered ? [] : [name];
+  });
 
 export const skillUpdatesAgentPrompt = (
   config: SkillUpdatesAgentConfig,
@@ -759,6 +868,52 @@ const latestPullRequestNumber = Effect.fn(
   return pulls[0]?.number ?? 0;
 });
 
+const pendingSkillUpdates = Effect.fn("UpdatesAgent.pendingSkillUpdates")(
+  function* (root: string) {
+    const github = yield* GitHub;
+    const report = yield* buildUpdateReport(root);
+    const pending = skillUpdatesNeedingWork(report.skills, []);
+
+    if (pending.length === 0) return pending;
+
+    const open = yield* decodeJson(
+      "pull-requests",
+      PullRequestTitles,
+      yield* github.run(
+        [
+          "pr",
+          "list",
+          "--state",
+          "open",
+          "--limit",
+          "100",
+          "--json",
+          "number,title",
+          "--repo",
+          "timmo001/skills",
+        ],
+        { readOnly: true },
+      ),
+    );
+
+    const titles = new Set(pending.flatMap(skillUpdateTitles));
+    const pulls: { title: string; patch: string }[] = [];
+
+    for (const { number, title } of open.filter(({ title }) =>
+      titles.has(title),
+    ))
+      pulls.push({
+        title,
+        patch: yield* github.run(
+          ["pr", "diff", String(number), "--repo", "timmo001/skills"],
+          { readOnly: true },
+        ),
+      });
+
+    return skillUpdatesNeedingWork(report.skills, pulls);
+  },
+);
+
 export const validatePullRequestPolicy = Effect.fn(
   "UpdatesAgent.validatePullRequestPolicy",
 )(function* (after: number) {
@@ -840,6 +995,72 @@ export const validatePullRequestPolicy = Effect.fn(
   }
 });
 
+const PullRequestBody = Schema.Struct({ body: Schema.String });
+
+const annotatePullRequests = Effect.fn("UpdatesAgent.annotatePullRequests")(
+  function* (
+    after: number,
+    attempts: readonly SkillUpdatesAttempt[],
+    context: { readonly agent: string; readonly runUrl: string },
+  ) {
+    const github = yield* GitHub;
+
+    const created = (yield* decodeJson(
+      "pull-requests",
+      PullRequestNumbers,
+      yield* github.run(
+        [
+          "pr",
+          "list",
+          "--state",
+          "all",
+          "--limit",
+          "100",
+          "--json",
+          "number",
+          "--repo",
+          "timmo001/skills",
+        ],
+        { readOnly: true },
+      ),
+    )).filter(({ number }) => number > after);
+
+    const section = renderSkillUpdatesBenchmark(attempts, {
+      ...context,
+      pullRequests: created.length,
+    });
+
+    for (const { number } of created) {
+      const { body } = yield* decodeJson(
+        "pull-request",
+        PullRequestBody,
+        yield* github.run(
+          [
+            "pr",
+            "view",
+            String(number),
+            "--json",
+            "body",
+            "--repo",
+            "timmo001/skills",
+          ],
+          { readOnly: true },
+        ),
+      );
+
+      yield* github.run([
+        "pr",
+        "edit",
+        String(number),
+        "--body",
+        withSkillUpdatesBenchmark(body, section),
+        "--repo",
+        "timmo001/skills",
+      ]);
+    }
+  },
+);
+
 const describeFailure = (error: Error) => {
   if (error instanceof CommandError) {
     const output = error.stderr.trim();
@@ -863,10 +1084,22 @@ const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
     initialPr: number,
   ) {
     const executor = yield* CommandExecutor;
+    const attempts: SkillUpdatesAttempt[] = [];
     let last = "No model was attempted";
+
+    const usageOf = (session: Parameters<typeof stopSkillUpdatesSession>[1]) =>
+      readSkillUpdatesSessionUsage(config, session).pipe(
+        Effect.map((usage): SkillUpdatesSessionUsage | null => usage),
+        Effect.catch((error) =>
+          Console.error(
+            `Unable to read session usage: ${describeFailure(error)}`,
+          ).pipe(Effect.as(null)),
+        ),
+      );
 
     for (const model of config.opencodeModels) {
       const name = skillUpdatesAgentModelArgument(model);
+      const label = `${model.modelID}${model.variant ? `#${model.variant}` : ""}`;
       const output: string[] = [];
 
       let session:
@@ -914,8 +1147,15 @@ const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
       if (
         Exit.isSuccess(result) &&
         skillUpdatesAgentResultStatus(output.join("\n")) === "success"
-      )
-        return;
+      ) {
+        attempts.push({
+          model: label,
+          succeeded: true,
+          usage: session ? yield* usageOf(session) : null,
+        });
+
+        return attempts;
+      }
 
       if (Exit.isFailure(result)) {
         const failure = Cause.findErrorOption(result.cause);
@@ -926,6 +1166,11 @@ const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
 
       // A timed-out client can leave its session running on the server.
       if (session) yield* stopSkillUpdatesSession(config, session);
+      attempts.push({
+        model: label,
+        succeeded: false,
+        usage: session ? yield* usageOf(session) : null,
+      });
       yield* requireRepositoryState(states);
 
       if ((yield* latestPullRequestNumber()) > initialPr)
@@ -1059,11 +1304,14 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
       run.id,
       Effect.gen(function* () {
         // Nothing has been published before the first model attempt.
-        const { states, initialPr } = yield* Effect.gen(function* () {
+        const { states, initialPr, pending } = yield* Effect.gen(function* () {
           const states = yield* requireCleanRepositories(config.repositories);
           const initialPr = yield* latestPullRequestNumber();
+          // The update report reads local metadata, so match origin first.
+          yield* runOrFail("git", ["pull", "--ff-only"], primaryRepository);
+          const pending = yield* pendingSkillUpdates(primaryRepository);
 
-          return { states, initialPr };
+          return { states, initialPr, pending };
         }).pipe(
           Effect.mapError(
             (error) =>
@@ -1074,14 +1322,37 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
           ),
         );
 
-        yield* processWithFallback(
-          config,
-          skillUpdatesAgentPrompt(config, run),
-          states,
-          initialPr,
-        );
+        let attempts: readonly SkillUpdatesAttempt[] = [];
+
+        if (pending.length === 0)
+          yield* Console.log(
+            "Every pending skill update already has an open pull request; skipping the model",
+          );
+        else {
+          yield* Console.log(`Updates needing work: ${pending.join(", ")}`);
+          attempts = yield* processWithFallback(
+            config,
+            skillUpdatesAgentPrompt(config, run),
+            states,
+            initialPr,
+          );
+        }
+
         yield* requireRepositoryState(states);
         yield* validatePullRequestPolicy(initialPr);
+
+        // Benchmark figures are informational; never fail a published run on them.
+        if (attempts.length > 0)
+          yield* annotatePullRequests(initialPr, attempts, {
+            agent: config.opencodeAgent,
+            runUrl: run.url,
+          }).pipe(
+            Effect.catch((error) =>
+              Console.error(
+                `Unable to add agent run details to pull requests: ${describeFailure(error)}`,
+              ),
+            ),
+          );
         yield* refreshDashboard(primaryRepository);
       }),
     );

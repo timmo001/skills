@@ -6,7 +6,7 @@
       "name": "skill-maintenance",
       "dependencies": {
         "@effect/platform-node": "4.0.0-rc.117",
-        "@timmo001/effect-gh": "github:timmo001/effect-gh#af9f2a985405072ea17a9165e1a1e5988027a00a",
+        "@timmo001/effect-gh": "github:timmo001/effect-gh#0b5bf18cba00f36f9a853d3fa18a02eb5c57f0a8",
         "effect": "4.0.0-rc.117",
       },
       "devDependencies": {
@@ -17,7 +17,7 @@
         "@types/bun": "1.4.2",
         "oxlint": "1.85.0",
         "oxlint-tsgolint": "7.0.2002",
-        "prettier": "3.9.8",
+        "prettier": "3.9.9",
         "typescript": "7.0.2",
         "vitest": "5.0.1",
       },
@@ -148,7 +148,7 @@
 
     "@rolldown/pluginutils": ["@rolldown/pluginutils@1.0.1", "", {}, "sha512-2j9bGt5Jh8hj+vPtgzPtl72j0yRxHAyumoo6TNfAjsLB04UtpSvPbPcDcBMxz7n+9CYB0c1GxQFxYRg2jimqGw=="],
 
-    "@timmo001/effect-gh": ["@timmo001/effect-gh@github:timmo001/effect-gh#af9f2a9", { "peerDependencies": { "effect": "4.0.0-rc.117" } }, "timmo001-effect-gh-af9f2a9", "sha512-/3mEHikQNtb+p85P0RVZ9JowiXToayNZCRgnO78JCrSsH3SESry5rnXM6Jx9hiNyGytXmMFzpbMufFxh2wJTAQ=="],
+    "@timmo001/effect-gh": ["@timmo001/effect-gh@github:timmo001/effect-gh#0b5bf18", { "peerDependencies": { "effect": "4.0.0-rc.117" } }, "timmo001-effect-gh-0b5bf18", "sha512-h/nBens8WHfkDYowgTmiNZT9afl12ABqEVnPmBIHBkf5IW+7tVe26o4hzRmLbjlaniHGYkxO3F7mDf+WVfQMGg=="],
 
     "@timmo001/oxlint-rules": ["@timmo001/oxlint-rules@0.3.6", "", { "peerDependencies": { "@oxlint/plugins": "1.85.0", "oxlint": "1.85.0" }, "bin": { "oxlint-rules": "dist/cli.js" } }, "sha512-9fAWa2fUwo7hOgwq/BHIsoKAIxDelsAvWf0ttpDMxgRp7M70vdEshQ6RM22j9ayof2ta23yzuj6bue/hQ7pgZQ=="],
 
@@ -270,7 +270,7 @@
 
     "postcss": ["postcss@8.5.26", "", { "dependencies": { "nanoid": "^3.3.17", "picocolors": "^1.1.1", "source-map-js": "^1.2.1" } }, "sha512-u82N74LFzG8ca+dD8puPnplTXoGH4fTPpVGuIbt36G3qvNlkvfD0lEAZSxaly3KX8TS/L1A1gsCEmvKmBcVbkQ=="],
 
-    "prettier": ["prettier@3.9.8", "", { "bin": { "prettier": "bin/prettier.cjs" } }, "sha512-WRFq3Wn3WId7LLROfMLdH7xaFr2jR62wU8nLO6rQUOLOxNZUviyJQs1M0iIhLexSFy+L+w0ch66wtoO2jRjG0A=="],
+    "prettier": ["prettier@3.9.9", "", { "bin": { "prettier": "bin/prettier.cjs" } }, "sha512-Z/CJHIkdujO/OtN7nXUii0Rf3VT5SRuhjBA82Xvu2XhBUgX3nhP67T0LHceBdQLex7OOFGTox+Q5Yg8Jk2Qivg=="],
 
     "redis": ["redis@6.2.1", "", { "dependencies": { "@redis/bloom": "6.2.1", "@redis/client": "6.2.1", "@redis/json": "6.2.1", "@redis/search": "6.2.1", "@redis/time-series": "6.2.1" } }, "sha512-Z9VHtgYs48PiQC77X9O2Er8Hj4T+5BtFjT91/vi5Is1D04N72cA946ZslM1ImJw8ZctFBZWAVjM7S5wJNeHMpg=="],
 
