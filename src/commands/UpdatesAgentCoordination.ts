@@ -42,6 +42,12 @@ export class SkillUpdatesCoordinationError extends Schema.TaggedError<SkillUpdat
   { operation: Schema.String, message: Schema.String },
 ) {}
 
+/** A claimed run failed without publishing anything, so it can be retried. */
+export class SkillUpdatesRetryableError extends Schema.TaggedError<SkillUpdatesRetryableError>()(
+  "SkillUpdatesRetryableError",
+  { operation: Schema.String, message: Schema.String },
+) {}
+
 const decode = <S extends Schema.Top>(schema: S, raw: string) =>
   Schema.decodeUnknownEffect(Schema.fromJsonString(schema))(raw).pipe(
     Effect.mapError(
@@ -227,9 +233,19 @@ export const withSkillUpdatesClaim = <A, E, R>(
     }
 
     yield* Console.log(`Claimed workflow run ${runId}: ${claim.token}`);
-    // Keep the claim on failure/interruption: an agent may already have published
-    // changes, or its server-side session may still be running.
-    yield* work;
+    // Keep the claim on other failures and interruption: an agent may already
+    // have published changes, or its server-side session may still be running.
+    yield* work.pipe(
+      Effect.tapError((error) =>
+        error instanceof SkillUpdatesRetryableError
+          ? finishSkillUpdatesClaim(claim.token, "retry").pipe(
+              Effect.andThen(
+                Console.log(`Released claim ${claim.token} for retry`),
+              ),
+            )
+          : Effect.void,
+      ),
+    );
     yield* finishSkillUpdatesClaim(claim.token, "processed");
   });
 

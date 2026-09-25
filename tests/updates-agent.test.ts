@@ -33,7 +33,6 @@ import {
   GitHubError,
   type GitHubService,
 } from "../src/services/GitHub.js";
-import { recoverSkillUpdatesClaim } from "../src/commands/UpdatesAgentCoordination.js";
 import { coordinationGitHub } from "./helpers/coordination-github.js";
 
 const config: SkillUpdatesAgentConfig = {
@@ -784,13 +783,8 @@ describe("updates agent policies", () => {
 
       expect((yield* Effect.exit(run))._tag).toBe("Failure");
       expect(yield* fs.exists(stateFile)).toBe(false);
-      const failedClaim = shared.state().claim;
-      expect(shared.state().processed).toEqual([]);
-
-      if (!failedClaim) return yield* Effect.die("Missing failed claim");
-      yield* recoverSkillUpdatesClaim(failedClaim.token, "retry", true).pipe(
-        Effect.provide(github),
-      );
+      // Failed attempts published nothing, so the claim is released for retry.
+      expect(shared.state()).toEqual({ claim: null, processed: [] });
       succeeds = true;
       modelAttempt = 0;
       yield* run;

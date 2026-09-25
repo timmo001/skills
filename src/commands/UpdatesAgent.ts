@@ -6,6 +6,7 @@ import {
   Effect,
   Exit,
   FileSystem,
+  Option,
   Path,
   Redacted,
   Schema,
@@ -20,10 +21,14 @@ import {
 import { importSkill } from "./Import.js";
 import { CommandError, CommandExecutor } from "../services/CommandExecutor.js";
 import { GitHub } from "../services/GitHub.js";
-import { withSkillUpdatesClaim } from "./UpdatesAgentCoordination.js";
+import {
+  SkillUpdatesRetryableError,
+  withSkillUpdatesClaim,
+} from "./UpdatesAgentCoordination.js";
 import {
   createSkillUpdatesSession,
   SkillUpdatesPermissions,
+  stopSkillUpdatesSession,
 } from "./UpdatesAgentPermissions.js";
 
 const SUCCESS_PREFIX = "STATUS: success";
@@ -835,6 +840,21 @@ export const validatePullRequestPolicy = Effect.fn(
   }
 });
 
+const describeFailure = (error: Error) => {
+  if (error instanceof CommandError) {
+    const output = error.stderr.trim();
+
+    return [
+      `${error.command.slice(0, 200)} exited with code ${error.exitCode}`,
+      output && output.slice(-1000),
+    ]
+      .filter(Boolean)
+      .join(": ");
+  }
+
+  return error.message ? `${error.name}: ${error.message}` : error.name;
+};
+
 const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
   function* (
     config: SkillUpdatesAgentConfig,
@@ -845,13 +865,17 @@ const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
     const executor = yield* CommandExecutor;
     let last = "No model was attempted";
 
-    for (const [index, model] of config.opencodeModels.entries()) {
+    for (const model of config.opencodeModels) {
       const name = skillUpdatesAgentModelArgument(model);
       const output: string[] = [];
 
+      let session:
+        | Effect.Success<ReturnType<typeof createSkillUpdatesSession>>
+        | undefined;
+
       const result = yield* Effect.exit(
         Effect.gen(function* () {
-          const session = yield* createSkillUpdatesSession(config);
+          session = yield* createSkillUpdatesSession(config);
           yield* executor
             .stream(
               config.opencodeCommand,
@@ -892,22 +916,26 @@ const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
         skillUpdatesAgentResultStatus(output.join("\n")) === "success"
       )
         return;
-      last = Exit.isFailure(result)
-        ? `Model ${name} failed: ${String(Cause.squash(result.cause))}`
-        : `Model ${name} returned no valid success status line`;
 
-      if (index < config.opencodeModels.length - 1) {
-        yield* requireRepositoryState(states);
+      if (Exit.isFailure(result)) {
+        const failure = Cause.findErrorOption(result.cause);
 
-        if ((yield* latestPullRequestNumber()) > initialPr)
-          return yield* new SkillUpdatesAgentError({
-            operation: "opencode.partial",
-            message: "A failed model attempt created pull requests",
-          });
-      }
+        last = `Model ${name} failed: ${Option.isSome(failure) ? describeFailure(failure.value) : Cause.pretty(result.cause)}`;
+      } else last = `Model ${name} returned no valid success status line`;
+      yield* Console.error(last);
+
+      // A timed-out client can leave its session running on the server.
+      if (session) yield* stopSkillUpdatesSession(config, session);
+      yield* requireRepositoryState(states);
+
+      if ((yield* latestPullRequestNumber()) > initialPr)
+        return yield* new SkillUpdatesAgentError({
+          operation: "opencode.partial",
+          message: "A failed model attempt created pull requests",
+        });
     }
 
-    return yield* new SkillUpdatesAgentError({
+    return yield* new SkillUpdatesRetryableError({
       operation: "opencode.models",
       message: last,
     });
@@ -1030,8 +1058,22 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
     yield* withSkillUpdatesClaim(
       run.id,
       Effect.gen(function* () {
-        const states = yield* requireCleanRepositories(config.repositories);
-        const initialPr = yield* latestPullRequestNumber();
+        // Nothing has been published before the first model attempt.
+        const { states, initialPr } = yield* Effect.gen(function* () {
+          const states = yield* requireCleanRepositories(config.repositories);
+          const initialPr = yield* latestPullRequestNumber();
+
+          return { states, initialPr };
+        }).pipe(
+          Effect.mapError(
+            (error) =>
+              new SkillUpdatesRetryableError({
+                operation: "run.prepare",
+                message: describeFailure(error),
+              }),
+          ),
+        );
+
         yield* processWithFallback(
           config,
           skillUpdatesAgentPrompt(config, run),

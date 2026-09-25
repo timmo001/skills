@@ -145,3 +145,40 @@ export const createSkillUpdatesSession = Effect.fn(
 
   return { id: stored.data.id, server, password };
 });
+
+/** Stop a session's server-side execution so its side effects can be inspected. */
+export const stopSkillUpdatesSession = Effect.fn("UpdatesAgent.stopSession")(
+  function* (
+    config: {
+      readonly opencodeCommand: string;
+      readonly opencodeArgs?: readonly string[];
+      readonly repositories: readonly string[];
+    },
+    session: {
+      readonly id: string;
+      readonly server: string;
+      readonly password: Redacted.Redacted<string>;
+    },
+  ) {
+    const executor = yield* CommandExecutor;
+
+    const api = (args: readonly string[]) =>
+      executor.run(
+        config.opencodeCommand,
+        [
+          ...(config.opencodeArgs ?? []),
+          "api",
+          "--server",
+          session.server,
+          ...args,
+        ],
+        {
+          cwd: config.repositories[0],
+          env: { OPENCODE_PASSWORD: Redacted.value(session.password) },
+        },
+      );
+
+    yield* api(["post", `/api/session/${session.id}/interrupt`]);
+    yield* api(["post", `/api/experimental/session/${session.id}/wait`]);
+  },
+);

@@ -85,7 +85,7 @@ Each state change creates a commit whose only parent is the observed state head,
 
 Failed ref writes are reconciled against the candidate SHA before retrying. Transient failures get at most three attempts with the same candidate; uncertain ownership stops processing. Shared state read failures also stop processing. Local `flock` still serialises a device, and `stateFile` remains a local completion cache; it cannot bypass shared coordination. Old local markers are not automatically imported into shared history.
 
-Claims do not expire. A failure, interruption or crash retains the claim because the OpenCode session or partially published changes may survive the CLI. The claim token is printed on acquisition and in subsequent busy errors. To recover:
+Claims do not expire. The runner releases a claim for retry only when it can show the run published nothing: preparation failed before any model ran, or every model attempt failed, each session was interrupted and waited for, the repositories are clean on their default branches and no pull request was opened. Any other failure, interruption or crash retains the claim because the OpenCode session or partially published changes may survive the CLI. The claim token is printed on acquisition and in subsequent busy errors. To recover:
 
 1. Stop the owning device runner and its OpenCode session. Confirm neither can resume, then inspect partial changes, PRs and repository cleanup.
 2. Use `retry` to allow another attempt, or `processed` only after confirming the run's work and cleanup are complete:
