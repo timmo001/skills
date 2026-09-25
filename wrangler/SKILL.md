@@ -4,7 +4,7 @@ description: Use the project's Wrangler CLI for Cloudflare development, configur
 compatibility: Requires the project's Wrangler dependency and supported Node.js runtime. Remote operations require Cloudflare authentication.
 license: Apache-2.0
 # origin: https://github.com/cloudflare/skills/tree/main/skills/wrangler
-# upstream-sha: 8c01b03b0a09a01581beed87b656cf634009e735
+# upstream-sha: 320fbbc1b671221bb86c3777715093d21cf286df
 # local-edits:
 #   - SKILL.md: replaced the bundled CLI manual with project-local version, source lookup, and scoped verification guidance
 ---
@@ -23,7 +23,38 @@ license: Apache-2.0
 - Framework-generated configuration belongs to its generator. Use the build output the framework's deployment script selects; do not hand-edit generated files.
 - Keep secrets in the project's supported secret mechanism, never in tracked config or command output.
 - Check environment inheritance in the current configuration reference rather than assuming bindings or variables carry across environments.
+- Reconcile dashboard changes before deploying because Wrangler can overwrite
+  dashboard variables and routes. Verify existing resource identifiers;
+  omitted identifiers can trigger automatic provisioning.
+- With the Cloudflare Vite plugin, select the environment at dev or build time.
+  Setting an environment only at deploy time does not retarget flattened build
+  configuration.
 - Prefer types matching the project's installed dependencies and compatibility settings. Newer published types alone are not a reason to change its runtime contract.
+
+## Previews
+
+- Use Workers Previews for branch and pull request environments under one
+  Worker, Version URLs for a specific uploaded version with production
+  resources, and Wrangler environments for persistent separate Workers.
+- Check that the project-local Wrangler supports Previews and follow the
+  current configuration placement and resource-isolation documentation. A
+  Preview name does not prove its resources are isolated.
+- Preview URLs are public unless access controls are configured. Confirm the
+  intended Worker or Wrangler environment and pass the same `--env` value to
+  every Preview command.
+- Treat missing bindings and shared production resources as validation gaps.
+  Do not test destructive writes without explicit authorisation.
+
+## Authentication and secrets
+
+- Retrieve the current role and API token scope for the exact remote operation.
+  Prefer narrow account-owned API tokens when granular access is required.
+- Keep secret values out of command arguments, source, logs, and chat. Treat
+  `wrangler secret put` and `secret delete` as deployments because they create
+  and deploy a version immediately.
+- Use authentication profiles when the project requires account separation.
+  Claim deployments are for eligible unauthenticated prototypes, not
+  production or CI.
 
 ## Sources
 
