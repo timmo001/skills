@@ -19,6 +19,7 @@ import {
   runDeviceSkillUpdates,
   runGitHubSkillUpdates,
   skillUpdatesAgentResultStatus,
+  skillUpdatesNeedingWork,
   skillUpdateSubject,
   SkillUpdatesAgentError,
   validatePullRequestPolicy,
@@ -270,6 +271,53 @@ describe("updates agent policies", () => {
         ],
       ]);
     }),
+  );
+
+  it.effect(
+    "skips only updates with an open PR for the current upstream SHA",
+    () =>
+      Effect.sync(() => {
+        const current = "b".repeat(40);
+
+        const patch = (sha: string) =>
+          [
+            "diff --git a/imports.json b/imports.json",
+            `-    "example": { "upstreamSha": "${"a".repeat(40)}", "localEdits": [] },`,
+            `+    "example": { "upstreamSha": "${sha}", "localEdits": [] },`,
+          ].join("\n");
+
+        const skills = [
+          {
+            name: "example",
+            state: "manual-review",
+            upstreamSha: current,
+          },
+          { name: "gone", state: "origin-gone", upstreamSha: null },
+          { name: "fresh", state: "up-to-date", upstreamSha: current },
+        ] as const;
+
+        expect(
+          skillUpdatesNeedingWork(skills, [
+            { title: "Update skill: example", patch: patch(current) },
+          ]),
+        ).toEqual([]);
+        expect(
+          skillUpdatesNeedingWork(skills, [
+            { title: "Update skill: example", patch: patch("c".repeat(40)) },
+          ]),
+        ).toEqual(["example"]);
+        expect(
+          skillUpdatesNeedingWork(skills, [
+            { title: "Update skill: other", patch: patch(current) },
+          ]),
+        ).toEqual(["example"]);
+        expect(
+          skillUpdatesNeedingWork(
+            [{ name: "broken", state: "error", upstreamSha: null }],
+            [],
+          ),
+        ).toEqual(["broken"]);
+      }),
   );
 
   it.effect("requires exactly one explicit status line", () =>
@@ -648,7 +696,18 @@ describe("updates agent policies", () => {
       yield* fs.makeDirectory(path.join(root, ".git"));
       yield* fs.writeFileString(
         path.join(root, "imports.json"),
-        '{"version":1,"imports":{}}',
+        // An invalid origin still needs attention, so the model runs.
+        JSON.stringify({
+          version: 1,
+          imports: {
+            example: {
+              origin: "not-a-github-url",
+              upstreamSha: "a".repeat(40),
+              license: "MIT",
+              localEdits: [],
+            },
+          },
+        }),
       );
       yield* fs.writeFileString(
         configFile,

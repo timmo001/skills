@@ -82,6 +82,13 @@ const PullRequestNumbers = Schema.Array(
   Schema.Struct({ number: Schema.Int.check(Schema.isGreaterThan(0)) }),
 );
 
+const PullRequestTitles = Schema.Array(
+  Schema.Struct({
+    number: Schema.Int.check(Schema.isGreaterThan(0)),
+    title: Schema.String,
+  }),
+);
+
 const PullRequestPolicy = Schema.Struct({
   title: Schema.String,
   state: Schema.String,
@@ -131,6 +138,41 @@ export const cleanSkillUpdateNames = (
 
 export const skillUpdatesAgentModelArgument = (model: SkillUpdatesAgentModel) =>
   `${model.providerID}/${model.modelID}${model.variant ? `#${model.variant}` : ""}`;
+
+const skillUpdateTitles = (skill: string) => [
+  `Update skill: ${skill}`,
+  `[SHA-only] Update ${skill}`,
+];
+
+const setsUpstreamSha = (patch: string, skill: string, sha: string) =>
+  patch
+    .split("\n")
+    .some(
+      (line) =>
+        line.startsWith("+") &&
+        line.slice(1).trimStart().startsWith(`"${skill}":`) &&
+        line.includes(`"upstreamSha": "${sha}"`),
+    );
+
+/** Pending updates without an open pull request for their current upstream SHA. */
+export const skillUpdatesNeedingWork = (
+  skills: readonly Pick<UpdateReportItem, "name" | "state" | "upstreamSha">[],
+  pulls: readonly { readonly title: string; readonly patch: string }[],
+) =>
+  skills.flatMap(({ name, state, upstreamSha }) => {
+    if (state === "up-to-date" || state === "origin-gone") return [];
+
+    const covered =
+      (state === "manual-review" || state === "update-available") &&
+      upstreamSha !== null &&
+      pulls.some(
+        ({ title, patch }) =>
+          skillUpdateTitles(name).includes(title) &&
+          setsUpstreamSha(patch, name, upstreamSha),
+      );
+
+    return covered ? [] : [name];
+  });
 
 export const skillUpdatesAgentPrompt = (
   config: SkillUpdatesAgentConfig,
@@ -759,6 +801,52 @@ const latestPullRequestNumber = Effect.fn(
   return pulls[0]?.number ?? 0;
 });
 
+const pendingSkillUpdates = Effect.fn("UpdatesAgent.pendingSkillUpdates")(
+  function* (root: string) {
+    const github = yield* GitHub;
+    const report = yield* buildUpdateReport(root);
+    const pending = skillUpdatesNeedingWork(report.skills, []);
+
+    if (pending.length === 0) return pending;
+
+    const open = yield* decodeJson(
+      "pull-requests",
+      PullRequestTitles,
+      yield* github.run(
+        [
+          "pr",
+          "list",
+          "--state",
+          "open",
+          "--limit",
+          "100",
+          "--json",
+          "number,title",
+          "--repo",
+          "timmo001/skills",
+        ],
+        { readOnly: true },
+      ),
+    );
+
+    const titles = new Set(pending.flatMap(skillUpdateTitles));
+    const pulls: { title: string; patch: string }[] = [];
+
+    for (const { number, title } of open.filter(({ title }) =>
+      titles.has(title),
+    ))
+      pulls.push({
+        title,
+        patch: yield* github.run(
+          ["pr", "diff", String(number), "--repo", "timmo001/skills"],
+          { readOnly: true },
+        ),
+      });
+
+    return skillUpdatesNeedingWork(report.skills, pulls);
+  },
+);
+
 export const validatePullRequestPolicy = Effect.fn(
   "UpdatesAgent.validatePullRequestPolicy",
 )(function* (after: number) {
@@ -1059,11 +1147,14 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
       run.id,
       Effect.gen(function* () {
         // Nothing has been published before the first model attempt.
-        const { states, initialPr } = yield* Effect.gen(function* () {
+        const { states, initialPr, pending } = yield* Effect.gen(function* () {
           const states = yield* requireCleanRepositories(config.repositories);
           const initialPr = yield* latestPullRequestNumber();
+          // The update report reads local metadata, so match origin first.
+          yield* runOrFail("git", ["pull", "--ff-only"], primaryRepository);
+          const pending = yield* pendingSkillUpdates(primaryRepository);
 
-          return { states, initialPr };
+          return { states, initialPr, pending };
         }).pipe(
           Effect.mapError(
             (error) =>
@@ -1074,12 +1165,20 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
           ),
         );
 
-        yield* processWithFallback(
-          config,
-          skillUpdatesAgentPrompt(config, run),
-          states,
-          initialPr,
-        );
+        if (pending.length === 0)
+          yield* Console.log(
+            "Every pending skill update already has an open pull request; skipping the model",
+          );
+        else {
+          yield* Console.log(`Updates needing work: ${pending.join(", ")}`);
+          yield* processWithFallback(
+            config,
+            skillUpdatesAgentPrompt(config, run),
+            states,
+            initialPr,
+          );
+        }
+
         yield* requireRepositoryState(states);
         yield* validatePullRequestPolicy(initialPr);
         yield* refreshDashboard(primaryRepository);
