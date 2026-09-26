@@ -13,10 +13,10 @@ import {
   Match,
   Option,
   Redacted,
-  Schedule,
   Schema,
   Stream,
 } from "effect";
+import { RetryBackoff } from "./RetryBackoff.js";
 
 export class GitHubError extends Schema.TaggedError<GitHubError>()(
   "GitHubError",
@@ -38,9 +38,20 @@ export interface GitHubApiOptions {
 export interface GitHubRunOptions {
   /** Opt in only for known-idempotent reads. Mutations are never retried by default. */
   readonly readOnly?: boolean;
+  readonly timeout?: GhOptions["timeout"];
 }
 
+/** The network probe exhausted its bounded wait without reaching GitHub. */
+export class NetworkUnavailableError extends Schema.TaggedError<NetworkUnavailableError>()(
+  "NetworkUnavailableError",
+  { message: Schema.String },
+) {}
+
 export interface GitHubService {
+  readonly waitForNetwork: () => Effect.Effect<
+    void,
+    GitHubError | NetworkUnavailableError
+  >;
   readonly isAvailable: () => Effect.Effect<boolean, GitHubError>;
   readonly run: (
     args: readonly string[],
@@ -88,6 +99,12 @@ const isRetryable = (stderr: string) => {
     "tls handshake",
   ].some((pattern) => lower.includes(pattern));
 };
+
+const isNetworkFailure = (error: GitHubError) =>
+  error.status === null &&
+  /connection reset|could not resolve host|temporary failure in name resolution|network is unreachable|no route to host|failed to connect|connection timed out|timed out after|tls handshake/i.test(
+    error.stderr,
+  );
 
 const fromGhError = (command: string, error: GhError, stderr?: string) => {
   const details = Match.value(error).pipe(
@@ -147,6 +164,7 @@ export class GitHub extends Context.Service<GitHub, GitHubService>()(
     GitHub,
     Effect.gen(function* () {
       const gh = yield* Gh;
+      const backoff = yield* RetryBackoff;
       const token = yield* Config.option(Config.Redacted("GH_TOKEN"));
 
       const fallbackToken = yield* Config.option(
@@ -176,35 +194,67 @@ export class GitHub extends Context.Service<GitHub, GitHubService>()(
           );
 
       const run = Effect.fn("GitHub.run")(
-        function* (args: readonly string[], _options?: GitHubRunOptions) {
+        function* (args: readonly string[], options?: GitHubRunOptions) {
           // Keep full stderr for status and retry classification, beyond the SDK error tail.
           let stderr = "";
 
-          return yield* gh.stream(args, env ? { env } : {}).pipe(
-            Stream.tap((chunk) =>
-              Effect.sync(() => {
-                if (GhChunk.guards.Stderr(chunk)) stderr += chunk.text;
+          return yield* gh
+            .stream(args, {
+              ...(env && { env }),
+              ...(options?.timeout !== undefined && {
+                timeout: options.timeout,
               }),
-            ),
-            Stream.runFold(
-              () => "",
-              (output, chunk) =>
-                GhChunk.guards.Stdout(chunk) ? output + chunk.text : output,
-            ),
-            Effect.mapError((error) =>
-              fromGhError(`gh ${args.join(" ")}`, error, stderr),
-            ),
-          );
+            })
+            .pipe(
+              Stream.tap((chunk) =>
+                Effect.sync(() => {
+                  if (GhChunk.guards.Stderr(chunk)) stderr += chunk.text;
+                }),
+              ),
+              Stream.runFold(
+                () => "",
+                (output, chunk) =>
+                  GhChunk.guards.Stdout(chunk) ? output + chunk.text : output,
+              ),
+              Effect.mapError((error) =>
+                fromGhError(`gh ${args.join(" ")}`, error, stderr),
+              ),
+            );
         },
         (effect, _args, options) =>
-          effect.pipe(
-            Effect.retry({
-              schedule: Schedule.exponential("1 second"),
-              times: options?.readOnly ? retries : 0,
-              while: (error) => error.retryable,
-            }),
-          ),
+          options?.readOnly
+            ? backoff.retry(effect, {
+                initial: "1 second",
+                times: retries,
+                while: (error) => error.retryable,
+              })
+            : effect,
       );
+
+      const waitForNetwork = Effect.fn("GitHub.waitForNetwork")(function* () {
+        yield* backoff
+          .retry(
+            run(["api", "rate_limit", "--method", "GET"], {
+              timeout: "2 seconds",
+            }),
+            {
+              initial: "500 millis",
+              maxDelay: "2 seconds",
+              times: 3,
+              while: isNetworkFailure,
+            },
+          )
+          .pipe(
+            Effect.mapError((error) =>
+              isNetworkFailure(error)
+                ? new NetworkUnavailableError({
+                    message:
+                      "[WARN] Network unavailable; skill updates deferred to a later run",
+                  })
+                : error,
+            ),
+          );
+      });
 
       const json = Effect.fn("GitHub.json")(function* (
         args: readonly string[],
@@ -263,7 +313,15 @@ export class GitHub extends Context.Service<GitHub, GitHubService>()(
         );
       });
 
-      return GitHub.of({ run, stream, json, api, apiJson, isAvailable });
+      return GitHub.of({
+        run,
+        stream,
+        json,
+        api,
+        apiJson,
+        isAvailable,
+        waitForNetwork,
+      });
     }),
-  );
+  ).pipe(Layer.provide(RetryBackoff.layer));
 }

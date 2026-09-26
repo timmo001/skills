@@ -34,6 +34,7 @@ import {
 import {
   GitHub,
   GitHubError,
+  NetworkUnavailableError,
   type GitHubService,
 } from "../src/services/GitHub.js";
 import { coordinationGitHub } from "./helpers/coordination-github.js";
@@ -57,6 +58,7 @@ const githubLayer = (
   stream: GitHubService["stream"] = () => Stream.empty,
 ) =>
   Layer.succeed(GitHub, {
+    waitForNetwork: () => Effect.void,
     isAvailable: () => Effect.succeed(true),
     run,
     stream,
@@ -82,6 +84,32 @@ const shaOnlyPatch = (oldSha: string, newSha: string) =>
   ].join("\n");
 
 describe("updates agent policies", () => {
+  it.effect("does not start GitHub Actions work while offline", () =>
+    Effect.gen(function* () {
+      const failure = yield* runGitHubSkillUpdates("/unused").pipe(
+        Effect.provide(
+          Layer.succeed(GitHub, {
+            waitForNetwork: () =>
+              Effect.fail(new NetworkUnavailableError({ message: "offline" })),
+            isAvailable: () => Effect.die("Unexpected CLI check"),
+            run: () => Effect.die("Unexpected GitHub command"),
+            stream: () => Stream.empty,
+            json: () => Effect.die("Unexpected JSON request"),
+            api: () => Effect.die("Unexpected API request"),
+            apiJson: () => Effect.die("Unexpected API request"),
+          }),
+        ),
+        Effect.provide(
+          CommandExecutor.layer.pipe(Layer.provide(NodeServices.layer)),
+        ),
+        Effect.provide(NodeServices.layer),
+        Effect.flip,
+      );
+
+      expect(failure).toBeInstanceOf(NetworkUnavailableError);
+    }),
+  );
+
   it.effect("selects clean content updates and stale SHA-only refreshes", () =>
     Effect.sync(() => {
       expect(
@@ -209,6 +237,7 @@ describe("updates agent policies", () => {
         Effect.provide(commandLayer),
         Effect.provide(
           Layer.succeed(GitHub, {
+            waitForNetwork: () => Effect.void,
             isAvailable: () => Effect.succeed(true),
             stream: () => Stream.empty,
             run: (args) => {
@@ -840,6 +869,7 @@ describe("updates agent policies", () => {
       const shared = coordinationGitHub();
 
       const github = Layer.succeed(GitHub, {
+        waitForNetwork: () => Effect.void,
         isAvailable: () => Effect.succeed(true),
         stream: () => Stream.empty,
         api: (endpoint, options) =>

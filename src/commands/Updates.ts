@@ -301,6 +301,8 @@ export const updates = Effect.fn("Updates.run")(function* (
     return;
   }
 
+  yield* github.waitForNetwork();
+
   const report = yield* buildUpdateReport(root, options.skill);
 
   const mode =

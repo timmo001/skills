@@ -638,6 +638,7 @@ const refreshDashboard = Effect.fn("UpdatesAgent.refreshDashboard")(function* (
 
 export const runGitHubSkillUpdates = Effect.fn("UpdatesAgent.runGitHub")(
   function* (root: string) {
+    yield* (yield* GitHub).waitForNetwork();
     yield* runOrFail(
       "git",
       ["config", "user.name", "skill-updates[bot]"],
@@ -1210,6 +1211,7 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
 
     if (runId && !locked) {
       const github = yield* GitHub;
+      yield* github.waitForNetwork();
       yield* github
         .stream(
           [
@@ -1332,6 +1334,8 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
             : Effect.fail(error),
       ),
     );
+
+    yield* (yield* GitHub).waitForNetwork();
 
     const run = yield* fetchRun(config, runId);
 

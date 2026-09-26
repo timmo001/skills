@@ -16,6 +16,7 @@ const fixture = () => {
   return {
     ...remote,
     layer: Layer.succeed(GitHub, {
+      waitForNetwork: () => Effect.void,
       api: remote.api,
       apiJson: () => Effect.die("Unexpected apiJson"),
       run: () => Effect.die("Unexpected run"),

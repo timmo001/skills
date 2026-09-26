@@ -18,7 +18,7 @@ import {
 } from "effect";
 import { TestClock } from "effect/testing";
 import { ChildProcess, ChildProcessSpawner } from "effect/unstable/process";
-import { GitHub } from "../src/services/GitHub.js";
+import { GitHub, NetworkUnavailableError } from "../src/services/GitHub.js";
 
 const text = (value: string) => Stream.succeed(new TextEncoder().encode(value));
 
@@ -107,6 +107,87 @@ const fixture = Effect.fn("Test.githubFixture")(function* (
 });
 
 describe("GitHub SDK boundary", () => {
+  it.effect(
+    "waits briefly for connectivity without replaying nonnetwork failures",
+    () =>
+      Effect.gen(function* () {
+        const fake = yield* fixture((_command, attempt) =>
+          Effect.succeed({
+            stderr: text(attempt === 1 ? "network is unreachable" : ""),
+            exitCode: exit(attempt === 1 ? 1 : 0),
+          }),
+        );
+
+        const clock = yield* retryClock();
+
+        const fiber = yield* fake.github
+          .waitForNetwork()
+          .pipe(
+            Effect.provideService(Clock.Clock, clock.clock),
+            Effect.forkScoped,
+          );
+
+        expect(Duration.toMillis(yield* Queue.take(clock.sleeps))).toBe(2000);
+        expect(Duration.toMillis(yield* Queue.take(clock.sleeps))).toBe(500);
+        yield* TestClock.adjust("500 millis");
+        yield* Fiber.join(fiber);
+        expect(fake.commands).toHaveLength(2);
+        expect(fake.commands[0]?.args).toEqual([
+          "api",
+          "rate_limit",
+          "--method",
+          "GET",
+        ]);
+      }),
+  );
+
+  it.effect(
+    "defers after bounded network failures but fails on authentication",
+    () =>
+      Effect.gen(function* () {
+        const offline = yield* fixture(() =>
+          Effect.succeed({
+            stderr: text("could not resolve host"),
+            exitCode: exit(1),
+          }),
+        );
+
+        const clock = yield* retryClock();
+
+        const fiber = yield* offline.github
+          .waitForNetwork()
+          .pipe(
+            Effect.provideService(Clock.Clock, clock.clock),
+            Effect.flip,
+            Effect.forkScoped,
+          );
+
+        for (const delay of [0.5, 1, 2]) {
+          expect(Duration.toMillis(yield* Queue.take(clock.sleeps))).toBe(2000);
+          expect(Duration.toMillis(yield* Queue.take(clock.sleeps))).toBe(
+            delay * 1000,
+          );
+          yield* TestClock.adjust(`${delay * 1000} millis`);
+        }
+
+        expect(yield* Fiber.join(fiber)).toBeInstanceOf(
+          NetworkUnavailableError,
+        );
+        expect(offline.commands).toHaveLength(4);
+
+        const denied = yield* fixture(() =>
+          Effect.succeed({ stderr: text("HTTP 403"), exitCode: exit(1) }),
+        );
+
+        expect(
+          yield* Effect.flip(denied.github.waitForNetwork()),
+        ).toMatchObject({
+          status: 403,
+        });
+        expect(denied.commands).toHaveLength(1);
+      }),
+  );
+
   it.effect("sends ref mutations as JSON without automatic retries", () =>
     Effect.gen(function* () {
       let input = "";

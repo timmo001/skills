@@ -23,6 +23,7 @@ import {
 import {
   GitHub,
   GitHubError,
+  NetworkUnavailableError,
   type GitHubService,
 } from "../src/services/GitHub.js";
 
@@ -40,6 +41,7 @@ interface FixtureImportMetadata {
 
 const githubLayer = (overrides: Partial<GitHubService> = {}) =>
   Layer.succeed(GitHub, {
+    waitForNetwork: () => Effect.void,
     isAvailable: () => Effect.succeed(true),
     run: () => Effect.succeed(""),
     stream: () => Stream.empty,
@@ -286,6 +288,30 @@ describe("upstream status", () => {
 });
 
 describe("versioned update reports", () => {
+  it.effect("defers updates without reading imports while offline", () =>
+    Effect.gen(function* () {
+      const failure = yield* updates("/unused", {
+        check: false,
+        update: true,
+        json: false,
+        noCommit: true,
+        skipReview: true,
+      }).pipe(
+        Effect.provide(
+          githubLayer({
+            waitForNetwork: () =>
+              Effect.fail(new NetworkUnavailableError({ message: "offline" })),
+          }),
+        ),
+        Effect.provide(commandLayer()),
+        Effect.provide(NodeServices.layer),
+        Effect.flip,
+      );
+
+      expect(failure).toBeInstanceOf(NetworkUnavailableError);
+    }),
+  );
+
   it.effect("reports a deleted path even when its last SHA is unchanged", () =>
     Effect.gen(function* () {
       const root = yield* makeRepository("Old body");
