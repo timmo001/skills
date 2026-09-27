@@ -47,10 +47,10 @@ These are agent-agnostic in format, but their workflows or specific branches dep
 | `browser-control` | Browser Control relay, extension, and CLI or MCP tools. |
 | `context-cli` | Context CLI and shell access, with Git and authenticated GitHub CLI for repository and PR details. Wholesale import owned by `timmo001/context`. |
 | `effect-gh` | TypeScript, @timmo001/effect-gh with its compatible Effect peer, a platform adapter providing ChildProcessSpawner, and an installed, authenticated GitHub CLI for operations. Wholesale import; consumers choose the runtime and platform. |
+| `effect-herdr` | TypeScript, @timmo001/effect-herdr with its pinned Effect and platform packages, Node.js 20+ or Bun, and a Herdr local socket server on the supported protocol for live checks. Wholesale import owned by `timmo001/effect-herdr`. |
 | `gh-stack` | GitHub `gh stack` extension. |
 | `github-development-rulesets` | Authenticated GitHub CLI, jq, Bash, and ruleset write access for mutations. Includes the Development JSON baseline for creation. |
 | `github-repository-setup` | Authenticated GitHub CLI, Git, jq, and repository creation/settings write access. Encodes preferred personal repository defaults, discovers workflow examples from the authenticated account, and uses the owner-selected shared source, including `timmo001/workflows` for the personal Renovate caller. Delegates reusable workflows and post-push rulesets to `shared-workflows` and `github-development-rulesets`. |
-| `herdr-sdk` | TypeScript, @herdr/sdk, compatible Effect/platform packages and runtime, current upstream docs, and a compatible Herdr local socket server for live checks. |
 | `herdr-workflows` | Herdr, its CLI environment, and the separately installed upstream `herdr` skill. |
 | `home-assistant-frontend` | Home Assistant frontend checkout and its local guidance. |
 | `home-assistant-lazy-context` | Home Assistant frontend source and conventions. |
