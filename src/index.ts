@@ -2,7 +2,7 @@
 import { NodeRuntime, NodeServices } from "@effect/platform-node";
 import { layer as ghLayer } from "@timmo001/effect-gh";
 import { Effect, Layer } from "effect";
-import { CliConfig, CliError, Command } from "effect/unstable/cli";
+import { CliConfig, CliError, Command } from "effect/cli";
 import { skillMaintenanceCommand } from "./cli/spec.js";
 import {
   SKILL_UPDATES_DEFERRED_EXIT_CODE,
