@@ -10,6 +10,7 @@ license: CC-BY-SA-4.0
 #   - added recommended-choice ordering and light/full grilling routing
 #   - removed verbose question templates and reply format examples
 #   - retained the concise cross-client skill after its Claude-specific upstream was deleted
+#   - require reporting discovery findings before asking
 ---
 
 # Ask Questions If Underspecified
@@ -34,7 +35,7 @@ Use this skill when a request has multiple plausible implementations and picking
 1. Ask the minimum needed to unblock work (prefer one targeted question).
 2. Use the client's structured question capability when available; otherwise ask one concise question in chat.
 3. Put recommended/default choices first and tag them with `(Recommended)`.
-4. Do all non-blocked, low-risk discovery first.
+4. Do all non-blocked, low-risk discovery first, and report what it found before asking.
 5. Until must-have answers arrive, do not edit files or run state-changing commands.
 6. If the user asks to proceed without answers, state assumptions briefly and continue with safest defaults.
 7. Never turn this into a multi-round design interview unless the user explicitly invokes `/grill` or asks to be grilled.
