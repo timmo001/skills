@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { Console, Effect, Result, Schema } from "effect";
+import { Clock, Console, Duration, Effect, Result, Schema } from "effect";
 import { GitHub } from "../services/GitHub.js";
 
 const repository = "repos/timmo001/skills";
@@ -7,6 +7,10 @@ const repository = "repos/timmo001/skills";
 export const skillUpdatesStateRef = "heads/automation/skill-update-state";
 
 const refEndpoint = `${repository}/git/refs/${skillUpdatesStateRef}`;
+
+// Longer than a device run can last (the scheduled runner stops at 40
+// minutes), shorter than the hourly schedule, so the next run takes over.
+export const staleClaimAfter = Duration.minutes(50);
 
 const RunId = Schema.Int.check(Schema.isGreaterThan(0));
 
@@ -157,14 +161,19 @@ const transition = Effect.fn("UpdatesAgentCoordination.transition")(function* (
   }
 });
 
+const describeClaim = (claim: typeof Claim.Type) =>
+  `Workflow run ${claim.runId} is claimed by ${claim.token} since ${claim.startedAt}`;
+
 export const claimSkillUpdates = Effect.fn("UpdatesAgentCoordination.claim")(
   function* (runId: number) {
     yield* Schema.decodeUnknownEffect(RunId)(runId);
 
+    const now = yield* Clock.currentTimeMillis;
+
     const claim = {
       token: randomUUID(),
       runId,
-      startedAt: new Date().toISOString(),
+      startedAt: new Date(now).toISOString(),
     };
 
     for (let attempt = 0; attempt < 3; attempt++) {
@@ -172,10 +181,20 @@ export const claimSkillUpdates = Effect.fn("UpdatesAgentCoordination.claim")(
 
       if (current?.state.processed.includes(runId)) return null;
 
-      if (current?.state.claim)
+      const held = current?.state.claim;
+
+      // A claim older than any run can last has no live owner. Replacing it in
+      // the same compare-and-swap write keeps its run retryable, and open pull
+      // requests stop a retry from repeating published work.
+      const stale =
+        held !== undefined &&
+        held !== null &&
+        now - Date.parse(held.startedAt) >= Duration.toMillis(staleClaimAfter);
+
+      if (held && !stale)
         return yield* new SkillUpdatesCoordinationError({
           operation: "coordination.busy",
-          message: `Workflow run ${current.state.claim.runId} is claimed by ${current.state.claim.token} since ${current.state.claim.startedAt}. Stop the owning runner before explicit recovery.`,
+          message: `${describeClaim(held)}; deferring to its owner`,
         });
 
       if (
@@ -184,8 +203,14 @@ export const claimSkillUpdates = Effect.fn("UpdatesAgentCoordination.claim")(
           claim,
           processed: current?.state.processed ?? [],
         })
-      )
+      ) {
+        if (held)
+          yield* Console.log(
+            `${describeClaim(held)}, past the ${Duration.format(staleClaimAfter)} limit; took it over`,
+          );
+
         return claim;
+      }
     }
 
     return yield* new SkillUpdatesCoordinationError({
@@ -235,6 +260,7 @@ export const withSkillUpdatesClaim = <A, E, R>(
     yield* Console.log(`Claimed workflow run ${runId}: ${claim.token}`);
     // Keep the claim on other failures and interruption: an agent may already
     // have published changes, or its server-side session may still be running.
+    // A later run takes it over once it is stale.
     yield* work.pipe(
       Effect.tapError((error) =>
         error instanceof SkillUpdatesRetryableError

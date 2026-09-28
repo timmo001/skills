@@ -85,7 +85,11 @@ Each state change creates a commit whose only parent is the observed state head,
 
 Failed ref writes are reconciled against the candidate SHA before retrying. Transient failures get at most three attempts with the same candidate; uncertain ownership stops processing. Shared state read failures also stop processing. Local `flock` still serialises a device, and `stateFile` remains a local completion cache; it cannot bypass shared coordination. Old local markers are not automatically imported into shared history.
 
-Claims do not expire. The runner releases a claim for retry only when it can show the run published nothing: preparation failed before any model ran, or every model attempt failed, each session was interrupted and waited for, the repositories are clean on their default branches and no pull request was opened. Any other failure, interruption or crash retains the claim because the OpenCode session or partially published changes may survive the CLI. The claim token is printed on acquisition and in subsequent busy errors. To recover:
+The runner releases a claim for retry when it can show the run published nothing: preparation failed before any model ran, or every model attempt failed, each session was interrupted and waited for, the repositories are clean on their default branches and no pull request was opened. Any other failure, interruption or crash retains the claim because the OpenCode session or partially published changes may survive the CLI.
+
+A retained claim goes stale 50 minutes after it started, longer than a scheduled device run can last and shorter than the hourly schedule. The next device run replaces a stale claim with its own in the same non-forced transition, leaving the old run unprocessed so it is retried; updates that already have an open pull request are skipped, so published work is not repeated. While a claim is still fresh, other device runs defer with status 2 instead of failing.
+
+The claim token is printed on acquisition and in busy messages. To release a claim before it goes stale:
 
 1. Stop the owning device runner and its OpenCode session. Confirm neither can resume, then inspect partial changes, PRs and repository cleanup.
 2. Use `retry` to allow another attempt, or `processed` only after confirming the run's work and cleanup are complete:
@@ -100,6 +104,8 @@ Recovery requires the current token and uses the same non-forced transition. A s
 Device configuration requires `opencodePermissions`, a non-empty array of OpenCode V2 `{ action, resource, effect }` rules using `allow` or `deny`. Keep machine-specific paths and command selections in that configuration. The runner prepends default-deny, then appends the selected agent's resolved explicit denials so job allowances cannot override them. Use `~/` for home-relative read, edit and external-directory resources; shell patterns are literal command text.
 
 If a configured checkout has uncommitted changes or is off its default branch, the runner defers before claiming the workflow run and exits with status 2, which service monitors can treat as a warning. The next run tries again.
+
+The runner also defers with status 2 when another local run holds the lock, or when GitHub stays unreachable for about a minute, which covers runs started at resume before Wi-Fi reconnects.
 
 Before starting a model, the runner fast-forwards the primary repository and builds the update report. If every pending update already has an open pull request whose `imports.json` change sets the current upstream SHA, it skips the model and records the run as processed. Skills whose upstream no longer exists count as nothing to do; errors and invalid origins still start the model.
 

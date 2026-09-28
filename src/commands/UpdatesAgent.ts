@@ -22,6 +22,7 @@ import { importSkill } from "./Import.js";
 import { CommandError, CommandExecutor } from "../services/CommandExecutor.js";
 import { GitHub } from "../services/GitHub.js";
 import {
+  type SkillUpdatesCoordinationError,
   SkillUpdatesRetryableError,
   withSkillUpdatesClaim,
 } from "./UpdatesAgentCoordination.js";
@@ -1297,6 +1298,12 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
         ...(runId ? ["--run-id", runId] : []),
       ]);
 
+      if (code === 75)
+        return yield* new SkillUpdatesDeferredError({
+          message:
+            "Another skill updates agent run is active; deferring skill updates",
+        });
+
       if (code === SKILL_UPDATES_DEFERRED_EXIT_CODE)
         return yield* new SkillUpdatesDeferredError({
           message: "Skill updates deferred to a later run",
@@ -1304,11 +1311,8 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
 
       if (code !== 0)
         return yield* new SkillUpdatesAgentError({
-          operation: code === 75 ? "run.lock" : "run.child",
-          message:
-            code === 75
-              ? "Another skill updates agent run is active"
-              : `Locked skill updates agent exited with code ${code}`,
+          operation: "run.child",
+          message: `Locked skill updates agent exited with code ${code}`,
         });
 
       return;
@@ -1394,6 +1398,22 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
           );
         yield* refreshDashboard(primaryRepository);
       }),
+    ).pipe(
+      // Another device is working on the run, so this one is not needed.
+      Effect.catchTag(
+        "SkillUpdatesCoordinationError",
+        (
+          error,
+        ): Effect.Effect<
+          never,
+          SkillUpdatesCoordinationError | SkillUpdatesDeferredError
+        > =>
+          error.operation === "coordination.busy"
+            ? Effect.fail(
+                new SkillUpdatesDeferredError({ message: error.message }),
+              )
+            : Effect.fail(error),
+      ),
     );
     yield* fs.makeDirectory(path.dirname(config.stateFile), {
       recursive: true,

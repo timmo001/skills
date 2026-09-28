@@ -1,10 +1,19 @@
 import { describe, expect, it } from "@effect/vitest";
-import { Deferred, Effect, Fiber, Layer, Result, Stream } from "effect";
+import {
+  Deferred,
+  Duration,
+  Effect,
+  Fiber,
+  Layer,
+  Result,
+  Stream,
+} from "effect";
 import { TestClock } from "effect/testing";
 import {
   claimSkillUpdates,
   finishSkillUpdatesClaim,
   recoverSkillUpdatesClaim,
+  staleClaimAfter,
   withSkillUpdatesClaim,
 } from "../src/commands/UpdatesAgentCoordination.js";
 import { GitHub } from "../src/services/GitHub.js";
@@ -291,27 +300,51 @@ describe("cross-device skill update coordination", () => {
     }),
   );
 
-  it.effect("retains interrupted work without expiring the claim", () =>
-    Effect.gen(function* () {
-      const remote = fixture();
-      const started = yield* Deferred.make<void>();
+  it.effect(
+    "retains interrupted work until its claim is stale, then takes it over for retry",
+    () =>
+      Effect.gen(function* () {
+        const remote = fixture();
+        const started = yield* Deferred.make<void>();
 
-      const worker = yield* withSkillUpdatesClaim(
-        42,
-        Deferred.succeed(started, undefined).pipe(Effect.andThen(Effect.never)),
-      ).pipe(Effect.provide(remote.layer), Effect.forkScoped);
+        const worker = yield* withSkillUpdatesClaim(
+          42,
+          Deferred.succeed(started, undefined).pipe(
+            Effect.andThen(Effect.never),
+          ),
+        ).pipe(Effect.provide(remote.layer), Effect.forkScoped);
 
-      yield* Deferred.await(started);
-      yield* Fiber.interrupt(worker);
-      yield* TestClock.adjust("7 days");
-      expect(
-        yield* claimSkillUpdates(43).pipe(
-          Effect.flip,
-          Effect.provide(remote.layer),
-        ),
-      ).toMatchObject({ operation: "coordination.busy" });
-      expect(remote.state().processed).toEqual([]);
-    }),
+        yield* Deferred.await(started);
+        yield* Fiber.interrupt(worker);
+        const token = remote.state().claim?.token;
+        yield* TestClock.adjust(
+          Duration.subtract(staleClaimAfter, Duration.seconds(1)),
+        );
+        expect(
+          yield* claimSkillUpdates(43).pipe(
+            Effect.flip,
+            Effect.provide(remote.layer),
+          ),
+        ).toMatchObject({ operation: "coordination.busy" });
+
+        yield* TestClock.adjust("1 second");
+        let starts = 0;
+        yield* withSkillUpdatesClaim(
+          43,
+          Effect.sync(() => {
+            starts++;
+          }),
+        ).pipe(Effect.provide(remote.layer));
+        expect(starts).toBe(1);
+        expect(remote.state()).toEqual({ claim: null, processed: [43] });
+        expect(
+          yield* finishSkillUpdatesClaim(token ?? "", "processed").pipe(
+            Effect.flip,
+            Effect.provide(remote.layer),
+          ),
+        ).toMatchObject({ operation: "coordination.owner" });
+        expect(remote.state().processed).toEqual([43]);
+      }),
   );
 
   it.effect(
