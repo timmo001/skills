@@ -2,7 +2,7 @@
 name: session-coordination
 license: Apache-2.0
 compatibility: Requires Herdr-managed sessions and the separately installed herdr skill, or explicitly requested host-native child sessions.
-description: Assess and coordinate parallel work through visible Herdr sessions, bounded assignments, and owned-session cleanup. Use when substantial plans or tasks contain independent work that could benefit from parallel workers, when the user requests coordination, or when a coordinator agent is selected. Ask before launching workers.
+description: Split independent work into visible Herdr sessions and choose models and effort variants for each assignment. Use when tasks benefit from parallel workers or different model capabilities, when the user requests coordination or model selection, or when a coordinator agent is selected. Ask before launching workers.
 ---
 
 # Session Coordination
@@ -14,12 +14,15 @@ than maintaining a second session registry in files.
 ## Agree The Split
 
 - Keep small or tightly coupled work in the current session. Propose Herdr workers
-  when substantial independent investigation, checks, or disjoint implementation
-  can run in parallel with a clear owner for shared decisions and files.
+  proactively when independent investigation, checks, or disjoint implementation
+  can run in parallel with a clear owner for shared decisions and files. Look for
+  useful splits at task intake and when implementation reaches verification;
+  do not keep separable work in one session simply because it already has context.
 - Apply `evidence-first` before proposing sessions. Use findings from the current
   task to explain why the work is independent and how parallel workers would help.
-  Name the assignments, repositories or areas, intended panes or workspaces, and
-  proposed concurrency. Task size alone is not evidence that a split will help.
+  Name the assignments, repositories or areas, intended panes or workspaces,
+  model and effort choices, and proposed concurrency. Task size alone is not
+  evidence that a split will help.
 - Ask through the question tool whether to use that Herdr split or continue
   directly. Wait for explicit agreement before creating worker sessions or their
   panes. A previous user instruction covering those launches is sufficient;
@@ -41,8 +44,12 @@ than maintaining a second session registry in files.
   objective, repository, allowed files, dependencies, applicable skills, required
   checks, and a concise result format: outcome, changed paths, checks, blockers.
 - Keep small reads and decisions with the coordinator. Prefer Herdr for useful
-  delegation; use native children only when explicitly requested. If Herdr is
-  unavailable, report that rather than silently switching delegation tools.
+  delegation so workers stay visible and can be prompted, resumed and switched
+  independently. A native child may suit a short, self-contained lookup where
+  its result-return mechanism avoids managing a terminal. Explain that advantage
+  and obtain explicit permission before using native children; availability alone
+  is not a reason. If Herdr is unavailable, report that rather than silently
+  switching delegation tools.
 - Load `herdr` before control. It owns CLI syntax, topology, lifecycle, targeting,
   and safety. Use the smallest useful set of sessions, with a soft cap of four
   active workers and three new background panes per tab. Ask before exceeding it.
@@ -52,6 +59,48 @@ than maintaining a second session registry in files.
 - Name created agents with a unique `coord-` name and retain their returned pane
   IDs in this conversation. A name prefix alone does not establish ownership of
   panes from another run.
+
+## Choose Models By Assignment
+
+Treat model capability and effort as separate choices. Honour explicit user
+selections and host preferences. Otherwise propose a model for the assignment
+rather than copying the coordinator's model into every worker. Runtime and
+version still follow the launch policy below.
+
+| Assignment | Starting point |
+| --- | --- |
+| Subtle correctness, security, concurrency or compatibility review | Strong reasoning model, high effort |
+| Architecture decisions or diagnosis with competing explanations | Strong reasoning model, high effort |
+| Bounded implementation with a settled design | Capable coding model, medium effort |
+| Mechanical edits with exact instructions and independent files | Smaller model, low effort |
+| Collect source references, logs or prescribed check results | Smaller model, low effort |
+| Design regression checks for complex behaviour or investigate a flaky test | Stronger model, medium or high effort |
+| Run a known command without interpretation | Background shell; no model needed |
+
+- These are starting points, not model rankings or guarantees. Resolve current
+  provider/model IDs and supported variants from the runtime. Use observed task
+  results and host preferences to choose between candidates; do not infer speed
+  or quality from a model's name alone. Keep personal model shortlists in the
+  host's private configuration, not these shared skills.
+- Include the model, effort and reason in the proposed split. Do not default to
+  maximum effort. Higher effort is useful for unresolved reasoning, not merely
+  because a command takes a long time to run.
+- Examples of independent work: frontend and backend tracing; implementation in
+  disjoint modules; collecting primary-source evidence while another worker
+  analyses the contract; a review and prescribed checks against a stable diff.
+  A checker must report the revision or working-tree state it verified. Do not
+  claim results from changing files as verification of the final changeset.
+- For a justified independent review, a different model can provide another
+  perspective. It is not proof of correctness: the coordinator still verifies
+  each finding. Do not launch a reviewer after every edit or create voting loops.
+- Escalate when a worker identifies unresolved ambiguity, cannot explain a
+  failure, or repeats an unsuccessful approach. Pass its evidence to a stronger
+  model or raise effort using the supported session switch within the agreed
+  scope. Keep the same worker for the same task; open a fresh session for genuinely
+  independent work, not merely to change a model.
+- Keep design, regression-test design and failure diagnosis separate from routine
+  test execution. A smaller worker may run checks and collect failures without
+  being authorised to weaken tests or make speculative fixes.
 
 ## Launch
 

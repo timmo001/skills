@@ -24,9 +24,12 @@ Report only problems introduced or worsened by the changeset.
   into findings. Recommend structural changes only to resolve a concrete problem.
 - Apply `testing` when choosing checks or considering test requests. Missing
   coverage alone is not a finding; explain the meaningful failure left unprotected.
-- Review directly by default. For requested delegation, use
-  `session-coordination`, give the reviewer the same boundary and applicable
-  skills, and independently verify its claims before reporting them.
+- Keep straightforward reviews direct. When a concrete reasoning risk or
+  independent review area warrants another perspective, apply
+  `session-coordination` to propose a Herdr reviewer with a stronger model or
+  higher effort. Give it the same boundary and applicable skills, and verify its
+  claims before reporting them. Delegate mechanical evidence collection separately
+  when useful; do not make another reviewer a mandatory step for every change.
 
 ## Findings
 

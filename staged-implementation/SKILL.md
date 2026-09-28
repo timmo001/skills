@@ -42,6 +42,7 @@ Use this workflow when finishing the whole request in one uninterrupted change w
 
 - For substantial independent work within the active stage, load `session-coordination` to propose a Herdr split and obtain agreement before launching workers. Coordinate from the current agent; keep small or tightly coupled work direct. Use native subagents only when explicitly requested.
 - Parallelise independent discovery, tests, or disjoint implementation only. Keep ordered reasoning and shared mutable files with one integrator.
+- Use `session-coordination` to choose each worker's model and effort for its assignment. Propose useful Herdr splits instead of keeping independent work on the coordinator's model by default; keep routine check execution distinct from test design, diagnosis and reasoning-heavy review.
 - Define shared contracts before delegation. Workers consume them; they do not independently redesign them.
 - Give each worker a bounded brief: objective, authoritative inputs, exact file scope, prohibited shared files, expected output, verification, and required concise summary.
 - Do not duplicate delegated work. Reconcile worker results through the contract owner before integration.
