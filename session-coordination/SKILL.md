@@ -64,6 +64,12 @@ configured. Prefer its shared opener to recreating workspace selection and agent
 startup. Check live state to reuse the right workspace, retain the target pane ID,
 and distinguish newly created panes from reused shells for cleanup. Follow the
 opener's focus behaviour and restore the caller for background work when needed.
+When a model is requested, use the host opener's model-selection option if it
+supports the requested runtime. Resolve ambiguity before starting the worker,
+and verify the selected model before delivering the brief. For an existing
+worker, use the host's supported session-model switch only after confirming its
+live identity and the user's requested model; do not start a replacement worker
+merely to change models.
 
 For an alternate runtime, verify the configured exact launcher in the coordinator
 before creating a pane. Use the host opener when it verifies that runtime and
