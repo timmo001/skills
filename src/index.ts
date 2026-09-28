@@ -9,7 +9,11 @@ import {
   SkillUpdatesDeferredError,
 } from "./commands/UpdatesAgent.js";
 import { CommandExecutor } from "./services/CommandExecutor.js";
-import { GitHub, NetworkUnavailableError } from "./services/GitHub.js";
+import {
+  GitHub,
+  GitHubError,
+  NetworkUnavailableError,
+} from "./services/GitHub.js";
 
 const commandExecutorLayer = CommandExecutor.layer.pipe(
   Layer.provide(NodeServices.layer),
@@ -35,8 +39,14 @@ const program = Command.runWith(skillMaintenanceCommand, { version: "1.0.0" })(
     Effect.sync(() => {
       if (error instanceof NetworkUnavailableError) {
         console.warn(error.message);
+      } else if (error instanceof GitHubError) {
+        console.error(
+          `${error.command} failed with exit code ${error.exitCode}: ${error.stderr}`,
+        );
       } else if (!CliError.isCliError(error)) {
-        console.error(error instanceof Error ? error.message : String(error));
+        console.error(
+          error instanceof Error ? error.message || error.name : String(error),
+        );
       }
 
       process.exitCode =

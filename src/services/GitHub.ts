@@ -93,6 +93,8 @@ const isRetryable = (stderr: string) => {
     "504",
     "connection reset",
     "could not resolve host",
+    "error connecting to",
+    "no such host",
     "network is unreachable",
     "temporarily unavailable",
     "timeout",
@@ -102,7 +104,7 @@ const isRetryable = (stderr: string) => {
 
 const isNetworkFailure = (error: GitHubError) =>
   error.status === null &&
-  /connection reset|could not resolve host|temporary failure in name resolution|network is unreachable|no route to host|failed to connect|connection timed out|timed out after|tls handshake/i.test(
+  /connection reset|could not resolve host|error connecting to|no such host|temporary failure in name resolution|network is unreachable|no route to host|failed to connect|connection timed out|timed out after|tls handshake/i.test(
     error.stderr,
   );
 
@@ -237,10 +239,12 @@ export class GitHub extends Context.Service<GitHub, GitHubService>()(
             run(["api", "rate_limit", "--method", "GET"], {
               timeout: "2 seconds",
             }),
+            // Timer runs missed during suspend start at resume, before Wi-Fi
+            // reconnects, so allow about a minute for the connection.
             {
               initial: "500 millis",
-              maxDelay: "2 seconds",
-              times: 3,
+              maxDelay: "5 seconds",
+              times: 10,
               while: isNetworkFailure,
             },
           )

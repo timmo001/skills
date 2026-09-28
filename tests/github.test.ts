@@ -147,7 +147,9 @@ describe("GitHub SDK boundary", () => {
       Effect.gen(function* () {
         const offline = yield* fixture(() =>
           Effect.succeed({
-            stderr: text("could not resolve host"),
+            stderr: text(
+              "error connecting to api.github.com\ncheck your internet connection or https://githubstatus.com",
+            ),
             exitCode: exit(1),
           }),
         );
@@ -162,7 +164,7 @@ describe("GitHub SDK boundary", () => {
             Effect.forkScoped,
           );
 
-        for (const delay of [0.5, 1, 2]) {
+        for (const delay of [0.5, 1, 2, 4, 5, 5, 5, 5, 5, 5]) {
           expect(Duration.toMillis(yield* Queue.take(clock.sleeps))).toBe(2000);
           expect(Duration.toMillis(yield* Queue.take(clock.sleeps))).toBe(
             delay * 1000,
@@ -173,7 +175,7 @@ describe("GitHub SDK boundary", () => {
         expect(yield* Fiber.join(fiber)).toBeInstanceOf(
           NetworkUnavailableError,
         );
-        expect(offline.commands).toHaveLength(4);
+        expect(offline.commands).toHaveLength(11);
 
         const denied = yield* fixture(() =>
           Effect.succeed({ stderr: text("HTTP 403"), exitCode: exit(1) }),
