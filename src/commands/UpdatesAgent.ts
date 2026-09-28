@@ -12,7 +12,7 @@ import {
   Schema,
   Stream,
 } from "effect";
-import { Yaml } from "effect/unstable/encoding";
+import { Yaml } from "effect/encoding";
 import {
   buildUpdateReport,
   renderUpdateMarkdown,
