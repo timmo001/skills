@@ -10,7 +10,6 @@ Install each unchanged skill from its official source:
 | `effect` | <https://github.com/kitlangton/skills/tree/main/skills/effect> |
 | `effect-service-design` | <https://github.com/dmmulroy/skills/tree/main/effect-service-design> |
 | `herdr` | <https://github.com/herdrdev/herdr/tree/master/skills/herdr> |
-| `hunk-review` | <https://github.com/modem-dev/hunk/tree/main/skills/hunk-review> |
 | `motion-choreography-patterns` | <https://github.com/stolinski/s-stack/tree/main/skills/motion-choreography-patterns> |
 | `opentui` | <https://github.com/anomalyco/opentui/tree/main/packages/web/src/content> |
 | `terminal-control` | <https://github.com/anomalyco/terminal-control/tree/main/skills/terminal-control> |
