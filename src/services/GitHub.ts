@@ -13,10 +13,10 @@ import {
   Match,
   Option,
   Redacted,
+  Schedule,
   Schema,
   Stream,
 } from "effect";
-import { RetryBackoff } from "./RetryBackoff.js";
 
 export class GitHubError extends Schema.TaggedError<GitHubError>()(
   "GitHubError",
@@ -166,7 +166,6 @@ export class GitHub extends Context.Service<GitHub, GitHubService>()(
     GitHub,
     Effect.gen(function* () {
       const gh = yield* Gh;
-      const backoff = yield* RetryBackoff;
       const token = yield* Config.option(Config.Redacted("GH_TOKEN"));
 
       const fallbackToken = yield* Config.option(
@@ -225,39 +224,39 @@ export class GitHub extends Context.Service<GitHub, GitHubService>()(
         },
         (effect, _args, options) =>
           options?.readOnly
-            ? backoff.retry(effect, {
-                initial: "1 second",
-                times: retries,
-                while: (error) => error.retryable,
-              })
+            ? effect.pipe(
+                Effect.retry({
+                  schedule: Schedule.exponential("1 second"),
+                  times: retries,
+                  while: (error) => error.retryable,
+                }),
+              )
             : effect,
       );
 
       const waitForNetwork = Effect.fn("GitHub.waitForNetwork")(function* () {
-        yield* backoff
-          .retry(
-            run(["api", "rate_limit", "--method", "GET"], {
-              timeout: "2 seconds",
-            }),
-            // Timer runs missed during suspend start at resume, before Wi-Fi
-            // reconnects, so allow about a minute for the connection.
-            {
-              initial: "500 millis",
-              maxDelay: "5 seconds",
-              times: 10,
-              while: isNetworkFailure,
-            },
-          )
-          .pipe(
-            Effect.mapError((error) =>
-              isNetworkFailure(error)
-                ? new NetworkUnavailableError({
-                    message:
-                      "[WARN] Network unavailable; skill updates deferred to a later run",
-                  })
-                : error,
-            ),
-          );
+        yield* run(["api", "rate_limit", "--method", "GET"], {
+          timeout: "2 seconds",
+        }).pipe(
+          // Timer runs missed during suspend start at resume, before Wi-Fi
+          // reconnects, so allow about a minute for the connection.
+          Effect.retry({
+            schedule: Schedule.min([
+              Schedule.exponential("500 millis"),
+              Schedule.spaced("5 seconds"),
+            ]),
+            times: 10,
+            while: isNetworkFailure,
+          }),
+          Effect.mapError((error) =>
+            isNetworkFailure(error)
+              ? new NetworkUnavailableError({
+                  message:
+                    "[WARN] Network unavailable; skill updates deferred to a later run",
+                })
+              : error,
+          ),
+        );
       });
 
       const json = Effect.fn("GitHub.json")(function* (
@@ -327,5 +326,5 @@ export class GitHub extends Context.Service<GitHub, GitHubService>()(
         waitForNetwork,
       });
     }),
-  ).pipe(Layer.provide(RetryBackoff.layer));
+  );
 }

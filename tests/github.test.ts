@@ -31,13 +31,18 @@ const retryClock = Effect.fn("Test.retryClock")(function* () {
 
   return {
     sleeps,
-    clock: {
-      ...clock,
+    clock: Clock.Clock.of({
+      currentTimeMillisUnsafe: () => clock.currentTimeMillisUnsafe(),
+      currentTimeMillis: clock.currentTimeMillis,
+      currentTimeNanosUnsafe: () => clock.currentTimeNanosUnsafe(),
+      currentTimeNanos: clock.currentTimeNanos,
+      monotonicTimeNanosUnsafe: () => clock.monotonicTimeNanosUnsafe(),
+      monotonicTimeNanos: clock.monotonicTimeNanos,
       sleep: (duration: Duration.Duration) =>
         Queue.offer(sleeps, duration).pipe(
           Effect.andThen(clock.sleep(duration)),
         ),
-    },
+    }),
   };
 });
 
