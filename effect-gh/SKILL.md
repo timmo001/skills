@@ -4,7 +4,7 @@ description: Use @timmo001/effect-gh for GitHub CLI integration in Effect TypeSc
 compatibility: Requires TypeScript, @timmo001/effect-gh with its compatible Effect peer, and an Effect platform adapter providing ChildProcessSpawner. Running operations requires an installed, authenticated GitHub CLI. Consumers choose the runtime and platform.
 license: Apache-2.0
 # origin: https://github.com/timmo001/effect-gh/tree/main/skills/effect-gh
-# upstream-sha: 05b2f8054b9742a6e57dd646864b16a640386ff9
+# upstream-sha: df8c724f83a154280a917c17d8e4d4ef5d1905a4
 ---
 
 # Effect GH
@@ -73,7 +73,9 @@ have a different transport contract.
      early termination cancels work and does not prove a successful final exit.
    - Keep retries explicit and bounded at a known-idempotent boundary. A failed
      mutation may already have taken effect; replaying emitted streams can
-     duplicate output.
+     duplicate output. Use `Gh.retryTransient`, `isTransient`, `isRateLimited`
+     and `RateLimit.cached` rather than local message lists or rate-limit caches,
+     then map `GhError` into the consumer's own error type.
 4. Verify the integration through the public SDK boundary. Typecheck layer and
    Schema requirements, test argument construction and relevant failure paths
    with a supplied test spawner, and run the consumer's normal checks. When
