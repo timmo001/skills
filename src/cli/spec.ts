@@ -1,6 +1,5 @@
-import { Option } from "effect";
+import { Effect, FileSystem, Option } from "effect";
 import { Argument, Command, Flag } from "effect/cli";
-import { existsSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import {
@@ -25,19 +24,27 @@ const bool = (name: string, description: string) =>
 
 const optional = <A>(value: Option.Option<A>) => Option.getOrUndefined(value);
 
-export const resolveSkillsRoot = (
+export const resolveSkillsRoot = Effect.fn("resolveSkillsRoot")(function* (
   cwd = process.cwd(),
   home = homedir(),
-  exists: (path: string) => boolean = existsSync,
-) =>
-  [
+) {
+  const fs = yield* FileSystem.FileSystem;
+
+  const candidates = [
     cwd,
     join(home, "repos", "skills"),
     join(home, ".config", "dotfiles", "agents", ".agents", "skills"),
-  ].find((candidate) => exists(join(candidate, "imports.json"))) ?? cwd;
+  ];
+
+  for (const candidate of candidates) {
+    if (yield* fs.exists(join(candidate, "imports.json"))) return candidate;
+  }
+
+  return cwd;
+});
 
 export const validateCommand = Command.make("validate", {}, () =>
-  validate(resolveSkillsRoot()),
+  resolveSkillsRoot().pipe(Effect.flatMap(validate)),
 ).pipe(Command.withDescription("Validate skills and repository metadata"));
 
 export const catalogueCommand = Command.make(
@@ -49,9 +56,9 @@ export const catalogueCommand = Command.make(
     ),
   },
   ({ check }) =>
-    check
-      ? checkSkillsCatalogue(resolveSkillsRoot())
-      : writeSkillsCatalogue(resolveSkillsRoot()),
+    resolveSkillsRoot().pipe(
+      Effect.flatMap(check ? checkSkillsCatalogue : writeSkillsCatalogue),
+    ),
 ).pipe(
   Command.withDescription(
     "Generate or check the SKILLS.md catalogue from skill frontmatter",
@@ -75,11 +82,15 @@ export const importCommand = Command.make(
     ),
   },
   ({ apply, metadataOnly, name, reviewedSha }) =>
-    importSkill(resolveSkillsRoot(), name, {
-      apply,
-      metadataOnly,
-      reviewedSha: optional(reviewedSha),
-    }),
+    resolveSkillsRoot().pipe(
+      Effect.flatMap((root) =>
+        importSkill(root, name, {
+          apply,
+          metadataOnly,
+          reviewedSha: optional(reviewedSha),
+        }),
+      ),
+    ),
 ).pipe(Command.withDescription("Fetch and compare or apply an imported skill"));
 
 export const updatesCommand = Command.make(
@@ -99,14 +110,18 @@ export const updatesCommand = Command.make(
     skipReview: bool("skip-review", "Do not open adapted imports for review"),
   },
   ({ check, commit, json, skill, skipReview, update }) =>
-    updates(resolveSkillsRoot(), {
-      check,
-      update,
-      json,
-      skill: optional(skill),
-      noCommit: !commit,
-      skipReview,
-    }),
+    resolveSkillsRoot().pipe(
+      Effect.flatMap((root) =>
+        updates(root, {
+          check,
+          update,
+          json,
+          skill: optional(skill),
+          noCommit: !commit,
+          skipReview,
+        }),
+      ),
+    ),
 ).pipe(Command.withDescription("Check and update tracked upstream skills"));
 
 export const checkCommand = Command.make(
@@ -120,11 +135,15 @@ export const checkCommand = Command.make(
     openOpencode: bool("open-opencode", "Open an interactive OpenCode review"),
   },
   ({ diffOrigin, openOpencode, skill }) =>
-    check(resolveSkillsRoot(), {
-      skill: optional(skill),
-      diffOrigin,
-      openOpencode,
-    }),
+    resolveSkillsRoot().pipe(
+      Effect.flatMap((root) =>
+        check(root, {
+          skill: optional(skill),
+          diffOrigin,
+          openOpencode,
+        }),
+      ),
+    ),
 ).pipe(Command.withDescription("Review adapted imports against their origins"));
 
 export const githubAgentCommand = Command.make(
@@ -136,7 +155,10 @@ export const githubAgentCommand = Command.make(
     ),
   },
   ({ skillsDir }) =>
-    runGitHubSkillUpdates(optional(skillsDir) ?? resolveSkillsRoot()),
+    Option.match(skillsDir, {
+      onNone: () => resolveSkillsRoot(),
+      onSome: Effect.succeed,
+    }).pipe(Effect.flatMap(runGitHubSkillUpdates)),
 ).pipe(
   Command.withDescription("Publish clean import updates from GitHub Actions"),
 );
