@@ -2,6 +2,9 @@ import {
   Api,
   Gh,
   GhChunk,
+  GhCommandError,
+  httpStatus,
+  isTransient,
   type GhError,
   type GhOptions,
 } from "@timmo001/effect-gh";
@@ -75,76 +78,61 @@ export interface GitHubService {
   ) => Effect.Effect<unknown, GitHubError>;
 }
 
-const statusFromStderr = (stderr: string) => {
-  const match = stderr.match(/(?:HTTP|status(?: code)?)\s*(\d{3})/i);
-
-  return match?.[1] ? Number(match[1]) : null;
-};
-
-const isRetryable = (stderr: string) => {
-  const lower = stderr.toLowerCase();
-
-  return [
-    "rate limit",
-    "secondary rate",
-    "http 5",
-    "502",
-    "503",
-    "504",
-    "connection reset",
-    "could not resolve host",
-    "error connecting to",
-    "no such host",
-    "network is unreachable",
-    "temporarily unavailable",
-    "timeout",
-    "tls handshake",
-  ].some((pattern) => lower.includes(pattern));
-};
-
 const isNetworkFailure = (error: GitHubError) =>
   error.status === null &&
   /connection reset|could not resolve host|error connecting to|no such host|temporary failure in name resolution|network is unreachable|no route to host|failed to connect|connection timed out|timed out after|tls handshake/i.test(
     error.stderr,
   );
 
-const fromGhError = (command: string, error: GhError, stderr?: string) => {
-  const details = Match.value(error).pipe(
+const fromGhError = (command: string, error: GhError, stderr?: string) =>
+  Match.value(error).pipe(
     Match.tags({
       GhCommandError: (error) => {
-        const detail = (stderr ?? error.stderr).trim();
-
-        return {
+        // Classify the full stderr, which can outgrow the SDK's retained tail.
+        const full = new GhCommandError({
+          executable: error.executable,
           exitCode: error.exitCode,
-          stderr: detail,
-          retryable: isRetryable(detail),
-        };
-      },
-      GhTimeoutError: (error) => ({
-        exitCode: -1,
-        stderr: `Command timed out after ${error.timeoutMs}ms`,
-        retryable: true,
-      }),
-      GhDecodeError: (error) => ({
-        exitCode: 0,
-        stderr: String(error.cause),
-        retryable: false,
-      }),
-      GhPlatformError: (error) => {
-        const detail = String(error.cause);
+          stdout: error.stdout,
+          stdoutTruncated: error.stdoutTruncated,
+          stderr: (stderr ?? error.stderr).trim(),
+          stderrTruncated: false,
+        });
 
-        return { exitCode: -1, stderr: detail, retryable: isRetryable(detail) };
+        return new GitHubError({
+          command,
+          exitCode: full.exitCode,
+          stderr: full.stderr,
+          status: Option.getOrNull(httpStatus(full)),
+          retryable: isTransient(full),
+        });
       },
+      GhTimeoutError: (error) =>
+        new GitHubError({
+          command,
+          exitCode: -1,
+          stderr: `Command timed out after ${error.timeoutMs}ms`,
+          status: null,
+          retryable: isTransient(error),
+        }),
+      GhDecodeError: (error) =>
+        new GitHubError({
+          command,
+          exitCode: 0,
+          stderr: String(error.cause),
+          status: null,
+          retryable: false,
+        }),
+      GhPlatformError: (error) =>
+        new GitHubError({
+          command,
+          exitCode: -1,
+          stderr: String(error.cause),
+          status: null,
+          retryable: false,
+        }),
     }),
     Match.exhaustive,
   );
-
-  return new GitHubError({
-    command,
-    ...details,
-    status: statusFromStderr(details.stderr),
-  });
-};
 
 const decodeJson = (command: string, output: string) =>
   Effect.try({
