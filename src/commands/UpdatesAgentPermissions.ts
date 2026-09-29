@@ -60,10 +60,7 @@ export const createSkillUpdatesSession = Effect.fn(
       message: "A session location is required",
     });
 
-  const invoke = (
-    args: readonly string[],
-    password?: Redacted.Redacted<string>,
-  ) =>
+  const invoke = (args: readonly string[], password?: Redacted.Redacted) =>
     executor.run(
       config.opencodeCommand,
       [...(config.opencodeArgs ?? []), ...args],
@@ -180,7 +177,7 @@ export const readSkillUpdatesSessionUsage = Effect.fn(
   session: {
     readonly id: string;
     readonly server: string;
-    readonly password: Redacted.Redacted<string>;
+    readonly password: Redacted.Redacted;
   },
 ) {
   const executor = yield* CommandExecutor;
@@ -223,7 +220,7 @@ export const stopSkillUpdatesSession = Effect.fn("UpdatesAgent.stopSession")(
     session: {
       readonly id: string;
       readonly server: string;
-      readonly password: Redacted.Redacted<string>;
+      readonly password: Redacted.Redacted;
     },
   ) {
     const executor = yield* CommandExecutor;

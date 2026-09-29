@@ -329,10 +329,11 @@ export const withFetched = Effect.fn("Snapshot.withFetched")(function* <
 
       const candidate = path.join(temp, name);
       yield* fs.copy(generated, candidate, { overwrite: true });
-      yield* materialiseMetadata(path.join(candidate, "SKILL.md"), name, {
-        ...metadata,
-        upstreamSha: sha,
-      });
+      yield* materialiseMetadata(
+        path.join(candidate, "SKILL.md"),
+        name,
+        Object.assign({}, metadata, { upstreamSha: sha }),
+      );
 
       return yield* use(candidate, sha);
     }),
