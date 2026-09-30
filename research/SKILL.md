@@ -46,4 +46,5 @@ Research feeds the thinking, it does not replace it. A visible plan is not alway
 
 - When the findings leave a clear, bounded implementation, offer to continue with an edit-capable agent or mode.
 - Do not treat completed research as permission to edit. Wait for explicit authorisation to continue.
-- If a material unknown remains, stop before implementation. Ask the minimum needed for a bounded choice; recommend the client's planning workflow for broader sequencing and the grilling workflow for question-led stress-testing.
+- Present the findings in chat first. Do not replace or preface them with a question.
+- If a material unknown remains, stop before implementation. Offer the next step in prose; follow `asking-questions` for a bounded choice, recommend the client's planning workflow for broader sequencing, and recommend the grilling workflow for question-led stress-testing.

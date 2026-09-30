@@ -8,6 +8,7 @@ license: MIT
 #   - preserve Light/Full intensity and materiality rules
 #   - use direct read-only investigation for fact-finding
 #   - cap question-tool rounds at five questions
+#   - present each round in chat first and keep questions concise via asking-questions
 ---
 
 # Grilling
@@ -23,6 +24,7 @@ Interview the user until you reach a shared understanding. Map the subject as a 
 5. Decisions remain with the user. Never silently settle an unresolved choice that could materially change scope, visible behaviour, acceptance criteria, safety, data, compatibility, cost, or an irreversible action.
 6. Include a question only when plausible answers materially change the plan or implementation. Skip nice-to-know, speculative, low-level, and safely reversible choices.
 7. Stay planning-only. Do not edit files, write specs, create issues, post comments, or implement code during grilling.
+8. Before each round, follow `asking-questions` Present Before Asking: summarise in chat what the last answers settled and what the frontier depends on, so every question makes sense from the chat above it. Keep each question and recommendation to its Wording rules.
 
 Format every question like this:
 
