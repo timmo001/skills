@@ -1,4 +1,4 @@
-import { Effect, Redacted, Schema } from "effect";
+import { Effect, Redacted, Schedule, Schema } from "effect";
 import { CommandExecutor } from "../services/CommandExecutor.js";
 
 // OpenCode 2.0.3: session.create and Session.Info use this ordered ruleset.
@@ -92,7 +92,14 @@ export const createSkillUpdatesSession = Effect.fn(
     yield* api([
       "get",
       `/api/agent/${encodeURIComponent(config.opencodeAgent)}${location}`,
-    ]),
+    ]).pipe(
+      // A freshly started server answers before the location's agents load.
+      Effect.retry({
+        schedule: Schedule.spaced("2 seconds"),
+        times: 3,
+        while: (error) => error.stderr.includes("HTTP 404"),
+      }),
+    ),
   );
 
   if (
