@@ -22,8 +22,8 @@ description: Run the advisory Oxlint pass on JavaScript or TypeScript changes in
    When the user explicitly asks to persist the opt-in, run
    `dot agent-oxlint --opt-in`. It enables an existing private config entry
    and commits the single-line change through `dot git-commit`, without pushing.
-   Missing entries offer the `dot repo-induct` wizard in a terminal.
-   For agent use, run `dot repo-induct <path> --noninteractive` with the chosen
+   Missing entries offer the `dot repo induct` wizard in a terminal.
+   For agent use, run `dot repo induct <path> --noninteractive` with the chosen
    `--preset normal` (default) or `--preset home-assistant`, `--agent-oxlint`,
    and field overrides from `--help`. Show the preview and ask for approval,
    then repeat exactly those options with `--commit`. Never add `--commit`

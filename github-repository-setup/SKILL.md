@@ -1,7 +1,7 @@
 ---
 name: github-repository-setup
 license: Apache-2.0
-description: Create GitHub repositories with the preferred settings, ask about licensing using GitHub templates, enable watching during creation or induction, offer CI and automerge workflows, and finish first-push setup with a Development ruleset. Use when creating or inducting a GitHub repository, using gh repo create or dot repo-induct, applying repository defaults, or completing initial GitHub setup.
+description: Create GitHub repositories with the preferred settings, ask about licensing using GitHub templates, enable watching during creation or induction, offer CI and automerge workflows, and finish first-push setup with a Development ruleset. Use when creating or inducting a GitHub repository, using gh repo create or dot repo induct, applying repository defaults, or completing initial GitHub setup.
 compatibility: Requires authenticated GitHub CLI, Git, jq, repository creation or settings write access, and the shared-workflows and github-development-rulesets skills for their setup steps.
 ---
 
