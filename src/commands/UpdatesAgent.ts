@@ -9,6 +9,7 @@ import {
   Option,
   Path,
   Redacted,
+  Schedule,
   Schema,
   Stream,
 } from "effect";
@@ -871,6 +872,12 @@ const updateBranchPattern =
 
 const updateCommitPattern = /^(?:\[SHA-only\] Update |Update skill: )\S+$/;
 
+export interface RecoveredUpdateBranch {
+  readonly description: string;
+  /** The branch is still on origin, so the failed run published something. */
+  readonly published: boolean;
+}
+
 /**
  * Return checkouts that a failed or crashed run left on one of its update
  * branches to the default branch. Uncommitted changes are stashed and the
@@ -882,7 +889,7 @@ export const recoverUpdateBranches = Effect.fn(
 )(function* (repositories: readonly string[]) {
   const executor = yield* CommandExecutor;
   const github = yield* GitHub;
-  const recovered: string[] = [];
+  const recovered: RecoveredUpdateBranch[] = [];
 
   for (const repository of repositories) {
     const git = (args: readonly string[]) =>
@@ -934,12 +941,9 @@ export const recoverUpdateBranches = Effect.fn(
       );
     yield* runOrFail("git", ["switch", target], repository);
     yield* runOrFail("git", ["branch", "-D", branch], repository);
-    recovered.push(
-      `${repository}: ${branch}${dirty ? " (uncommitted changes stashed)" : ""}`,
-    );
 
     // A pushed branch without a pull request would hide the update from later runs.
-    yield* Effect.gen(function* () {
+    const published = yield* Effect.gen(function* () {
       const [remote] = (yield* git([
         "ls-remote",
         "--heads",
@@ -947,7 +951,9 @@ export const recoverUpdateBranches = Effect.fn(
         branch,
       ])).split(/\s/);
 
-      if (remote !== tip) return;
+      if (!remote) return false;
+
+      if (remote !== tip) return true;
 
       const open = yield* github.run(
         [
@@ -967,19 +973,27 @@ export const recoverUpdateBranches = Effect.fn(
         { readOnly: true },
       );
 
-      if (open.trim() === "0")
-        yield* runOrFail(
-          "git",
-          ["push", "origin", "--delete", branch],
-          repository,
-        );
+      if (open.trim() !== "0") return true;
+
+      yield* runOrFail(
+        "git",
+        ["push", "origin", "--delete", branch],
+        repository,
+      );
+
+      return false;
     }).pipe(
       Effect.catch((error) =>
         Console.error(
           `Unable to remove ${branch} from origin: ${describeFailure(error)}`,
-        ),
+        ).pipe(Effect.as(true)),
       ),
     );
+
+    recovered.push({
+      description: `${repository}: ${branch}${dirty ? " (uncommitted changes stashed)" : ""}`,
+      published,
+    });
   }
 
   return recovered;
@@ -1221,6 +1235,12 @@ const describeFailure = (error: Error) => {
   return error.message ? `${error.name}: ${error.message}` : error.name;
 };
 
+// `opencode run` reports this when the server stops or restarts mid-session.
+const serverDisconnectPattern = /socket connection was closed unexpectedly/;
+
+/** The OpenCode server went away, so the run defers instead of failing. */
+const serverUnavailableOperation = "opencode.server";
+
 const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
   function* (
     config: SkillUpdatesAgentConfig,
@@ -1231,6 +1251,7 @@ const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
     const executor = yield* CommandExecutor;
     const attempts: SkillUpdatesAttempt[] = [];
     let last = "No model was attempted";
+    let serverRestarted = false;
 
     const usageOf = (session: Parameters<typeof stopSkillUpdatesSession>[1]) =>
       readSkillUpdatesSessionUsage(config, session).pipe(
@@ -1309,8 +1330,27 @@ const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
       } else last = `Model ${name} returned no valid success status line`;
       yield* Console.error(last);
 
-      // A timed-out client can leave its session running on the server.
-      if (session) yield* stopSkillUpdatesSession(config, session);
+      if (output.some((line) => serverDisconnectPattern.test(line)))
+        serverRestarted = true;
+
+      // A timed-out client can leave its session running on the server. A
+      // restarting server needs a moment before it accepts the interrupt.
+      if (session) {
+        const stopping = session;
+
+        yield* stopSkillUpdatesSession(config, stopping).pipe(
+          Effect.retry({ schedule: Schedule.spaced("5 seconds"), times: 5 }),
+          Effect.catch((error) =>
+            Effect.fail(
+              new SkillUpdatesAgentError({
+                operation: serverUnavailableOperation,
+                message: `OpenCode server is unavailable, so session ${stopping.id} could not be stopped (${describeFailure(error)}); a later run takes over its claim`,
+              }),
+            ),
+          ),
+        );
+      }
+
       attempts.push({
         model: label,
         succeeded: false,
@@ -1323,11 +1363,18 @@ const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
 
       yield* requireRepositoryState(states);
 
-      // Commits on a leftover branch may already be pushed without a pull request.
-      if (leftBranches.length > 0)
+      for (const { description } of leftBranches)
+        yield* Console.error(
+          `A failed model attempt left work on another branch; recovered ${description}`,
+        );
+
+      // Anything still on origin needs review before another attempt.
+      const published = leftBranches.filter((branch) => branch.published);
+
+      if (published.length > 0)
         return yield* new SkillUpdatesAgentError({
           operation: "opencode.partial",
-          message: `A failed model attempt left work on another branch (${leftBranches.join(", ")}); the checkout was recovered`,
+          message: `A failed model attempt published work that remains on origin (${published.map(({ description }) => description).join(", ")})`,
         });
 
       if ((yield* latestPullRequestNumber()) > initialPr)
@@ -1338,8 +1385,12 @@ const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
     }
 
     return yield* new SkillUpdatesRetryableError({
-      operation: "opencode.models",
-      message: last,
+      operation: serverRestarted
+        ? serverUnavailableOperation
+        : "opencode.models",
+      message: serverRestarted
+        ? `OpenCode server restarted during the run; ${last}`
+        : last,
     });
   },
 );
@@ -1465,8 +1516,10 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
     }
 
     // A crashed run can leave the checkout on its own update branch.
-    for (const recovered of yield* recoverUpdateBranches(config.repositories))
-      yield* Console.error(`Recovered from an interrupted run: ${recovered}`);
+    for (const { description } of yield* recoverUpdateBranches(
+      config.repositories,
+    ))
+      yield* Console.error(`Recovered from an interrupted run: ${description}`);
 
     // Local work in a checkout is not a failure: defer before claiming the run.
     yield* requireCleanRepositories(config.repositories).pipe(
@@ -1563,6 +1616,14 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
                 new SkillUpdatesDeferredError({ message: error.message }),
               )
             : Effect.fail(error),
+      ),
+      // A lost OpenCode server is not a fault in the run; retry later.
+      Effect.mapError((error) =>
+        (error instanceof SkillUpdatesAgentError ||
+          error instanceof SkillUpdatesRetryableError) &&
+        error.operation === serverUnavailableOperation
+          ? new SkillUpdatesDeferredError({ message: error.message })
+          : error,
       ),
     );
     yield* fs.makeDirectory(path.dirname(config.stateFile), {

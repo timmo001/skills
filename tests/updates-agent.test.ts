@@ -24,6 +24,7 @@ import {
   skillUpdatesNeedingWork,
   skillUpdateSubject,
   SkillUpdatesAgentError,
+  SkillUpdatesDeferredError,
   validatePullRequestPolicy,
   withSkillUpdatesBenchmark,
   type SkillUpdatesAgentConfig,
@@ -803,7 +804,11 @@ describe("updates agent policies", () => {
             Effect.provide(Layer.merge(owned.layer, github)),
           ),
         ).toEqual([
-          "/repo: update/diagnose-upstream (uncommitted changes stashed)",
+          {
+            description:
+              "/repo: update/diagnose-upstream (uncommitted changes stashed)",
+            published: false,
+          },
         ]);
         expect(owned.commands).toEqual([
           ["fetch", "origin"],
@@ -817,6 +822,35 @@ describe("updates agent policies", () => {
           ["switch", "main"],
           ["branch", "-D", "update/diagnose-upstream"],
           ["push", "origin", "--delete", "update/diagnose-upstream"],
+        ]);
+
+        // An open pull request keeps the branch, which a failed attempt must report.
+        const reviewed = executor(
+          "update/diagnose-upstream",
+          "[SHA-only] Update diagnose\n",
+        );
+
+        expect(
+          yield* recoverUpdateBranches(["/repo"]).pipe(
+            Effect.provide(
+              Layer.merge(
+                reviewed.layer,
+                githubLayer(() => Effect.succeed("1\n")),
+              ),
+            ),
+          ),
+        ).toEqual([
+          {
+            description:
+              "/repo: update/diagnose-upstream (uncommitted changes stashed)",
+            published: true,
+          },
+        ]);
+        expect(reviewed.commands).not.toContainEqual([
+          "push",
+          "origin",
+          "--delete",
+          "update/diagnose-upstream",
         ]);
 
         const foreign = executor(
@@ -887,6 +921,7 @@ describe("updates agent policies", () => {
         ].join("\n"),
       );
       let succeeds = false;
+      let disconnects = false;
       let modelAttempt = 0;
 
       const executor = Layer.succeed(CommandExecutor, {
@@ -943,6 +978,11 @@ describe("updates agent policies", () => {
           ]);
           modelAttempt += 1;
 
+          if (disconnects)
+            return Stream.make(
+              "Error: Transport: The socket connection was closed unexpectedly",
+            );
+
           return Stream.make(
             succeeds && modelAttempt === 2
               ? "STATUS: success"
@@ -996,6 +1036,12 @@ describe("updates agent policies", () => {
       expect(yield* fs.exists(stateFile)).toBe(false);
       // Failed attempts published nothing, so the claim is released for retry.
       expect(shared.state()).toEqual({ claim: null, processed: [] });
+      // A server restart defers the run and still releases the claim.
+      disconnects = true;
+      expect(yield* Effect.flip(run)).toBeInstanceOf(SkillUpdatesDeferredError);
+      expect(yield* fs.exists(stateFile)).toBe(false);
+      expect(shared.state()).toEqual({ claim: null, processed: [] });
+      disconnects = false;
       succeeds = true;
       modelAttempt = 0;
       yield* run;
