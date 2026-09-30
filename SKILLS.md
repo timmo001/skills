@@ -7,7 +7,7 @@ Generated from each top-level skill's `SKILL.md` frontmatter (`name` and `descri
 # or: mise run catalogue
 ```
 
-This repository currently documents **58** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
+This repository currently documents **55** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
 
 ## Portable
 
@@ -77,13 +77,10 @@ Skills coupled to the current OpenCode, dotfiles, notes, or maintainer workflow.
 
 | Skill | Description |
 | --- | --- |
-| [`agent-oxlint`](./agent-oxlint/) | Run the advisory Oxlint pass on JavaScript or TypeScript changes in dot-managed repositories. Use after the repository's own lint workflow whenever a task changes JS or TS files; the command checks private opt-in and local Oxlint precedence and reports only findings on changed lines. |
 | [`branch-context-consumer`](./branch-context-consumer/) | Consume BranchContextPlugin injections in commands. Use when a command depends on an injected <branch-context> block for its scope. |
 | [`check-skill-updates`](./check-skill-updates/) | Check imported skills for upstream changes and review safe updates. Use when a tracked `# origin:` may have changed or when refreshing installed skills from their source repositories. |
-| [`git-commit`](./git-commit/) | Commit workflow using the dot git-commit gateway, splitting a reviewed changeset into coherent commits by default. Use only after the user explicitly requests a commit or push, including /commit or /commit-push. Never infer authorisation for later changes; never run raw git commit. |
 | [`git-context`](./git-context/) | Patterns for working with git branches, remotes, diffs against the default branch, and rebases. Use when resolving rebase conflicts, continuing interactive rebases, amending commits, or any git operation that would open an interactive editor. |
 | [`handoff`](./handoff/) | Save concise continuation context when work moves to another session or the user requests a handoff. |
 | [`import-external-skill`](./import-external-skill/) | Import skills from external repositories into this Agent Skills repository. Use when pulling in a public skill, reviewing an external skill set, or adapting upstream content into an existing skill. |
-| [`install-tool`](./install-tool/) | Install tools, applications, CLIs, runtimes, and packages. Use when an installation request should prefer mise for development tools, then fall back to pacman or yay for system-integrated software. |
 | [`session-coordination`](./session-coordination/) | Split independent work into visible Herdr sessions and choose models and effort variants for each assignment. Use when tasks benefit from parallel workers or different model capabilities, when the user requests coordination or model selection, or when a coordinator agent is selected. Ask before launching workers. |
 | [`task-focus`](./task-focus/) | Keep the original task on track when the user raises a side thought, side question, tentative branch idea, or explicit change of task. Use before diverting work, switching branches, or choosing between a BTW session, a fresh session, and the current conversation, especially with a large context window. |
