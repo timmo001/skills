@@ -851,6 +851,37 @@ export const requireRepositoryState = Effect.fn(
   }
 });
 
+/**
+ * Switch clean checkouts that an interrupted model left on another branch
+ * back to their starting branch, returning the branches that were left.
+ */
+export const restoreRepositoryBranches = Effect.fn(
+  "UpdatesAgent.restoreRepositoryBranches",
+)(function* (expected: readonly RepositoryState[]) {
+  const executor = yield* CommandExecutor;
+  const left: string[] = [];
+
+  for (const { path, branch } of expected) {
+    // Uncommitted work stays in place for requireRepositoryState to report.
+    if (
+      (yield* executor.run("git", ["status", "--porcelain"], {
+        cwd: path,
+      })).trim()
+    )
+      continue;
+
+    const current = (yield* executor.run("git", ["branch", "--show-current"], {
+      cwd: path,
+    })).trim();
+
+    if (current === branch) continue;
+    yield* runOrFail("git", ["switch", branch], path);
+    left.push(`${path}: ${current || "detached HEAD"}`);
+  }
+
+  return left;
+});
+
 const latestPullRequestNumber = Effect.fn(
   "UpdatesAgent.latestPullRequestNumber",
 )(function* () {
@@ -1182,7 +1213,15 @@ const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
         succeeded: false,
         usage: session ? yield* usageOf(session) : null,
       });
+      const leftBranches = yield* restoreRepositoryBranches(states);
       yield* requireRepositoryState(states);
+
+      // Commits on a leftover branch may already be pushed without a pull request.
+      if (leftBranches.length > 0)
+        return yield* new SkillUpdatesAgentError({
+          operation: "opencode.partial",
+          message: `A failed model attempt left work on another branch (${leftBranches.join(", ")}); the checkout was switched back`,
+        });
 
       if ((yield* latestPullRequestNumber()) > initialPr)
         return yield* new SkillUpdatesAgentError({

@@ -17,6 +17,7 @@ import {
   latestSuccessfulWorkflowRun,
   renderSkillUpdatesBenchmark,
   requireRepositoryState,
+  restoreRepositoryBranches,
   runDeviceSkillUpdates,
   runGitHubSkillUpdates,
   skillUpdatesAgentResultStatus,
@@ -746,6 +747,52 @@ describe("updates agent policies", () => {
       ),
       Effect.provide(NodeServices.layer),
     ),
+  );
+
+  it.effect(
+    "switches clean checkouts back from a leftover branch but leaves dirty ones",
+    () =>
+      Effect.gen(function* () {
+        const switched: string[][] = [];
+
+        const executor = (dirty: boolean) =>
+          Layer.succeed(CommandExecutor, {
+            capture: () =>
+              Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
+            run: (_command, args) =>
+              Effect.succeed(
+                args.includes("--porcelain")
+                  ? dirty
+                    ? " M imports.json\n"
+                    : ""
+                  : "update/example\n",
+              ),
+            exitCode: () => Effect.succeed(0),
+            inherit: (_command, args) =>
+              Effect.sync(() => {
+                switched.push([...args]);
+
+                return 0;
+              }),
+            stream: () => Stream.empty,
+          });
+
+        const state = [{ path: "/repo", branch: "main" }];
+
+        expect(
+          yield* restoreRepositoryBranches(state).pipe(
+            Effect.provide(executor(false)),
+          ),
+        ).toEqual(["/repo: update/example"]);
+        expect(switched).toEqual([["switch", "main"]]);
+
+        expect(
+          yield* restoreRepositoryBranches(state).pipe(
+            Effect.provide(executor(true)),
+          ),
+        ).toEqual([]);
+        expect(switched).toHaveLength(1);
+      }),
   );
 
   it.effect("records completed state only after successful processing", () =>
