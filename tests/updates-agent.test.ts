@@ -184,6 +184,14 @@ describe("updates agent policies", () => {
         path.join(root, "example", "SKILL.md"),
         `---\nname: example\ndescription: Example\nlicense: MIT\n# origin: ${origin}\n# upstream-sha: ${oldSha}\n---\nSame body\n`,
       );
+      yield* fs.writeFileString(
+        path.join(root, "skills.sh.json"),
+        JSON.stringify({
+          groupings: [
+            { title: "Example", description: "Example", skills: ["example"] },
+          ],
+        }),
+      );
       const githubCalls: string[][] = [];
 
       const commandLayer = Layer.effect(

@@ -18,6 +18,7 @@ import {
   renderUpdateMarkdown,
   type UpdateReportItem,
 } from "./Updates.js";
+import { CATALOGUE_FILE, writeSkillsCatalogue } from "./Catalogue.js";
 import { importSkill } from "./Import.js";
 import { CommandError, CommandExecutor } from "../services/CommandExecutor.js";
 import { GitHub } from "../services/GitHub.js";
@@ -390,6 +391,7 @@ export function isScopedSkillPatch(patch: string, skill: string): boolean {
 
   const allowed = (file: string) =>
     file === "imports.json" ||
+    file === CATALOGUE_FILE ||
     file.startsWith(`${skill}/`) ||
     file.startsWith(`upstream/${skill}/`);
 
@@ -499,8 +501,13 @@ const publishCleanUpdate = Effect.fn("UpdatesAgent.publishCleanUpdate")(
     const branch = `skill-update/${name}`;
     yield* runOrFail("git", ["checkout", "-B", branch, "origin/main"], root);
     yield* importSkill(root, name, { apply: true, metadataOnly: false });
+    yield* writeSkillsCatalogue(root);
     yield* validateRepository(root);
-    yield* runOrFail("git", ["add", "--", "imports.json"], root);
+    yield* runOrFail(
+      "git",
+      ["add", "--", "imports.json", CATALOGUE_FILE],
+      root,
+    );
     const snapshotPaths: string[] = [];
 
     for (const candidate of [name, path.join("upstream", name)])
@@ -523,7 +530,15 @@ const publishCleanUpdate = Effect.fn("UpdatesAgent.publishCleanUpdate")(
     const title = skillUpdateSubject(patch, name);
     yield* runOrFail(
       "git",
-      ["commit", "-m", title, "--", "imports.json", ...snapshotPaths],
+      [
+        "commit",
+        "-m",
+        title,
+        "--",
+        "imports.json",
+        CATALOGUE_FILE,
+        ...snapshotPaths,
+      ],
       root,
     );
     yield* runOrFail(
