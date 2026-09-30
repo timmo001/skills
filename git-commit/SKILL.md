@@ -98,6 +98,15 @@ dot git-commit -m "<subject>" --dry-run       # preview, change nothing
   `--amend -m "<subject>"` is how you reword the last commit. Do not amend a
   commit someone else may have based work on.
 - If the gateway rejects the subject, fix it and rerun; do not work around it.
+- In repositories opted into agent Oxlint, the gateway lints the files being
+  committed and reports only findings on changed lines. Warnings print and the
+  commit continues; mention them in the report. Errors refuse the commit and
+  make the changeset differ from what the user reviewed, so do not fix them
+  silently or retry with `--skip-agent-oxlint` on your own. Stop, explain each
+  error in chat (file and line, what the rule objects to, the likely fix, and
+  your recommendation), then use the question tool to ask whether to fix them
+  first, commit anyway with `--skip-agent-oxlint`, or stop. If they choose a
+  fix, show it and retry the commit only once they confirm it.
 - The gateway refuses to commit to the base branch of a repo you do not own
   (owners in `git config dot.owner`), so you do not commit to, say, `dev` on
   `home-assistant/frontend`. This also applies to a fork kept for upstream PRs

@@ -77,7 +77,7 @@ Skills coupled to the current OpenCode, dotfiles, notes, or maintainer workflow.
 
 | Skill | Description |
 | --- | --- |
-| [`agent-oxlint`](./agent-oxlint/) | Run the optional advisory Oxlint pass during JavaScript or TypeScript cleanup and slop-reduction work in dot-managed repositories. Use after the repository's own lint workflow; act only on diagnostics intersecting changed diff lines, while the command checks private opt-in and local Oxlint precedence. |
+| [`agent-oxlint`](./agent-oxlint/) | Run the advisory Oxlint pass on JavaScript or TypeScript changes in dot-managed repositories. Use after the repository's own lint workflow whenever a task changes JS or TS files; the command checks private opt-in and local Oxlint precedence and reports only findings on changed lines. |
 | [`branch-context-consumer`](./branch-context-consumer/) | Consume BranchContextPlugin injections in commands. Use when a command depends on an injected <branch-context> block for its scope. |
 | [`check-skill-updates`](./check-skill-updates/) | Check imported skills for upstream changes and review safe updates. Use when a tracked `# origin:` may have changed or when refreshing installed skills from their source repositories. |
 | [`git-commit`](./git-commit/) | Commit workflow using the dot git-commit gateway, splitting a reviewed changeset into coherent commits by default. Use only after the user explicitly requests a commit or push, including /commit or /commit-push. Never infer authorisation for later changes; never run raw git commit. |
