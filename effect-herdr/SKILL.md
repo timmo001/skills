@@ -1,10 +1,10 @@
 ---
 name: effect-herdr
-description: Use @timmo001/effect-herdr for Effect TypeScript integrations with Herdr's local socket API. Apply when adding, migrating, debugging or reviewing SDK consumers, including agent coordination, event streams, panes, workspaces and graphics. For operating terminals or workspaces as an agent, use the herdr skill.
+description: Use @timmo001/effect-herdr for Effect TypeScript integrations with Herdr's local socket API. Apply when adding, migrating, debugging or reviewing SDK consumers, including agent coordination, event streams, panes and workspaces. For operating terminals or workspaces as an agent, use the herdr skill.
 compatibility: Requires TypeScript, @timmo001/effect-herdr with its pinned Effect and @effect/platform-node-shared versions, Node.js 20+ or Bun, and a Herdr server on the SDK's supported protocol for live checks.
 license: MIT
 # origin: https://github.com/timmo001/effect-herdr/tree/HEAD/skills/effect-herdr
-# upstream-sha: 21a965109fd41fcfbe72de63adbefaf68791fdc7
+# upstream-sha: 719c04d408270f2075e18c6c0d32df9c54038609
 ---
 
 # Effect Herdr
@@ -23,7 +23,7 @@ workspaces as an agent.
    server. Treat declared but absent packages as unverified.
 2. Read the relevant current docs before coding:
    - [README](https://github.com/timmo001/effect-herdr/blob/fork/main/README.md):
-     setup, API shape, errors, events and graphics.
+     setup, API shape, errors and events.
    - [Package manifest](https://github.com/timmo001/effect-herdr/blob/fork/main/package.json)
      and [exports](https://github.com/timmo001/effect-herdr/blob/fork/main/src/index.ts):
      dependency pins, protocol and public surface.
@@ -41,7 +41,7 @@ workspaces as an agent.
 2. Preserve boundary semantics:
    - Keep typed failures such as `HerdrUnsupportedProtocol` visible; install
      matching Herdr and SDK releases rather than bypassing the check.
-   - Keep event streams and graphics resources within their owning scope.
+   - Keep event streams and SSH agent leases within their owning scope.
    - A prompt timeout can follow delivery; inspect state before retrying.
 3. For coordination, use the agent prompt/wait operations for one-shot work and
    event streams for long-lived observation. Do not build polling loops or a
