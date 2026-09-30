@@ -851,35 +851,123 @@ export const requireRepositoryState = Effect.fn(
   }
 });
 
-/**
- * Switch clean checkouts that an interrupted model left on another branch
- * back to their starting branch, returning the branches that were left.
- */
-export const restoreRepositoryBranches = Effect.fn(
-  "UpdatesAgent.restoreRepositoryBranches",
-)(function* (expected: readonly RepositoryState[]) {
-  const executor = yield* CommandExecutor;
-  const left: string[] = [];
+const updateBranchPattern =
+  /^(?:skill-update\/|update\/|update-skill-|sha-only\/)/;
 
-  for (const { path, branch } of expected) {
-    // Uncommitted work stays in place for requireRepositoryState to report.
+const updateCommitPattern = /^(?:\[SHA-only\] Update |Update skill: )\S+$/;
+
+/**
+ * Return checkouts that a failed or crashed run left on one of its update
+ * branches to the default branch. Uncommitted changes are stashed and the
+ * branch is deleted, including on origin when it has no open pull request.
+ * Branches holding any other commits are left alone as the user's own work.
+ */
+export const recoverUpdateBranches = Effect.fn(
+  "UpdatesAgent.recoverUpdateBranches",
+)(function* (repositories: readonly string[]) {
+  const executor = yield* CommandExecutor;
+  const github = yield* GitHub;
+  const recovered: string[] = [];
+
+  for (const repository of repositories) {
+    const git = (args: readonly string[]) =>
+      executor
+        .run("git", args, { cwd: repository })
+        .pipe(Effect.map((output) => output.trim()));
+
+    const branch = yield* git(["branch", "--show-current"]);
+
+    if (!updateBranchPattern.test(branch)) continue;
+
+    // A stale origin ref would count merged commits as foreign work.
+    yield* github.waitForNetwork();
+    yield* runOrFail("git", ["fetch", "origin"], repository);
+
+    const target = (yield* git([
+      "symbolic-ref",
+      "--short",
+      "refs/remotes/origin/HEAD",
+    ])).replace(/^origin\//, "");
+
+    const subjects = yield* git([
+      "log",
+      "--format=%s",
+      `origin/${target}..HEAD`,
+    ]);
+
     if (
-      (yield* executor.run("git", ["status", "--porcelain"], {
-        cwd: path,
-      })).trim()
+      subjects
+        .split("\n")
+        .some((subject) => subject && !updateCommitPattern.test(subject))
     )
       continue;
 
-    const current = (yield* executor.run("git", ["branch", "--show-current"], {
-      cwd: path,
-    })).trim();
+    const tip = yield* git(["rev-parse", "HEAD"]);
+    const dirty = (yield* git(["status", "--porcelain"])) !== "";
 
-    if (current === branch) continue;
-    yield* runOrFail("git", ["switch", branch], path);
-    left.push(`${path}: ${current || "detached HEAD"}`);
+    if (dirty)
+      yield* runOrFail(
+        "git",
+        [
+          "stash",
+          "push",
+          "--include-untracked",
+          "--message",
+          `skill-updates-agent recovery ${branch}`,
+        ],
+        repository,
+      );
+    yield* runOrFail("git", ["switch", target], repository);
+    yield* runOrFail("git", ["branch", "-D", branch], repository);
+    recovered.push(
+      `${repository}: ${branch}${dirty ? " (uncommitted changes stashed)" : ""}`,
+    );
+
+    // A pushed branch without a pull request would hide the update from later runs.
+    yield* Effect.gen(function* () {
+      const [remote] = (yield* git([
+        "ls-remote",
+        "--heads",
+        "origin",
+        branch,
+      ])).split(/\s/);
+
+      if (remote !== tip) return;
+
+      const open = yield* github.run(
+        [
+          "pr",
+          "list",
+          "--head",
+          branch,
+          "--state",
+          "open",
+          "--json",
+          "number",
+          "--jq",
+          "length",
+          "--repo",
+          "timmo001/skills",
+        ],
+        { readOnly: true },
+      );
+
+      if (open.trim() === "0")
+        yield* runOrFail(
+          "git",
+          ["push", "origin", "--delete", branch],
+          repository,
+        );
+    }).pipe(
+      Effect.catch((error) =>
+        Console.error(
+          `Unable to remove ${branch} from origin: ${describeFailure(error)}`,
+        ),
+      ),
+    );
   }
 
-  return left;
+  return recovered;
 });
 
 const latestPullRequestNumber = Effect.fn(
@@ -1213,14 +1301,18 @@ const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
         succeeded: false,
         usage: session ? yield* usageOf(session) : null,
       });
-      const leftBranches = yield* restoreRepositoryBranches(states);
+
+      const leftBranches = yield* recoverUpdateBranches(
+        states.map(({ path }) => path),
+      );
+
       yield* requireRepositoryState(states);
 
       // Commits on a leftover branch may already be pushed without a pull request.
       if (leftBranches.length > 0)
         return yield* new SkillUpdatesAgentError({
           operation: "opencode.partial",
-          message: `A failed model attempt left work on another branch (${leftBranches.join(", ")}); the checkout was switched back`,
+          message: `A failed model attempt left work on another branch (${leftBranches.join(", ")}); the checkout was recovered`,
         });
 
       if ((yield* latestPullRequestNumber()) > initialPr)
@@ -1356,6 +1448,10 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
 
       return;
     }
+
+    // A crashed run can leave the checkout on its own update branch.
+    for (const recovered of yield* recoverUpdateBranches(config.repositories))
+      yield* Console.error(`Recovered from an interrupted run: ${recovered}`);
 
     // Local work in a checkout is not a failure: defer before claiming the run.
     yield* requireCleanRepositories(config.repositories).pipe(

@@ -15,9 +15,9 @@ import {
   isScopedSkillPatch,
   isShaOnlySkillPatch,
   latestSuccessfulWorkflowRun,
+  recoverUpdateBranches,
   renderSkillUpdatesBenchmark,
   requireRepositoryState,
-  restoreRepositoryBranches,
   runDeviceSkillUpdates,
   runGitHubSkillUpdates,
   skillUpdatesAgentResultStatus,
@@ -750,48 +750,78 @@ describe("updates agent policies", () => {
   );
 
   it.effect(
-    "switches clean checkouts back from a leftover branch but leaves dirty ones",
+    "recovers an abandoned update branch but leaves other branches alone",
     () =>
       Effect.gen(function* () {
-        const switched: string[][] = [];
+        const executor = (branch: string, subjects: string) => {
+          const commands: string[][] = [];
 
-        const executor = (dirty: boolean) =>
-          Layer.succeed(CommandExecutor, {
+          const outputs = new Map([
+            ["branch", `${branch}\n`],
+            ["symbolic-ref", "origin/main\n"],
+            ["log", subjects],
+            ["rev-parse", "abc123\n"],
+            ["status", " M imports.json\n"],
+            ["ls-remote", `abc123\trefs/heads/${branch}\n`],
+          ]);
+
+          const layer = Layer.succeed(CommandExecutor, {
             capture: () =>
               Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
             run: (_command, args) =>
-              Effect.succeed(
-                args.includes("--porcelain")
-                  ? dirty
-                    ? " M imports.json\n"
-                    : ""
-                  : "update/example\n",
-              ),
+              Effect.succeed(outputs.get(args[0] ?? "") ?? ""),
             exitCode: () => Effect.succeed(0),
             inherit: (_command, args) =>
               Effect.sync(() => {
-                switched.push([...args]);
+                commands.push([...args]);
 
                 return 0;
               }),
             stream: () => Stream.empty,
           });
 
-        const state = [{ path: "/repo", branch: "main" }];
+          return { commands, layer };
+        };
+
+        const github = githubLayer(() => Effect.succeed("0\n"));
+
+        const owned = executor(
+          "update/diagnose-upstream",
+          "[SHA-only] Update diagnose\n",
+        );
 
         expect(
-          yield* restoreRepositoryBranches(state).pipe(
-            Effect.provide(executor(false)),
+          yield* recoverUpdateBranches(["/repo"]).pipe(
+            Effect.provide(Layer.merge(owned.layer, github)),
           ),
-        ).toEqual(["/repo: update/example"]);
-        expect(switched).toEqual([["switch", "main"]]);
+        ).toEqual([
+          "/repo: update/diagnose-upstream (uncommitted changes stashed)",
+        ]);
+        expect(owned.commands).toEqual([
+          ["fetch", "origin"],
+          [
+            "stash",
+            "push",
+            "--include-untracked",
+            "--message",
+            "skill-updates-agent recovery update/diagnose-upstream",
+          ],
+          ["switch", "main"],
+          ["branch", "-D", "update/diagnose-upstream"],
+          ["push", "origin", "--delete", "update/diagnose-upstream"],
+        ]);
+
+        const foreign = executor(
+          "update/diagnose-upstream",
+          "[SHA-only] Update diagnose\nTry something by hand\n",
+        );
 
         expect(
-          yield* restoreRepositoryBranches(state).pipe(
-            Effect.provide(executor(true)),
+          yield* recoverUpdateBranches(["/repo"]).pipe(
+            Effect.provide(Layer.merge(foreign.layer, github)),
           ),
         ).toEqual([]);
-        expect(switched).toHaveLength(1);
+        expect(foreign.commands).toEqual([["fetch", "origin"]]);
       }),
   );
 
