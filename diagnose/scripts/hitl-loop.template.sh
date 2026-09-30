@@ -11,8 +11,9 @@
 #   capture VAR "<question>"      → show question, read response into VAR
 #
 # At the end, captured values are printed as KEY=VALUE for the agent to parse.
-# Do not capture secrets: every captured value is printed where the agent can
-# read it.
+# Capture only non-sensitive observations. Leave signing in and other
+# secret-bearing actions to the user as a step; captured values are printed
+# where the agent can read them.
 
 set -euo pipefail
 
