@@ -1,7 +1,7 @@
 ---
 name: import-external-skill
 license: Apache-2.0
-compatibility: Requires this Agent Skills repository's imports.json and built skill-maintenance CLI, Git, mise, the Skills CLI, authenticated GitHub CLI, and network access to upstream repositories.
+compatibility: Requires this Agent Skills repository's imports.json and built skill-maintenance CLI, Git, mise, the Skills CLI, authenticated GitHub CLI, and network access to upstream repositories. Commits use dot git-commit.
 description: Import skills from external repositories into this Agent Skills repository. Use when pulling in a public skill, reviewing an external skill set, or adapting upstream content into an existing skill.
 ---
 
