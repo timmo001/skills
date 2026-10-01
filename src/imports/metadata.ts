@@ -10,9 +10,8 @@ export const ImportMetadata = Schema.Struct({
   upstreamSha: Sha,
   license: Schema.NonEmptyString,
   localEdits: Schema.Array(Schema.NonEmptyString),
-  distribution: Schema.optionalKey(
-    Schema.Literals(["official-source", "wholesale"]),
-  ),
+  /** `external` imports are unedited upstream skills installed from their origin, not committed here. */
+  distribution: Schema.optionalKey(Schema.Literal("external")),
 });
 
 export interface ImportMetadata extends Schema.Schema.Type<
@@ -70,11 +69,7 @@ export const getImport = Effect.fn("Imports.get")(function* (
     });
   }
 
-  if (
-    metadata.distribution !== "official-source" &&
-    metadata.distribution !== "wholesale" &&
-    metadata.localEdits.length === 0
-  ) {
+  if (!isExternal(metadata) && metadata.localEdits.length === 0) {
     return yield* new MetadataError({
       operation: "imports.get",
       message: `${name}: imported skills must declare local edits`,
@@ -84,15 +79,13 @@ export const getImport = Effect.fn("Imports.get")(function* (
   return metadata;
 });
 
-export const trackedSkillPath = (
-  root: string,
-  name: string,
-  metadata: ImportMetadata,
-  path: Path.Path,
-) =>
-  metadata.distribution === "official-source"
-    ? path.join(root, "upstream", name, "UPSTREAM_SKILL.md")
-    : path.join(root, name, "SKILL.md");
+/** Whether an import is installed from its origin instead of being committed here. */
+export const isExternal = (metadata: ImportMetadata) =>
+  metadata.distribution === "external";
+
+/** Committed `SKILL.md` of an adapted import. External imports have none. */
+export const trackedSkillPath = (root: string, name: string, path: Path.Path) =>
+  path.join(root, name, "SKILL.md");
 
 export const writeReviewedSha = Effect.fn("Imports.writeReviewedSha")(
   function* (root: string, name: string, sha: string) {

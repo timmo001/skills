@@ -142,7 +142,7 @@ export const renderSkillsCatalogue = Effect.fn(
     "# or: mise run catalogue",
     "```",
     "",
-    `This repository currently documents **${skillNames.length}** tracked skills. Upstream review snapshots under \`upstream/\` are not listed here.`,
+    `This repository currently documents **${skillNames.length}** tracked skills. External imports are installed from their origin and are not listed here.`,
     "",
     sections.join("\n\n"),
     "",

@@ -8,6 +8,7 @@ import {
 } from "../commands/Catalogue.js";
 import { check } from "../commands/Check.js";
 import { importSkill } from "../commands/Import.js";
+import { install } from "../commands/Install.js";
 import { updates } from "../commands/Updates.js";
 import {
   runDeviceSkillUpdates,
@@ -92,6 +93,22 @@ export const importCommand = Command.make(
       ),
     ),
 ).pipe(Command.withDescription("Fetch and compare or apply an imported skill"));
+
+export const installCommand = Command.make(
+  "install",
+  {
+    target: Flag.Path("target", { pathType: "directory" }).pipe(
+      Flag.withDefault(join(homedir(), ".agents", "skills")),
+      Flag.withDescription("Skills directory to install into"),
+    ),
+  },
+  ({ target }) =>
+    resolveSkillsRoot().pipe(Effect.flatMap((root) => install(root, target))),
+).pipe(
+  Command.withDescription(
+    "Install external imports at their pinned SHAs without committing them",
+  ),
+);
 
 export const updatesCommand = Command.make(
   "updates",
@@ -213,6 +230,7 @@ export const skillMaintenanceCommand = Command.make("skill-maintenance").pipe(
     validateCommand,
     catalogueCommand,
     importCommand,
+    installCommand,
     updatesCommand,
     checkCommand,
     updatesAgentCommand,

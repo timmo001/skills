@@ -1,6 +1,7 @@
 import { Console, Effect, Path, Schema } from "effect";
 import {
   getImport,
+  isExternal,
   trackedSkillPath,
   writeReviewedSha,
 } from "../imports/metadata.js";
@@ -35,9 +36,30 @@ export const importSkill = Effect.fn("ImportSkill.run")(function* (
 
   const path = yield* Path.Path;
 
+  if (isExternal(metadata)) {
+    if (options.metadataOnly) return;
+
+    return yield* withFetched(root, name, metadata, (latest, sha) =>
+      Effect.gen(function* () {
+        if (options.apply) return yield* applyClean(root, name, metadata, sha);
+
+        yield* withFetched(
+          root,
+          name,
+          metadata,
+          (pinned) =>
+            comparison(pinned, latest).pipe(Effect.flatMap(Console.log)),
+          { pinned: true },
+        );
+      }),
+    );
+  }
+
+  const target = path.dirname(trackedSkillPath(root, name, path));
+
   if (options.metadataOnly) {
     return yield* materialiseMetadata(
-      trackedSkillPath(root, name, metadata, path),
+      trackedSkillPath(root, name, path),
       name,
       metadata,
     );
@@ -45,14 +67,9 @@ export const importSkill = Effect.fn("ImportSkill.run")(function* (
 
   return yield* withFetched(root, name, metadata, (candidate, sha) =>
     Effect.gen(function* () {
-      const target = path.dirname(trackedSkillPath(root, name, metadata, path));
-
-      if (
-        metadata.localEdits.length > 0 &&
-        (yield* directoriesMatch(target, candidate))
-      ) {
+      if (yield* directoriesMatch(target, candidate)) {
         yield* Console.error(
-          `${name}: adapted import exactly matches its source; reimport with: mise exec npm:skills -- skills add '${metadata.origin}' --global`,
+          `${name}: adapted import exactly matches its source; mark it external in imports.json instead`,
         );
 
         return yield* new ImportError({
@@ -61,10 +78,10 @@ export const importSkill = Effect.fn("ImportSkill.run")(function* (
       }
 
       if (options.apply) {
-        return yield* applyClean(root, name, metadata, candidate, sha);
+        return yield* applyClean(root, name, metadata, sha);
       }
 
-      yield* Console.log(yield* comparison(root, name, metadata, candidate));
+      yield* Console.log(yield* comparison(target, candidate));
     }),
   );
 });

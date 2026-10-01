@@ -1,5 +1,9 @@
 import { Console, Effect, FileSystem, Path, Result, Schema } from "effect";
-import { readImports, trackedSkillPath } from "../imports/metadata.js";
+import {
+  isExternal,
+  readImports,
+  trackedSkillPath,
+} from "../imports/metadata.js";
 import { parseFrontmatter } from "../lib/frontmatter.js";
 import { checkSkillsCatalogue } from "./Catalogue.js";
 
@@ -161,33 +165,31 @@ export const validate = Effect.fn("Validate.run")(function* (root: string) {
     : { version: 1 as const, imports: {} };
 
   for (const [name, metadata] of Object.entries(imports.imports)) {
-    if (
-      (metadata.distribution === "wholesale" ||
-        metadata.distribution === "official-source") &&
-      metadata.localEdits.length !== 0
-    )
+    if (isExternal(metadata)) {
+      if (metadata.localEdits.length !== 0)
+        failures.push(
+          `imports.json: ${name} external import must not declare local edits`,
+        );
+
+      for (const committed of [name, path.join("upstream", name)])
+        if (yield* fs.exists(path.join(root, committed)))
+          failures.push(
+            `imports.json: ${name} external import must not be committed at ${committed}/`,
+          );
+      continue;
+    }
+
+    if (metadata.localEdits.length === 0)
       failures.push(
-        `imports.json: ${name} ${metadata.distribution} import must not declare local edits`,
+        `imports.json: ${name} adapted import must declare local edits, or be marked external`,
       );
+    const tracked = trackedSkillPath(root, name, path);
 
-    if (!metadata.distribution && metadata.localEdits.length === 0)
-      failures.push(
-        `imports.json: ${name} distributed import must declare local edits`,
-      );
-    const tracked = trackedSkillPath(root, name, metadata, path);
+    if (!(yield* fs.exists(tracked))) {
+      failures.push(`imports.json: missing skill directory: ${name}`);
+      continue;
+    }
 
-    if (!(yield* fs.exists(tracked)))
-      failures.push(
-        `imports.json: missing ${metadata.distribution === "official-source" ? "upstream snapshot" : "skill directory"}: ${name}`,
-      );
-
-    if (
-      metadata.distribution === "official-source" &&
-      (yield* fs.exists(path.join(root, "upstream", name, "SKILL.md")))
-    )
-      failures.push(`imports.json: ${name} upstream snapshot is discoverable`);
-
-    if (!(yield* fs.exists(tracked))) continue;
     const text = yield* fs.readFileString(tracked);
     const fm = text.split("---", 3)[1] ?? "";
 

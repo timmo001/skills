@@ -1,33 +1,6 @@
-const fs = require("node:fs");
-
-const path = require("node:path");
-
-const importedSkillIgnores = fs
-  .readdirSync(".", { withFileTypes: true })
-  .filter((entry) => entry.isDirectory())
-  .flatMap((entry) => {
-    const skillPath = path.join(entry.name, "SKILL.md");
-
-    if (!fs.existsSync(skillPath)) {
-      return [];
-    }
-
-    const content = fs.readFileSync(skillPath, "utf8");
-
-    const frontmatter = content.match(
-      /^---\r?\n([\s\S]*?)\r?\n---(?:\r?\n|$)/,
-    )?.[1];
-
-    return frontmatter &&
-      /^# origin:/m.test(frontmatter) &&
-      !/^# local-edits:/m.test(frontmatter)
-      ? [`${entry.name}/**`]
-      : [];
-  });
-
 module.exports = {
   // Structural rules are enforced; noisy stylistic rules are disabled with a
-  // reason. Unmodified imported skills and upstream snapshots are excluded.
+  // reason.
   config: {
     default: true,
     // Off: long lines are unavoidable in docs, tables, and code samples.
@@ -48,7 +21,5 @@ module.exports = {
   ignores: [
     "**/node_modules",
     "**/node_modules/**",
-    "upstream/**",
-    ...importedSkillIgnores,
   ],
 };

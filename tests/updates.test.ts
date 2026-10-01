@@ -36,7 +36,7 @@ interface FixtureImportMetadata {
   upstreamSha: string;
   license: string;
   localEdits: readonly string[];
-  distribution?: "wholesale";
+  distribution?: "external";
 }
 
 const githubLayer = (overrides: Partial<GitHubService> = {}) =>
@@ -61,12 +61,13 @@ const commandLayer = (overrides: Partial<CommandExecutorService> = {}) =>
     ...overrides,
   });
 
-const snapshotLayer = (skillContent: string) =>
+const snapshotLayer = (skillContent: string, pinnedContent = skillContent) =>
   Layer.effect(
     CommandExecutor,
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
+      const pinned = new Set<string>();
 
       return CommandExecutor.of({
         capture: () => Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
@@ -74,6 +75,9 @@ const snapshotLayer = (skillContent: string) =>
           Effect.gen(function* () {
             if (command === "git" && args.includes("--format=%H"))
               return sha("b");
+
+            if (command === "git" && args.at(-1) === sha("a") && args[1])
+              pinned.add(path.dirname(args[1]));
 
             if (command === "mise") {
               const sourceName = args[args.indexOf("--skill") + 1];
@@ -91,7 +95,7 @@ const snapshotLayer = (skillContent: string) =>
               yield* fs.makeDirectory(directory, { recursive: true });
               yield* fs.writeFileString(
                 path.join(directory, "SKILL.md"),
-                skillContent,
+                pinned.has(options.cwd) ? pinnedContent : skillContent,
               );
             }
 
@@ -122,7 +126,7 @@ const makeRepository = Effect.fn("Test.makeRepository")(function* (
     localEdits,
   };
 
-  if (localEdits.length === 0) importMetadata.distribution = "wholesale";
+  if (localEdits.length === 0) importMetadata.distribution = "external";
   yield* fs.writeFileString(
     path.join(root, "imports.json"),
     JSON.stringify({
@@ -132,6 +136,8 @@ const makeRepository = Effect.fn("Test.makeRepository")(function* (
       },
     }),
   );
+
+  if (localEdits.length === 0) return root;
   yield* fs.makeDirectory(path.join(root, "example"));
   yield* fs.writeFileString(
     path.join(root, "example", "SKILL.md"),
@@ -386,6 +392,7 @@ describe("versioned update reports", () => {
       Effect.provide(
         snapshotLayer(
           "---\nname: upstream\ndescription: Example\n---\nNew body\n",
+          "---\nname: upstream\ndescription: Example\n---\nOld body\n",
         ),
       ),
       Effect.provide(githubLayer()),
@@ -407,7 +414,7 @@ describe("versioned update reports", () => {
         upstreamSha: sha("a"),
         license: "MIT",
         localEdits: [],
-        distribution: "wholesale",
+        distribution: "external",
       });
 
       yield* fs.writeFileString(
@@ -421,13 +428,7 @@ describe("versioned update reports", () => {
         }),
       );
 
-      for (const name of ["broken", "later"]) {
-        yield* fs.makeDirectory(path.join(root, name));
-        yield* fs.writeFileString(
-          path.join(root, name, "SKILL.md"),
-          `---\nname: ${name}\ndescription: Example\n---\nOld body\n`,
-        );
-      }
+      const pinned = new Set<string>();
 
       const executor = Layer.effect(
         CommandExecutor,
@@ -441,6 +442,9 @@ describe("versioned update reports", () => {
             run: (command, args, options) => {
               if (command === "git" && args.includes("--format=%H"))
                 return Effect.succeed(sha("b"));
+
+              if (command === "git" && args.at(-1) === sha("a") && args[1])
+                pinned.add(fixturePath.dirname(args[1]));
 
               if (command !== "mise") return Effect.succeed("");
 
@@ -469,7 +473,7 @@ describe("versioned update reports", () => {
                 yield* fixtureFs.makeDirectory(generated, { recursive: true });
                 yield* fixtureFs.writeFileString(
                   fixturePath.join(generated, "SKILL.md"),
-                  "---\nname: upstream\ndescription: Example\n---\nNew body\n",
+                  `---\nname: upstream\ndescription: Example\n---\n${pinned.has(cwd) ? "Old" : "New"} body\n`,
                 );
 
                 return "";
@@ -543,13 +547,11 @@ describe("versioned update reports", () => {
       ),
   );
 
-  it.effect("synchronises SHA-only changes without rewriting content", () =>
+  it.effect("pins external SHA changes without committing content", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const root = yield* makeRepository("Same body");
-      const skillPath = path.join(root, "example", "SKILL.md");
-      const before = yield* fs.readFileString(skillPath);
       yield* updates(root, {
         check: false,
         update: true,
@@ -557,8 +559,7 @@ describe("versioned update reports", () => {
         noCommit: true,
         skipReview: true,
       });
-      const after = yield* fs.readFileString(skillPath);
-      expect(after).toBe(before.replaceAll(sha("a"), sha("b")));
+      expect(yield* fs.exists(path.join(root, "example"))).toBe(false);
       expect(
         yield* fs.readFileString(path.join(root, "imports.json")),
       ).toContain(sha("b"));

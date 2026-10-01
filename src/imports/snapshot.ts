@@ -2,7 +2,7 @@ import { Effect, FileSystem, Path, Schema } from "effect";
 import { CommandError, CommandExecutor } from "../services/CommandExecutor.js";
 import {
   type ImportMetadata,
-  trackedSkillPath,
+  isExternal,
   writeReviewedSha,
 } from "./metadata.js";
 import { DeletedOriginError, parseOrigin } from "./upstream.js";
@@ -213,6 +213,7 @@ export const withFetched = Effect.fn("Snapshot.withFetched")(function* <
   name: string,
   metadata: ImportMetadata,
   use: (candidate: string, sha: string) => Effect.Effect<A, E, R>,
+  options: { readonly pinned?: boolean } = {},
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -249,20 +250,28 @@ export const withFetched = Effect.fn("Snapshot.withFetched")(function* <
         .run("git", ["-C", checkout, "sparse-checkout", "set", origin.path])
         .pipe(snapshotError("git.sparse-checkout"));
       yield* executor
-        .run("git", ["-C", checkout, "checkout", "--quiet", origin.branch])
-        .pipe(snapshotError("git.checkout"));
-
-      const shaOutput = (yield* executor
         .run("git", [
           "-C",
           checkout,
-          "log",
-          "-1",
-          "--format=%H",
-          "--",
-          origin.path,
+          "checkout",
+          "--quiet",
+          options.pinned ? metadata.upstreamSha : origin.branch,
         ])
-        .pipe(snapshotError("git.log"))).trim();
+        .pipe(snapshotError("git.checkout"));
+
+      const shaOutput = options.pinned
+        ? metadata.upstreamSha
+        : (yield* executor
+            .run("git", [
+              "-C",
+              checkout,
+              "log",
+              "-1",
+              "--format=%H",
+              "--",
+              origin.path,
+            ])
+            .pipe(snapshotError("git.log"))).trim();
 
       const sha = yield* Schema.decodeUnknownEffect(GitSha)(shaOutput).pipe(
         Effect.mapError(
@@ -344,40 +353,23 @@ export const applyClean = Effect.fn("Snapshot.applyClean")(function* (
   root: string,
   name: string,
   metadata: ImportMetadata,
-  candidate: string,
   sha: string,
 ) {
-  if (metadata.localEdits.length > 0) {
+  if (!isExternal(metadata)) {
     return yield* new SnapshotError({
       operation: "snapshot.apply",
       message: `${name}: has local edits; review the generated snapshot before applying`,
     });
   }
 
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const tracked = trackedSkillPath(root, name, metadata, path);
-  const target = path.dirname(tracked);
-
-  if (yield* fs.exists(target)) yield* fs.remove(target, { recursive: true });
-  yield* fs.copy(candidate, target, { overwrite: true });
-
-  if (metadata.distribution === "official-source") {
-    yield* fs.rename(path.join(target, "SKILL.md"), tracked);
-  }
-
   yield* writeReviewedSha(root, name, sha);
 });
 
 export const comparison = Effect.fn("Snapshot.comparison")(function* (
-  root: string,
-  name: string,
-  metadata: ImportMetadata,
+  target: string,
   candidate: string,
 ) {
-  const path = yield* Path.Path;
   const executor = yield* CommandExecutor;
-  const target = path.dirname(trackedSkillPath(root, name, metadata, path));
 
   const result = yield* executor
     .capture("diff", ["--recursive", "--unified", target, candidate])

@@ -47,7 +47,7 @@ Use the `import-external-skill` adaptation workflow when upstream and local chan
 ## Safety
 
 - Never replace a locally adapted skill wholesale.
-- Never distribute an unchanged upstream skill unless its import metadata explicitly marks a user-requested byte-for-byte `wholesale` import. Keep other review snapshots non-discoverable under `upstream/` and install them from their owning repository.
+- Never commit an unchanged upstream skill. Mark it `external` in `imports.json`; updating it only moves the pinned SHA.
 - Never infer that an absent upstream file should be deleted when `# local-edits:` identifies local-only material.
 - Treat imported scripts as executable code: review changes before running them.
 - Do not commit or push without explicit user authorisation.

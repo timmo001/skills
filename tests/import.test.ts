@@ -17,7 +17,7 @@ const metadata = {
   upstreamSha: "a".repeat(40),
   license: "MIT",
   localEdits: [],
-  distribution: "wholesale" as const,
+  distribution: "external" as const,
 };
 
 interface FixtureImportMetadata {
@@ -160,7 +160,7 @@ describe("import snapshots", () => {
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
   );
 
-  it.effect("applies wholesale and official-source snapshots", () =>
+  it.effect("applies an external update by pinning only its SHA", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -169,51 +169,15 @@ describe("import snapshots", () => {
         prefix: "skill-apply-test-",
       });
 
-      const snapshot = path.join(root, "snapshot");
-      yield* fs.makeDirectory(path.join(snapshot, "references"), {
-        recursive: true,
-      });
-      yield* fs.writeFileString(path.join(snapshot, "SKILL.md"), "upstream\n");
-      yield* fs.writeFileString(
-        path.join(snapshot, "references", "added.md"),
-        "added\n",
-      );
-      yield* fs.makeDirectory(path.join(root, "example"));
-      yield* fs.writeFileString(
-        path.join(root, "example", "removed.md"),
-        "old\n",
-      );
       yield* fs.writeFileString(
         path.join(root, "imports.json"),
-        `{\n  "version": 1,\n  "imports": {\n    "example": { "origin": "${metadata.origin}", "upstreamSha": "${"b".repeat(40)}", "localEdits": [], "distribution": "wholesale" }\n  }\n}\n`,
+        `{\n  "version": 1,\n  "imports": {\n    "example": { "origin": "${metadata.origin}", "upstreamSha": "${"b".repeat(40)}", "localEdits": [], "distribution": "external" }\n  }\n}\n`,
       );
-      yield* applyClean(root, "example", metadata, snapshot, "a".repeat(40));
+      yield* applyClean(root, "example", metadata, "c".repeat(40));
       expect(
-        yield* fs.readFileString(path.join(root, "example", "SKILL.md")),
-      ).toBe("upstream\n");
-      expect(yield* fs.exists(path.join(root, "example", "removed.md"))).toBe(
-        false,
-      );
-      expect(
-        yield* fs.readFileString(
-          path.join(root, "example", "references", "added.md"),
-        ),
-      ).toBe("added\n");
-
-      const official = {
-        ...metadata,
-        distribution: "official-source" as const,
-      };
-
-      yield* applyClean(root, "example", official, snapshot, "a".repeat(40));
-      expect(
-        yield* fs.exists(
-          path.join(root, "upstream", "example", "UPSTREAM_SKILL.md"),
-        ),
-      ).toBe(true);
-      expect(
-        yield* fs.exists(path.join(root, "upstream", "example", "SKILL.md")),
-      ).toBe(false);
+        yield* fs.readFileString(path.join(root, "imports.json")),
+      ).toContain(`"upstreamSha": "${"c".repeat(40)}"`);
+      expect(yield* fs.exists(path.join(root, "example"))).toBe(false);
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
   );
 
@@ -229,7 +193,6 @@ describe("import snapshots", () => {
             license: metadata.license,
             localEdits: ["adapted"],
           },
-          "/tmp/snapshot",
           "a".repeat(40),
         ),
       );
@@ -251,8 +214,8 @@ describe("import snapshots", () => {
         "{",
         '  "version": 1,',
         '  "imports": {',
-        `    "example": { "origin": "${metadata.origin}", "upstreamSha": "${"a".repeat(40)}", "license": "MIT", "localEdits": [], "distribution": "wholesale" },`,
-        `    "other": { "origin": "https://github.com/org/repo/tree/main/other", "upstreamSha": "${"c".repeat(40)}", "license": "MIT", "localEdits": [], "distribution": "wholesale" }`,
+        `    "example": { "origin": "${metadata.origin}", "upstreamSha": "${"a".repeat(40)}", "license": "MIT", "localEdits": [], "distribution": "external" },`,
+        `    "other": { "origin": "https://github.com/org/repo/tree/main/other", "upstreamSha": "${"c".repeat(40)}", "license": "MIT", "localEdits": [], "distribution": "external" }`,
         "  }",
         "}",
         "",
@@ -278,16 +241,9 @@ describe("import snapshots", () => {
         });
 
         const file = path.join(root, "imports.json");
-        yield* fs.writeFileString(
-          file,
-          importedMetadata([], "official-source"),
-        );
+        yield* fs.writeFileString(file, importedMetadata([], "external"));
         expect((yield* getImport(root, "example")).distribution).toBe(
-          "official-source",
-        );
-        yield* fs.writeFileString(file, importedMetadata([], "wholesale"));
-        expect((yield* getImport(root, "example")).distribution).toBe(
-          "wholesale",
+          "external",
         );
         yield* fs.writeFileString(file, importedMetadata([]));
         expect(
@@ -307,7 +263,7 @@ describe("import snapshots", () => {
 
       yield* fs.writeFileString(
         path.join(root, "imports.json"),
-        importedMetadata([], "wholesale"),
+        importedMetadata(["adapted"]),
       );
       yield* fs.makeDirectory(path.join(root, "example"));
       yield* fs.writeFileString(
@@ -452,7 +408,7 @@ describe("import snapshots", () => {
 
       yield* fs.writeFileString(
         path.join(root, "imports.json"),
-        importedMetadata([], "wholesale"),
+        importedMetadata([], "external"),
       );
 
       const failure = yield* Effect.flip(

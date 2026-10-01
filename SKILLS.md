@@ -7,7 +7,7 @@ Generated from each top-level skill's `SKILL.md` frontmatter (`name` and `descri
 # or: mise run catalogue
 ```
 
-This repository currently documents **55** tracked skills. Upstream review snapshots under `upstream/` are not listed here.
+This repository currently documents **49** tracked skills. External imports are installed from their origin and are not listed here.
 
 ## Portable
 
@@ -49,9 +49,6 @@ Skills for named tools, services, and target repositories.
 | --- | --- |
 | [`agentic-workflows`](./agentic-workflows/) | Design, create, update, debug, audit, or upgrade GitHub Agentic Workflows with the `gh aw` extension. Use when work involves workflow Markdown, compiled `.lock.yml` files, agent engines, MCP tools, safe outputs, or `gh aw` commands. |
 | [`browser-control`](./browser-control/) | Drive the user's existing Chromium-family browser with deterministic Playwright. Use when asked to inspect, automate, test, or interact with a visible browser tab; continue an authenticated browser workflow; handle 2FA, passkeys, CAPTCHAs, or payment confirmation; record browser behavior; or capture an authenticated network flow. |
-| [`context-cli`](./context-cli/) | Use the context CLI to inspect repository branches, working-tree changes, recent commits, pull requests, and tech stacks. Use for context git, context stack, and shell-based repository snapshots. For Context MCP tool calls, use context-mcp instead. |
-| [`effect-gh`](./effect-gh/) | Use @timmo001/effect-gh for GitHub CLI integration in Effect TypeScript code. Apply when adding or changing gh-backed API requests, repository, issue, pull request or workflow operations, streaming output, or migrating hand-written gh subprocess wrappers to Effect. |
-| [`effect-herdr`](./effect-herdr/) | Use @timmo001/effect-herdr for Effect TypeScript integrations with Herdr's local socket API. Apply when adding, migrating, debugging or reviewing SDK consumers, including agent coordination, event streams, panes and workspaces. For operating terminals or workspaces as an agent, use the herdr skill. |
 | [`gh-stack`](./gh-stack/) | Manage stacked branches and pull requests with GitHub's `gh stack` extension. Use when work involves stacked PRs, dependent branches, stack creation, navigation, submission, synchronisation, rebasing, restructuring, linking, or merging. |
 | [`github-development-rulesets`](./github-development-rulesets/) | Create GitHub Development rulesets from the bundled JSON baseline, compare and migrate existing rulesets, or update required CI checks. Use when setting up a Development ruleset, choosing among existing rulesets, or reconciling their policy and emitted check names. |
 | [`github-repository-setup`](./github-repository-setup/) | Create GitHub repositories with the preferred settings, ask about licensing using GitHub templates, enable watching during creation or induction, offer CI and automerge workflows, and finish first-push setup with a Development ruleset. Use when creating or inducting a GitHub repository, using gh repo create or dot repo induct, applying repository defaults, or completing initial GitHub setup. |
@@ -60,10 +57,7 @@ Skills for named tools, services, and target repositories.
 | [`home-assistant-lazy-context`](./home-assistant-lazy-context/) | Home Assistant frontend lazy-context, memoization, and `hass` removal guidance. Use when migrating Lit components from `hass!: HomeAssistant`, `.hass=${...}`, or broad `hass` access to context slices. |
 | [`home-assistant-list-components`](./home-assistant-list-components/) | Home Assistant list component migration and usage guidance. Use when editing ha-list, ha-list-item, ha-md-list, or migrating to ha-list-nav, ha-list-selectable, ha-list-item-button, ha-list-item-option, or ha-list-item-base. |
 | [`home-assistant-lit-rendering`](./home-assistant-lit-rendering/) | Home Assistant Lit rendering extensions for HA components and context-aware picker callback shape. |
-| [`add-oxlint-rule`](./add-oxlint-rule/) | Create or revise a centrally maintained rule in @timmo001/oxlint-rules. Use for requests to add an Oxlint anti-slop rule, change an existing central rule, or promote a repository-specific lint preference into the shared package. |
-| [`install-timmo-oxlint-rules`](./install-timmo-oxlint-rules/) | Install or copy @timmo001/oxlint-rules into a JavaScript or TypeScript repository. Use when adding the shared anti-slop Oxlint config, enabling its Effect rules, or replacing a local anti-slop copy. |
 | [`release-oxlint-rules`](./release-oxlint-rules/) | Create and publish a major, minor, or patch release of @timmo001/oxlint-rules. Use when asked to create, cut, prepare, or publish an oxlint-rules release, including its version bump and npm and JSR publication. |
-| [`notes-cli`](./notes-cli/) | Use the notes CLI to find, read, create, update, and delete repository notes. Use for shell-based note workflows, notes commands, and handoff storage. For Notes MCP tool calls, use notes-mcp instead. |
 | [`opencode-effect`](./opencode-effect/) | Develop and migrate OpenCode V2 plugins, clients, SDK hosts, and HTTP API integrations. Use for the OpenCode plugin API, `@opencode/client`, `@opencode/sdk`, server API, Effect entrypoints, or V1-to-V2 API migration. |
 | [`pitchfork-dev-servers`](./pitchfork-dev-servers/) | Manage long-running local dev servers by precedence - the project's own AGENTS.md workflow first, framework-native background mode next, then pitchfork as the fallback. Use when starting, stopping, restarting, checking, or tailing development servers, background servers, `pitchfork.toml`, pitchfork MCP tools, or local AGENTS/mise tasks that mention pitchfork. |
 | [`pkexec-root`](./pkexec-root/) | Use pkexec first for commands that need root directly or indirectly. |

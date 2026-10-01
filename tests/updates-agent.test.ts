@@ -175,7 +175,7 @@ describe("updates agent policies", () => {
               upstreamSha: oldSha,
               license: "MIT",
               localEdits: [],
-              distribution: "wholesale",
+              distribution: "external",
             },
           },
         }),
@@ -448,18 +448,12 @@ describe("updates agent policies", () => {
     }),
   );
 
-  it.effect("accepts SHA-only changes for non-discoverable snapshots", () =>
+  it.effect("scopes external pin changes without auto-merging them", () =>
     Effect.sync(() => {
       const oldSha = "a".repeat(40);
       const newSha = "b".repeat(40);
 
       const patch = [
-        "diff --git a/upstream/example/UPSTREAM_SKILL.md b/upstream/example/UPSTREAM_SKILL.md",
-        "--- a/upstream/example/UPSTREAM_SKILL.md",
-        "+++ b/upstream/example/UPSTREAM_SKILL.md",
-        "@@ -1 +1 @@",
-        `-# upstream-sha: ${oldSha}`,
-        `+# upstream-sha: ${newSha}`,
         "diff --git a/imports.json b/imports.json",
         "--- a/imports.json",
         "+++ b/imports.json",
@@ -468,7 +462,7 @@ describe("updates agent policies", () => {
         `+    "example": { "upstreamSha": "${newSha}" },`,
       ].join("\n");
 
-      expect(isShaOnlySkillPatch(patch, "example")).toBe(true);
+      expect(isShaOnlySkillPatch(patch, "example")).toBe(false);
       expect(isScopedSkillPatch(patch, "example")).toBe(true);
     }),
   );

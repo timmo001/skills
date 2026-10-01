@@ -7,9 +7,6 @@ import {
 } from "../imports/snapshot.js";
 import { CommandExecutor } from "../services/CommandExecutor.js";
 
-export const skillReimportCommand = (origin: string) =>
-  `mise exec npm:skills -- skills add '${origin}' --global`;
-
 export class CheckError extends Schema.TaggedError<CheckError>()("CheckError", {
   message: Schema.String,
 }) {}
@@ -54,20 +51,18 @@ export const check = Effect.fn("Check.run")(function* (
     if (!metadata) continue;
     yield* withFetched(root, name, metadata, (candidate) =>
       Effect.gen(function* () {
-        const target = path.dirname(
-          trackedSkillPath(root, name, metadata, path),
-        );
+        const target = path.dirname(trackedSkillPath(root, name, path));
 
         if (yield* directoriesMatch(target, candidate)) {
           yield* Console.error(
-            `${name}: adapted import exactly matches upstream; reimport with: ${skillReimportCommand(metadata.origin)}`,
+            `${name}: adapted import exactly matches upstream; mark it external in imports.json instead`,
           );
           exactMatches.push(name);
 
           return;
         }
 
-        const diff = yield* comparison(root, name, metadata, candidate);
+        const diff = yield* comparison(target, candidate);
 
         if (options.diffOrigin) yield* Console.log(diff);
 

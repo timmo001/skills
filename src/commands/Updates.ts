@@ -3,6 +3,7 @@ import { check as reviewImports } from "./Check.js";
 import { importSkill } from "./Import.js";
 import {
   type ImportMetadata,
+  isExternal,
   readImports,
   trackedSkillPath,
 } from "../imports/metadata.js";
@@ -68,18 +69,22 @@ const compareFiles = Effect.fn("Updates.compareFiles")(function* (
 ) {
   const path = yield* Path.Path;
 
-  return yield* withFetched(root, name, metadata, (candidate) =>
-    Effect.gen(function* () {
-      const target = path.dirname(trackedSkillPath(root, name, metadata, path));
+  if (isExternal(metadata))
+    return yield* withFetched(root, name, metadata, (latest) =>
+      withFetched(
+        root,
+        name,
+        metadata,
+        (pinned) => directoryChanges(pinned, latest),
+        { pinned: true },
+      ),
+    );
 
-      return yield* directoryChanges(
-        target,
-        candidate,
-        metadata.distribution === "official-source"
-          ? "UPSTREAM_SKILL.md"
-          : "SKILL.md",
-      );
-    }),
+  return yield* withFetched(root, name, metadata, (candidate) =>
+    directoryChanges(
+      path.dirname(trackedSkillPath(root, name, path)),
+      candidate,
+    ),
   );
 });
 
@@ -321,7 +326,6 @@ export const updates = Effect.fn("Updates.run")(function* (
 
   if (mode !== "check") {
     const imports = yield* readImports(root);
-    const path = yield* Path.Path;
     const updatedNames: string[] = [];
     const updatedPaths: string[] = [];
 
@@ -347,11 +351,8 @@ export const updates = Effect.fn("Updates.run")(function* (
       }
 
       updatedNames.push(item.name);
-      updatedPaths.push(
-        metadata.distribution === "official-source"
-          ? path.join("upstream", item.name)
-          : item.name,
-      );
+
+      if (!isExternal(metadata)) updatedPaths.push(item.name);
     }
 
     if (updatedNames.length > 0 && !options.noCommit) {

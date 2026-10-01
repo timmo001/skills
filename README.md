@@ -53,7 +53,13 @@ Claude Code is supported through the same cross-agent installer. This repository
 
 `SKILL.md` is the source of truth. Keep supporting files one link away from it and use relative paths within a skill.
 
-Unchanged upstream snapshots are committed under [`upstream/`](./upstream/README.md) for review and provenance. Their root files are named `UPSTREAM_SKILL.md`, so the Skills CLI does not offer them. Install those skills from the official sources listed there.
+Unchanged upstream skills are `external` imports: `imports.json` records their origin and pinned SHA, but their content is not committed here. Install them with:
+
+```bash
+./dist/skill-maintenance install --target ~/.agents/skills
+```
+
+The installer copies each external skill at its pinned SHA, records what it owns in `.external-skills.json` in the target, skips names already used by a linked local skill, and removes skills that are no longer external imports.
 
 ## Validate
 
@@ -130,9 +136,9 @@ checker manages reviewed upstream skill revisions separately.
 
 - Add new skills under `<name>/` at the repository root.
 - Classify each new skill in `skills.sh.json` and `PORTABILITY.md`, then regenerate the human catalogue with `mise run catalogue` (or `./dist/skill-maintenance catalogue`) and commit `SKILLS.md`.
-- Distribute imported skills only when this repository contains substantive local edits. An explicit `wholesale` import is the exception and must remain byte-for-byte upstream. Keep other unchanged snapshots under `upstream/` and install them from their owning repository.
+- Commit imported skills only when this repository contains substantive local edits. Mark unchanged imports `external`; only their origin and pinned SHA are committed.
 - Maintain import provenance, reviewed SHA, licence, local edits, and distribution mode in `imports.json`.
-- Use `./dist/skill-maintenance import <name>` to generate a complete upstream comparison. Use `--apply` only for clean official-source or wholesale imports; adapted changes remain manual. The importer rejects an adapted skill that exactly matches every file in its source and prints the standard reimport command instead.
+- Use `./dist/skill-maintenance import <name>` to generate a complete upstream comparison. For an external import it compares the pinned and latest upstream revisions, and `--apply` moves the pin. Adapted changes remain manual. The importer rejects an adapted skill that exactly matches every file in its source; mark it external instead.
 - Keep `skills.sh.json`, `PORTABILITY.md`, and `SKILLS.md` in sync.
 - Prefer repository revisions for installed copies. The scheduled checker reports adapted imports for manual review and opens pull requests for unchanged upstream updates.
 - Do not duplicate canonical skills into checked-in agent-specific directories.

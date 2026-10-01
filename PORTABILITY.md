@@ -2,7 +2,7 @@
 
 This inventory classifies the current skills by what must be present for their instructions to work. It is a migration guide, not a quality ranking.
 
-Skills with concrete prerequisites declare the optional [Agent Skills compatibility field](https://agentskills.io/specification#compatibility-field) as a 1–500 character string. Branch-specific tools are labelled as such; general language and engineering guidance needs no field merely to repeat its subject. Wholesale imports retain upstream frontmatter and need compatibility additions at their source. This metadata does not install dependencies or grant tool permissions.
+Skills with concrete prerequisites declare the optional [Agent Skills compatibility field](https://agentskills.io/specification#compatibility-field) as a 1–500 character string. Branch-specific tools are labelled as such; general language and engineering guidance needs no field merely to repeat its subject. External imports retain upstream frontmatter and need compatibility additions at their source. This metadata does not install dependencies or grant tool permissions.
 
 ## Portable
 
@@ -42,22 +42,16 @@ These are agent-agnostic in format, but their workflows or specific branches dep
 
 | Skill | Required environment |
 | --- | --- |
-| `add-oxlint-rule` | Writable central Oxlint rules checkout, mise, Bun, npm, and registry access for validation. Wholesale import; compatibility frontmatter belongs upstream. |
 | `agentic-workflows` | GitHub `gh aw` extension and Agentic Workflows. |
 | `browser-control` | Browser Control relay, extension, and CLI or MCP tools. |
-| `context-cli` | Context CLI and shell access, with Git and authenticated GitHub CLI for repository and PR details. Wholesale import owned by `timmo001/context`. |
-| `effect-gh` | TypeScript, @timmo001/effect-gh with its compatible Effect peer, a platform adapter providing ChildProcessSpawner, and an installed, authenticated GitHub CLI for operations. Wholesale import; consumers choose the runtime and platform. |
-| `effect-herdr` | TypeScript, @timmo001/effect-herdr with its pinned Effect and platform packages, Node.js 20+ or Bun, and a Herdr local socket server on the supported protocol for live checks. Wholesale import owned by `timmo001/effect-herdr`. |
 | `gh-stack` | GitHub `gh stack` extension. |
 | `github-development-rulesets` | Authenticated GitHub CLI, jq, Bash, and ruleset write access for mutations. Includes the Development JSON baseline for creation. |
 | `github-repository-setup` | Authenticated GitHub CLI, Git, jq, and repository creation/settings write access. Encodes preferred personal repository defaults, discovers workflow examples from the authenticated account, and uses the owner-selected shared source, including `timmo001/workflows` for the personal Renovate caller. Delegates reusable workflows and post-push rulesets to `shared-workflows` and `github-development-rulesets`. |
-| `herdr-workflows` | Herdr, its CLI environment, and the separately installed upstream `herdr` skill. |
+| `herdr-workflows` | Herdr, its CLI environment, and the external `herdr` skill. |
 | `home-assistant-frontend` | Home Assistant frontend checkout and its local guidance. |
 | `home-assistant-lazy-context` | Home Assistant frontend source and conventions. |
 | `home-assistant-list-components` | Home Assistant frontend source and components. |
 | `home-assistant-lit-rendering` | Home Assistant frontend and Lit. |
-| `install-timmo-oxlint-rules` | JavaScript or TypeScript repository, Oxlint, and its package manager; copying uses Node.js. Wholesale import; compatibility frontmatter belongs upstream. |
-| `notes-cli` | Notes CLI, shell access, and a configured repository notes vault with CLI-managed Git persistence. Wholesale import owned by `timmo001/notes`. |
 | `opencode-effect` | OpenCode V2 plus mutually compatible plugin, client, SDK, and Effect package contracts. |
 | `pitchfork-dev-servers` | Project-declared dev-server runtime and tasks; Pitchfork and daemon configuration only for the fallback tier. |
 | `pkexec-root` | Linux with polkit/pkexec; pacman or yay for Arch package operations, sudo as fallback. |
@@ -86,7 +80,7 @@ Migrate one coherent family at a time:
 
 1. Split reusable behaviour from personal wrappers in git, notes, and handoff skills.
 2. Replace runtime-specific tool names with capability descriptions plus small client adapters where needed.
-3. Keep `compatibility` metadata aligned with owning workflows; request wholesale-import additions upstream and check target-client discovery when fields change.
-4. Distribute imported skills only when they contain documented local edits, except for explicit byte-for-byte wholesale imports; keep other unchanged review snapshots under `upstream/` and install them from their owning repository.
+3. Keep `compatibility` metadata aligned with owning workflows; request external-import additions upstream and check target-client discovery when fields change.
+4. Commit imported skills only when they contain documented local edits. Mark unchanged imports `external` in `imports.json`; `skill-maintenance install` installs them from their origin at the pinned SHA.
 5. Use `imports.json` as the maintenance metadata overlay for adapted imports.
 6. Build `dist/skill-maintenance` and use `./dist/skill-maintenance import <name>` to fetch and compare upstream content before manually reviewing an adapted skill. This requires Bun 1.4.0 and the locked Effect 4 dependencies, but makes no dotfiles assumptions.

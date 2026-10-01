@@ -21,6 +21,7 @@ import {
 } from "./Updates.js";
 import { CATALOGUE_FILE, writeSkillsCatalogue } from "./Catalogue.js";
 import { importSkill } from "./Import.js";
+import { getImport, type ImportMetadata } from "../imports/metadata.js";
 import { CommandError, CommandExecutor } from "../services/CommandExecutor.js";
 import { GitHub } from "../services/GitHub.js";
 import {
@@ -342,9 +343,7 @@ export function isShaOnlySkillPatch(patch: string, skill: string): boolean {
 
   const metadata = changes.get("imports.json");
 
-  const frontmatter =
-    changes.get(`${skill}/SKILL.md`) ??
-    changes.get(`upstream/${skill}/UPSTREAM_SKILL.md`);
+  const frontmatter = changes.get(`${skill}/SKILL.md`);
 
   if (
     changes.size !== 2 ||
@@ -393,21 +392,32 @@ export function isScopedSkillPatch(patch: string, skill: string): boolean {
   const allowed = (file: string) =>
     file === "imports.json" ||
     file === CATALOGUE_FILE ||
-    file.startsWith(`${skill}/`) ||
-    file.startsWith(`upstream/${skill}/`);
+    file.startsWith(`${skill}/`);
 
   return (
-    files.length >= 2 &&
     files.some(([from, to]) => from === "imports.json" && to === from) &&
-    files.some(
-      ([from, to]) =>
-        (from === `${skill}/SKILL.md` ||
-          from === `upstream/${skill}/UPSTREAM_SKILL.md`) &&
-        to === from,
-    ) &&
     files.every(([from, to]) => from === to && allowed(from))
   );
 }
+
+/** Pull request body for an external import's pinned SHA change, linking the upstream comparison. */
+export const externalUpdateBody = (
+  skill: string,
+  before: Pick<ImportMetadata, "origin" | "upstreamSha">,
+  after: Pick<ImportMetadata, "upstreamSha">,
+) => {
+  const repo = before.origin.match(/^https:\/\/github\.com\/([^/]+\/[^/]+)\//);
+
+  return [
+    `Pin \`${skill}\` to upstream \`${after.upstreamSha}\`. \`dot update\` installs the pinned revision.`,
+    ...(repo?.[1]
+      ? [
+          "",
+          `Upstream changes: https://github.com/${repo[1]}/compare/${before.upstreamSha}...${after.upstreamSha}`,
+        ]
+      : []),
+  ].join("\n");
+};
 
 export const skillUpdateSubject = (patch: string, skill: string) =>
   isShaOnlySkillPatch(patch, skill)
@@ -497,11 +507,11 @@ const publishCleanUpdate = Effect.fn("UpdatesAgent.publishCleanUpdate")(
   function* (root: string, name: string) {
     const executor = yield* CommandExecutor;
     const github = yield* GitHub;
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
     const branch = `skill-update/${name}`;
     yield* runOrFail("git", ["checkout", "-B", branch, "origin/main"], root);
+    const before = yield* getImport(root, name);
     yield* importSkill(root, name, { apply: true, metadataOnly: false });
+    const after = yield* getImport(root, name);
     yield* writeSkillsCatalogue(root);
     yield* validateRepository(root);
     yield* runOrFail(
@@ -509,13 +519,6 @@ const publishCleanUpdate = Effect.fn("UpdatesAgent.publishCleanUpdate")(
       ["add", "--", "imports.json", CATALOGUE_FILE],
       root,
     );
-    const snapshotPaths: string[] = [];
-
-    for (const candidate of [name, path.join("upstream", name)])
-      if (yield* fs.exists(path.join(root, candidate))) {
-        yield* runOrFail("git", ["add", "-A", "--", candidate], root);
-        snapshotPaths.push(candidate);
-      }
 
     const patch = yield* executor.run(
       "git",
@@ -531,15 +534,7 @@ const publishCleanUpdate = Effect.fn("UpdatesAgent.publishCleanUpdate")(
     const title = skillUpdateSubject(patch, name);
     yield* runOrFail(
       "git",
-      [
-        "commit",
-        "-m",
-        title,
-        "--",
-        "imports.json",
-        CATALOGUE_FILE,
-        ...snapshotPaths,
-      ],
+      ["commit", "-m", title, "--", "imports.json", CATALOGUE_FILE],
       root,
     );
     yield* runOrFail(
@@ -591,7 +586,7 @@ const publishCleanUpdate = Effect.fn("UpdatesAgent.publishCleanUpdate")(
         "--title",
         title,
         "--body",
-        `Update the reviewed upstream snapshot for \`${name}\`.`,
+        externalUpdateBody(name, before, after),
         "--assignee",
         "timmo001",
         "--repo",
