@@ -75,15 +75,18 @@ Ollaya, in this order:
    optionally `model`. Other tools: `list_models`, `show_model`, `pull_model`. Resources
    `ollaya://presets/<name>` show each preset's questions.
 2. **CLI** (`ollaya` on PATH):
+
    ```sh
    ollaya run laya --preset triage --format json "I was charged twice and want a refund."
    ollaya run laya --questions questions.json --format json "$TEXT"
    ollaya run laya --questions '{"angry":{"type":"noul"}}' --format json "$TEXT"
    echo '{"subject": "…", "body": "…"}' | ollaya run laya --preset email --format json
    ```
+
    `--format json` prints the full response. The CLI starts the server if it isn't running and
    pulls the model on first use.
 3. **HTTP** (`http://127.0.0.1:11435`), TypeSafe-compatible:
+
    ```sh
    curl -s http://127.0.0.1:11435/v1/systemone -H 'Content-Type: application/json' \
      -d '{"model": "laya", "state": "…", "questions": {…}}'
