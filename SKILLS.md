@@ -7,7 +7,7 @@ Generated from each top-level skill's `SKILL.md` frontmatter (`name` and `descri
 # or: mise run catalogue
 ```
 
-This repository currently documents **49** tracked skills. External imports are installed from their origin and are not listed here.
+This repository currently documents **50** tracked skills. External imports are installed from their origin and are not listed here.
 
 ## Portable
 
@@ -49,6 +49,7 @@ Skills for named tools, services, and target repositories.
 | --- | --- |
 | [`agentic-workflows`](./agentic-workflows/) | Design, create, update, debug, audit, or upgrade GitHub Agentic Workflows with the `gh aw` extension. Use when work involves workflow Markdown, compiled `.lock.yml` files, agent engines, MCP tools, safe outputs, or `gh aw` commands. |
 | [`browser-control`](./browser-control/) | Drive the user's existing Chromium-family browser with deterministic Playwright. Use when asked to inspect, automate, test, or interact with a visible browser tab; continue an authenticated browser workflow; handle 2FA, passkeys, CAPTCHAs, or payment confirmation; record browser behavior; or capture an authenticated network flow. |
+| [`decision-models`](./decision-models/) | Make typed, calibrated decisions about text, JSON or images with a decision model: classify (choice), rate (score) or check a yes/no statement (noul), with probabilities you can threshold. Use it to triage tickets and emails, route requests, moderate posts, screen prompts, or any step where the agent needs a quick judgement it can act on instead of reasoning it out in text. |
 | [`gh-stack`](./gh-stack/) | Manage stacked branches and pull requests with GitHub's `gh stack` extension. Use when work involves stacked PRs, dependent branches, stack creation, navigation, submission, synchronisation, rebasing, restructuring, linking, or merging. |
 | [`github-development-rulesets`](./github-development-rulesets/) | Create GitHub Development rulesets from the bundled JSON baseline, compare and migrate existing rulesets, or update required CI checks. Use when setting up a Development ruleset, choosing among existing rulesets, or reconciling their policy and emitted check names. |
 | [`github-repository-setup`](./github-repository-setup/) | Create GitHub repositories with the preferred settings, ask about licensing using GitHub templates, enable watching during creation or induction, offer CI and automerge workflows, and finish first-push setup with a Development ruleset. Use when creating or inducting a GitHub repository, using gh repo create or dot repo induct, applying repository defaults, or completing initial GitHub setup. |
