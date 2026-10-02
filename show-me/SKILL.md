@@ -3,7 +3,7 @@ name: show-me
 description: Explain the current topic with a concise visual such as a tree, diagram, diff, or focused HTML artefact. Use ONLY when the user explicitly asks to see, visualise, diagram, sketch, or be shown the preceding explanation.
 license: UNLICENSED
 # origin: https://github.com/dmmulroy/.dotfiles/tree/main/home/.agents/skills/show-me
-# upstream-sha: dcfccdffccea86ef2e3730e2980a33ca5df20b7b
+# upstream-sha: 574e1f2a95c6f40de09691c4dd742a64df1af30c
 # local-edits:
 #   - SKILL.md: rewritten as a portable explicit-only visual explanation workflow; removed client-specific frontmatter and file-opening commands
 ---
