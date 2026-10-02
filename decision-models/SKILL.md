@@ -1,7 +1,7 @@
 ---
 name: decision-models
 description: "Make typed, calibrated decisions about text, JSON or images with decision models, locally through Ollaya or hosted as Cloudflare Clef on Workers AI: classify (choice), rate (score) or check a yes/no statement (noul), with probabilities you can threshold. Use it to triage tickets and emails, route requests, moderate posts, screen prompts for jailbreaks or injections, or any step where the agent needs a quick judgement it can act on, instead of reasoning it out in text. Also use it whenever the user names a decision model such as laya, winnow, clef or clef-flash, which are models, not commands. Works through the Ollaya MCP server (the `decide` tool), the `ollaya` CLI or local HTTP API, or the Cloudflare API MCP server."
-compatibility: Requires local Ollaya (CLI, MCP server or HTTP API) or hosted Cloudflare Clef on Workers AI through the Cloudflare API MCP server or an authenticated API token. Hosted requests are billed per input token beyond the free daily allocation.
+compatibility: Requires local Ollaya (CLI, MCP server or HTTP API, plus nvidia-smi on machines with an NVIDIA GPU) or hosted Cloudflare Clef on Workers AI through the Cloudflare API MCP server or an authenticated API token. Hosted requests are billed per input token beyond the free daily allocation.
 license: Apache-2.0
 # origin: https://github.com/ollaya-dev/ollaya/tree/main/skills/ollaya-decisions
 # upstream-sha: 37fcfa9f8a35b6b389447ffca49e4b4242970f81
@@ -9,7 +9,8 @@ license: Apache-2.0
 #   - SKILL.md: renamed to decision-models and added hosted Cloudflare Clef on Workers AI as a fallback provider alongside Ollaya
 #   - SKILL.md: added compatibility metadata for concrete environment requirements
 #   - SKILL.md: dropped the metadata.homepage block (https://ollaya.dev); the frontmatter validator allows no nested keys
-#   - SKILL.md: added a provider check that prefers local Ollaya (laya on CPU, larger models on an NVIDIA GPU) and falls back to hosted Clef
+#   - SKILL.md: added a cascade that starts on winnow:e4b with an NVIDIA GPU or laya on CPU and escalates unclear answers to local or hosted Clef
+#   - SKILL.md: replaced the upstream model advice with a pointer to that cascade
 ---
 
 # Typed decisions with Ollaya or Cloudflare Clef
@@ -42,26 +43,30 @@ Model names such as `laya`, `winnow:e4b` and `clef` are Ollaya models (see "Pick
 run with `ollaya run <model>` or the `decide` tool; there is no `laya` command. Don't search for
 one.
 
-If the user names a model or provider, skip the check below and go straight to calling it. Only
-run the check when the choice is yours, once per session before the first decision:
+If the user names a model or provider, go straight to calling it. Otherwise start with the
+lightest model that suits the machine, and escalate only the answers it can't settle:
 
-```sh
-command -v ollaya
-nvidia-smi --query-gpu=name,memory.total --format=csv,noheader 2>/dev/null
-```
+1. **Pick the first model** once per session, when `ollaya` is on PATH:
 
-- **`ollaya` available**: use Ollaya locally (the paths below). It is free and keeps the data on
-  this machine.
-  - With an NVIDIA GPU, start with `winnow:e4b`; with 24 GB or more VRAM, local `clef` matches
-    the hosted model at no cost.
-  - Without one, use `laya`: about 1 s per decision on a CPU. `laya` reads only about 1k tokens,
-    so trim the state to the lines that matter (deduplicate logs, drop noise) or split it.
-    Larger local models are slow on CPU (a 9B model took over a minute), so don't pick them
-    yourself there.
-- **Hosted Clef on Workers AI** when `ollaya` isn't installed, when `laya`'s confidence stays low
-  and the decision needs a stronger model than the hardware can run, or when the state is too
-  long to trim to `laya`'s window.
-- **The user's choice always wins over the hardware check.** If they name a provider or model
+   ```sh
+   nvidia-smi --query-gpu=name,memory.total --format=csv,noheader 2>/dev/null
+   ```
+
+   - NVIDIA GPU: start with `winnow:e4b`, the best accuracy for its speed (about 90 ms per
+     decision on a GPU, by Ollaya's figures).
+   - No GPU: start with `laya`, about 1 s per decision on a CPU. `laya` reads only about 1k
+     tokens, so trim the state to the lines that matter (deduplicate logs, drop noise) or split
+     it.
+2. **Act on its answer when it is clear** (see "Reading answers and acting on them"). Most
+   decisions stop here.
+3. **Escalate only the unclear answers**, or a state too long for the model's window:
+   - NVIDIA GPU with 24 GB or more VRAM: rerun on local `clef`. Otherwise rerun on hosted Clef on
+     Workers AI.
+   - No GPU: rerun on hosted Clef on Workers AI. Larger local models are slow on CPU (a 9B model
+     took over a minute), so don't pick them yourself there.
+4. **Without `ollaya`**, use hosted Clef on Workers AI from the start.
+
+- **The user's choice always wins.** If they name a provider or model
   ("use local clef", "use laya", "use Workers AI", "use clef-flash"), use exactly that, even when
   it will be slow on CPU or too big for the GPU. "Local clef" means Ollaya's `clef`, not Workers
   AI. Warn once if it is likely to be slow or fail for memory, then run it; fall back only if it
@@ -156,8 +161,8 @@ private content.
 | `jeb` | Jebadiah (Qwen3.5 4b/9b, Qwen3.8 27b) on llama.cpp; per-type calibration | `jeb:9b` ~0.12 s GPU |
 | `cygnet` | Frozen Gemma 4 12B IT with Cygnet's letter prompt; 0.683 on typed decisions; calibrated; up to 20 options | ~0.2 s GPU |
 
-With an NVIDIA GPU, start with `winnow:e4b`. Without one, start with `laya`, and move to a larger
-model when `laya`'s confidence is often low on your data.
+Start with `winnow:e4b` on an NVIDIA GPU or `laya` without one, and escalate unclear answers as
+described in "Choose local or hosted".
 
 ## Presets
 
