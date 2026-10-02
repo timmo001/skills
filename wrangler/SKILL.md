@@ -4,12 +4,14 @@ description: Use the project's Wrangler CLI for Cloudflare development, configur
 compatibility: Requires the project's Wrangler dependency and supported Node.js runtime. Remote operations require Cloudflare authentication.
 license: Apache-2.0
 # origin: https://github.com/cloudflare/skills/tree/main/skills/wrangler
-# upstream-sha: 320fbbc1b671221bb86c3777715093d21cf286df
+# upstream-sha: 41e0d19858946d18af9ee2c2feebbe2e11d829ff
 # local-edits:
 #   - SKILL.md: replaced the bundled CLI manual with project-local version, source lookup, and scoped verification guidance
 ---
 
 # Wrangler
+
+If the project has a `cloudflare.config.ts` file, or the user has asked you to use the `cf` CLI, do not use this skill. Follow the [Cloudflare CLI documentation](https://developers.cloudflare.com/cf/index.md) instead.
 
 1. Inspect the project's package manifest, lockfile, scripts, and Wrangler configuration. Run its existing task or local binary. A missing global command does not mean the project dependency is absent.
 2. Check the local version and relevant subcommand's `--help`. Do not silently install or upgrade Wrangler during a read, review, or deployment. If installation is needed, follow the repository's package manager and dependency policy.
@@ -33,17 +35,23 @@ license: Apache-2.0
 
 ## Previews
 
-- Use Workers Previews for branch and pull request environments under one
-  Worker, Version URLs for a specific uploaded version with production
-  resources, and Wrangler environments for persistent separate Workers.
-- Check that the project-local Wrangler supports Previews and follow the
-  current configuration placement and resource-isolation documentation. A
-  Preview name does not prove its resources are isolated.
-- Preview URLs are public unless access controls are configured. Confirm the
-  intended Worker or Wrangler environment and pass the same `--env` value to
-  every Preview command.
-- Treat missing bindings and shared production resources as validation gaps.
-  Do not test destructive writes without explicit authorisation.
+- Workers Previews requires project-local Wrangler 4.135.0 or later. Check the
+  project's pinned version and make any required dependency upgrade explicit.
+- Use Previews for branch and pull request environments under one Worker,
+  Version URLs for a specific uploaded version with production resources, and
+  Wrangler environments for persistent separate Workers.
+- Follow the project's existing configuration and deployment approach for
+  Preview domains and deployments. Mirror the management approach, not
+  production resource bindings or data.
+- Follow current configuration placement and resource-isolation guidance. A
+  Preview name does not prove its resources are isolated; treat missing
+  bindings and shared production resources as validation gaps.
+- Preview URLs are public unless access controls are configured. Tell the user
+  and let them decide whether to protect the URLs. Confirm the intended Worker
+  or Wrangler environment and pass the same `--env` value to every Preview
+  command.
+- Do not test destructive writes without explicit authorisation. A returned
+  Preview URL does not validate behaviour that depends on missing bindings.
 
 ## Authentication and secrets
 
@@ -58,8 +66,10 @@ license: Apache-2.0
 
 ## Sources
 
-- [Install and update](https://developers.cloudflare.com/workers/wrangler/install-and-update/): project-local installation and package-manager invocation.
-- [Commands](https://developers.cloudflare.com/workers/wrangler/commands/): exact subcommands, flags, and remote effects.
-- [Configuration](https://developers.cloudflare.com/workers/wrangler/configuration/): environment inheritance and binding fields.
+- [Install and update](https://developers.cloudflare.com/workers/wrangler/install-and-update/index.md): project-local installation and package-manager invocation.
+- [Commands](https://developers.cloudflare.com/workers/wrangler/commands/index.md): exact subcommands, flags, and remote effects.
+- [Configuration](https://developers.cloudflare.com/workers/wrangler/configuration/index.md): environment inheritance and binding fields.
+- [Workers Previews](https://developers.cloudflare.com/workers/previews/index.md): [configuration](https://developers.cloudflare.com/workers/previews/configuration/index.md), [resource isolation](https://developers.cloudflare.com/workers/previews/resources/index.md), and [workflow comparison](https://developers.cloudflare.com/workers/previews/compare-workflows/index.md).
+- [Preview custom domains and access](https://developers.cloudflare.com/workers/previews/custom-domains/index.md): URL access controls.
 
 Use `workers-best-practices` for Worker implementation concerns. This skill does not replace that guidance with a copied API manual.
