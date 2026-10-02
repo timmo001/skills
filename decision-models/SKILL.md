@@ -9,7 +9,7 @@ license: Apache-2.0
 #   - SKILL.md: renamed to decision-models and added hosted Cloudflare Clef on Workers AI as a fallback provider alongside Ollaya
 #   - SKILL.md: added compatibility metadata for concrete environment requirements
 #   - SKILL.md: dropped the metadata.homepage block (https://ollaya.dev); the frontmatter validator allows no nested keys
-#   - SKILL.md: added a hardware check that picks local Ollaya on a capable GPU and hosted Clef otherwise
+#   - SKILL.md: added a provider check that prefers local Ollaya (laya on CPU, larger models on an NVIDIA GPU) and falls back to hosted Clef
 ---
 
 # Typed decisions with Ollaya or Cloudflare Clef
@@ -46,16 +46,21 @@ If the user names a model or provider, skip the check below and go straight to c
 run the check when the choice is yours, once per session before the first decision:
 
 ```sh
-nvidia-smi --query-gpu=name,memory.total --format=csv,noheader 2>/dev/null
 command -v ollaya
+nvidia-smi --query-gpu=name,memory.total --format=csv,noheader 2>/dev/null
 ```
 
-- **NVIDIA GPU and `ollaya` available**: use Ollaya locally (the paths below). Start with
-  `winnow:e4b`; with 24 GB or more VRAM, local `clef` matches the hosted model at no cost.
-- **No NVIDIA GPU** (CPU only, Intel or AMD graphics, which Ollaya can't use): use hosted Clef on
-  Workers AI. Larger local models are too slow or too big for RAM on CPU.
-- Exceptions: when the state is private and must not leave the machine, use Ollaya's `laya` on CPU
-  even without a GPU.
+- **`ollaya` available**: use Ollaya locally (the paths below). It is free and keeps the data on
+  this machine.
+  - With an NVIDIA GPU, start with `winnow:e4b`; with 24 GB or more VRAM, local `clef` matches
+    the hosted model at no cost.
+  - Without one, use `laya`: about 1 s per decision on a CPU. `laya` reads only about 1k tokens,
+    so trim the state to the lines that matter (deduplicate logs, drop noise) or split it.
+    Larger local models are slow on CPU (a 9B model took over a minute), so don't pick them
+    yourself there.
+- **Hosted Clef on Workers AI** when `ollaya` isn't installed, when `laya`'s confidence stays low
+  and the decision needs a stronger model than the hardware can run, or when the state is too
+  long to trim to `laya`'s window.
 - **The user's choice always wins over the hardware check.** If they name a provider or model
   ("use local clef", "use laya", "use Workers AI", "use clef-flash"), use exactly that, even when
   it will be slow on CPU or too big for the GPU. "Local clef" means Ollaya's `clef`, not Workers
@@ -92,7 +97,8 @@ Ollaya, in this order:
      -d '{"model": "laya", "state": "…", "questions": {…}}'
    ```
 
-Hosted: **Cloudflare Clef on Workers AI**, the default without an NVIDIA GPU (see below).
+Hosted: **Cloudflare Clef on Workers AI**, for when Ollaya is missing or not strong enough (see
+below).
 
 ### Cloudflare Clef on Workers AI
 
