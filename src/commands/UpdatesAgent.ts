@@ -1,4 +1,5 @@
 import { GhChunk } from "@timmo001/effect-gh";
+import { createHash } from "node:crypto";
 import {
   Cause,
   Config,
@@ -9,6 +10,7 @@ import {
   Option,
   Path,
   Redacted,
+  Result,
   Schedule,
   Schema,
   Stream,
@@ -21,7 +23,14 @@ import {
 } from "./Updates.js";
 import { CATALOGUE_FILE, writeSkillsCatalogue } from "./Catalogue.js";
 import { importSkill } from "./Import.js";
-import { getImport, type ImportMetadata } from "../imports/metadata.js";
+import { getImport } from "../imports/metadata.js";
+import {
+  originDirectory,
+  parseOrigin,
+  type SkillOrigin,
+  type UpstreamFileChange,
+  upstreamFileChanges,
+} from "../imports/upstream.js";
 import { CommandError, CommandExecutor } from "../services/CommandExecutor.js";
 import { GitHub } from "../services/GitHub.js";
 import {
@@ -400,24 +409,119 @@ export function isScopedSkillPatch(patch: string, skill: string): boolean {
   );
 }
 
-/** Pull request body for an external import's pinned SHA change, linking the upstream comparison. */
-export const externalUpdateBody = (
-  skill: string,
-  before: Pick<ImportMetadata, "origin" | "upstreamSha">,
-  after: Pick<ImportMetadata, "upstreamSha">,
+const UPSTREAM_MARKER = "<!-- skill-updates-agent:upstream -->";
+
+const fileStatusLabel = {
+  added: "Added",
+  modified: "Modified",
+  removed: "Removed",
+} satisfies Record<UpstreamFileChange["status"], string>;
+
+/** Pull request section linking each changed upstream file and its diff. */
+export const renderUpstreamChanges = (
+  origin: SkillOrigin,
+  before: string,
+  after: string,
+  files: readonly UpstreamFileChange[] | null,
 ) => {
-  const repo = before.origin.match(/^https:\/\/github\.com\/([^/]+\/[^/]+)\//);
+  const repo = `https://github.com/${origin.owner}/${origin.repo}`;
+  const compare = `${repo}/compare/${before}...${after}`;
+  const directory = originDirectory(origin);
+
+  const relative = (file: string) =>
+    directory && file.startsWith(`${directory}/`)
+      ? file.slice(directory.length + 1)
+      : file;
+
+  const summary = `[\`${origin.owner}/${origin.repo}\`](${compare}) \`${before.slice(0, 7)}...${after.slice(0, 7)}\`${directory ? ` in \`${directory}\`` : ""}`;
 
   return [
-    `Pin \`${skill}\` to upstream \`${after.upstreamSha}\`. \`dot update\` installs the pinned revision.`,
-    ...(repo?.[1]
-      ? [
-          "",
-          `Upstream changes: https://github.com/${repo[1]}/compare/${before.upstreamSha}...${after.upstreamSha}`,
-        ]
-      : []),
+    UPSTREAM_MARKER,
+    "## Upstream changes",
+    "",
+    ...(files === null
+      ? [`${summary}. The changed files could not be listed.`]
+      : files.length === 0
+        ? [`${summary}. No files changed.`]
+        : [
+            `${summary}:`,
+            "",
+            ...files.map(
+              ({ path, status }) =>
+                `- ${fileStatusLabel[status]} [\`${relative(path)}\`](${repo}/blob/${status === "removed" ? before : after}/${path}) ([diff](${compare}#diff-${createHash("sha256").update(path).digest("hex")}))`,
+            ),
+          ]),
   ].join("\n");
 };
+
+/** Add the upstream section unless the body already has one, keeping any benchmark section last. */
+export const withUpstreamChanges = (body: string, section: string) => {
+  if (body.includes(UPSTREAM_MARKER)) return body;
+  const index = body.indexOf(BENCHMARK_MARKER);
+  const base = (index === -1 ? body : body.slice(0, index)).trimEnd();
+  const tail = index === -1 ? "" : `\n\n${body.slice(index).trimEnd()}`;
+
+  return `${base ? `${base}\n\n` : ""}${section}${tail}\n`;
+};
+
+/** The skill's pinned SHA change and origin, read from a pull request's imports.json diff. */
+export const upstreamPinChange = (patch: string, skill: string) => {
+  const entry = (prefix: "-" | "+") =>
+    patch
+      .split("\n")
+      .find(
+        (line) =>
+          line.startsWith(prefix) &&
+          !line.startsWith(`${prefix}${prefix}${prefix}`) &&
+          line.slice(1).trimStart().startsWith(`"${skill}":`),
+      );
+
+  const sha = (line: string | undefined) =>
+    line?.match(/"upstreamSha": "([0-9a-f]{40})"/)?.[1];
+
+  const removed = entry("-");
+  const added = entry("+");
+  const before = sha(removed);
+  const after = sha(added);
+  const origin = added?.match(/"origin": "([^"]+)"/)?.[1];
+
+  return before && after && origin && before !== after
+    ? { origin, before, after }
+    : null;
+};
+
+const upstreamChangesSection = Effect.fn("UpdatesAgent.upstreamChangesSection")(
+  function* (originUrl: string, before: string, after: string) {
+    const origin = yield* Effect.result(parseOrigin(originUrl));
+
+    if (Result.isFailure(origin)) return null;
+
+    const files = yield* upstreamFileChanges(
+      origin.success,
+      before,
+      after,
+    ).pipe(
+      Effect.catch((error) =>
+        Console.error(
+          `Unable to list upstream changes for ${originUrl}: ${describeFailure(error)}`,
+        ).pipe(Effect.as(null)),
+      ),
+    );
+
+    return renderUpstreamChanges(origin.success, before, after, files);
+  },
+);
+
+/** Pull request body for an external import's pinned SHA change, linking the upstream files. */
+export const externalUpdateBody = (
+  skill: string,
+  sha: string,
+  upstream: string | null,
+) =>
+  [
+    `Pin \`${skill}\` to upstream \`${sha}\`. \`dot update\` installs the pinned revision.`,
+    ...(upstream ? ["", upstream] : []),
+  ].join("\n");
 
 export const skillUpdateSubject = (patch: string, skill: string) =>
   isShaOnlySkillPatch(patch, skill)
@@ -563,19 +667,47 @@ const publishCleanUpdate = Effect.fn("UpdatesAgent.publishCleanUpdate")(
 
     const existing = url.length > 0;
 
-    if (existing)
+    const body = externalUpdateBody(
+      name,
+      after.upstreamSha,
+      yield* upstreamChangesSection(
+        before.origin,
+        before.upstreamSha,
+        after.upstreamSha,
+      ),
+    );
+
+    if (existing) {
+      const { body: previous } = yield* decodeJson(
+        "pull-request",
+        PullRequestBody,
+        yield* github.run(
+          ["pr", "view", url, "--json", "body", "--repo", "timmo001/skills"],
+          { readOnly: true },
+        ),
+      );
+
+      const benchmark = previous.indexOf(BENCHMARK_MARKER);
+
       yield* github.run([
         "pr",
         "edit",
         url,
         "--title",
         title,
+        "--body",
+        benchmark === -1
+          ? body
+          : withSkillUpdatesBenchmark(
+              body,
+              previous.slice(benchmark).trimEnd(),
+            ),
         "--add-assignee",
         "timmo001",
         "--repo",
         "timmo001/skills",
       ]);
-    else
+    } else
       url = (yield* github.run([
         "pr",
         "create",
@@ -586,7 +718,7 @@ const publishCleanUpdate = Effect.fn("UpdatesAgent.publishCleanUpdate")(
         "--title",
         title,
         "--body",
-        externalUpdateBody(name, before, after),
+        body,
         "--assignee",
         "timmo001",
         "--repo",
@@ -1151,6 +1283,91 @@ export const validatePullRequestPolicy = Effect.fn(
 
 const PullRequestBody = Schema.Struct({ body: Schema.String });
 
+const PullRequestTitleBody = Schema.Struct({
+  title: Schema.String,
+  body: Schema.String,
+});
+
+/** Add upstream file links to each skill update pull request opened after `after`. */
+const linkUpstreamChanges = Effect.fn("UpdatesAgent.linkUpstreamChanges")(
+  function* (after: number) {
+    const github = yield* GitHub;
+
+    const created = (yield* decodeJson(
+      "pull-requests",
+      PullRequestNumbers,
+      yield* github.run(
+        [
+          "pr",
+          "list",
+          "--state",
+          "all",
+          "--limit",
+          "100",
+          "--json",
+          "number",
+          "--repo",
+          "timmo001/skills",
+        ],
+        { readOnly: true },
+      ),
+    )).filter(({ number }) => number > after);
+
+    for (const { number } of created) {
+      const { title, body } = yield* decodeJson(
+        "pull-request",
+        PullRequestTitleBody,
+        yield* github.run(
+          [
+            "pr",
+            "view",
+            String(number),
+            "--json",
+            "title,body",
+            "--repo",
+            "timmo001/skills",
+          ],
+          { readOnly: true },
+        ),
+      );
+
+      const skill = title.match(
+        /^(?:\[SHA-only\] Update|Update skill:) ([a-z0-9-]+)$/,
+      )?.[1];
+
+      if (!skill || body.includes(UPSTREAM_MARKER)) continue;
+
+      const pin = upstreamPinChange(
+        yield* github.run(
+          ["pr", "diff", String(number), "--repo", "timmo001/skills"],
+          { readOnly: true },
+        ),
+        skill,
+      );
+
+      if (!pin) continue;
+
+      const section = yield* upstreamChangesSection(
+        pin.origin,
+        pin.before,
+        pin.after,
+      );
+
+      if (!section) continue;
+
+      yield* github.run([
+        "pr",
+        "edit",
+        String(number),
+        "--body",
+        withUpstreamChanges(body, section),
+        "--repo",
+        "timmo001/skills",
+      ]);
+    }
+  },
+);
+
 const annotatePullRequests = Effect.fn("UpdatesAgent.annotatePullRequests")(
   function* (
     after: number,
@@ -1581,6 +1798,16 @@ export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
 
         yield* requireRepositoryState(states);
         yield* validatePullRequestPolicy(initialPr);
+
+        // Upstream links help review; never fail a published run on them.
+        if (attempts.length > 0)
+          yield* linkUpstreamChanges(initialPr).pipe(
+            Effect.catch((error) =>
+              Console.error(
+                `Unable to add upstream changes to pull requests: ${describeFailure(error)}`,
+              ),
+            ),
+          );
 
         // Benchmark figures are informational; never fail a published run on them.
         if (attempts.length > 0)

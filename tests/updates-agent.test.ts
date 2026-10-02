@@ -1,5 +1,6 @@
 import { describe, expect, it } from "@effect/vitest";
 import { NodeServices } from "@effect/platform-node";
+import { createHash } from "node:crypto";
 import {
   ConfigProvider,
   Effect,
@@ -17,6 +18,7 @@ import {
   latestSuccessfulWorkflowRun,
   recoverUpdateBranches,
   renderSkillUpdatesBenchmark,
+  renderUpstreamChanges,
   requireRepositoryState,
   runDeviceSkillUpdates,
   runGitHubSkillUpdates,
@@ -25,10 +27,13 @@ import {
   skillUpdateSubject,
   SkillUpdatesAgentError,
   SkillUpdatesDeferredError,
+  upstreamPinChange,
   validatePullRequestPolicy,
   withSkillUpdatesBenchmark,
+  withUpstreamChanges,
   type SkillUpdatesAgentConfig,
 } from "../src/commands/UpdatesAgent.js";
+import { parseNameStatus } from "../src/imports/upstream.js";
 import {
   CommandError,
   CommandExecutor,
@@ -393,6 +398,65 @@ describe("updates agent policies", () => {
 
       expect(once).toBe(`Summary\n\n${section}\n`);
       expect(withSkillUpdatesBenchmark(once, section)).toBe(once);
+    }),
+  );
+
+  it.effect("links each changed upstream file to its diff", () =>
+    Effect.sync(() => {
+      const oldSha = "a".repeat(40);
+      const newSha = "b".repeat(40);
+      const origin = "https://github.com/org/repo/tree/main/skills/example";
+
+      const pin = upstreamPinChange(
+        [
+          "diff --git a/imports.json b/imports.json",
+          "--- a/imports.json",
+          "+++ b/imports.json",
+          "@@ -1 +1 @@",
+          `-    "example": { "origin": "${origin}", "upstreamSha": "${oldSha}" },`,
+          `+    "example": { "origin": "${origin}", "upstreamSha": "${newSha}" },`,
+        ].join("\n"),
+        "example",
+      );
+
+      expect(pin).toEqual({ origin, before: oldSha, after: newSha });
+
+      const files = parseNameStatus(
+        "M\0skills/example/SKILL.md\0D\0skills/example/old.md\0",
+      );
+
+      const section = renderUpstreamChanges(
+        {
+          owner: "org",
+          repo: "repo",
+          branch: "main",
+          path: "skills/example",
+          type: "directory",
+        },
+        oldSha,
+        newSha,
+        files,
+      );
+
+      const compare = `https://github.com/org/repo/compare/${oldSha}...${newSha}`;
+
+      expect(section).toContain(
+        `- Modified [\`SKILL.md\`](https://github.com/org/repo/blob/${newSha}/skills/example/SKILL.md) ([diff](${compare}#diff-${createHash("sha256").update("skills/example/SKILL.md").digest("hex")}))`,
+      );
+      expect(section).toContain(
+        `- Removed [\`old.md\`](https://github.com/org/repo/blob/${oldSha}/skills/example/old.md)`,
+      );
+
+      const benchmark = renderSkillUpdatesBenchmark([], {
+        agent: "build",
+        runUrl: "https://example/1",
+        pullRequests: 1,
+      });
+
+      const body = withUpstreamChanges(`Summary\n\n${benchmark}`, section);
+
+      expect(body).toBe(`Summary\n\n${section}\n\n${benchmark.trimEnd()}\n`);
+      expect(withUpstreamChanges(body, section)).toBe(body);
     }),
   );
 

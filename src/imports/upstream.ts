@@ -1,4 +1,5 @@
-import { Effect, Schema } from "effect";
+import { Effect, FileSystem, Match, Path, Schema } from "effect";
+import { CommandExecutor } from "../services/CommandExecutor.js";
 import { GitHub, type GitHubError } from "../services/GitHub.js";
 
 export const SkillOrigin = Schema.Struct({
@@ -112,6 +113,88 @@ export const latestPathSha = Effect.fn("Upstream.latestPathSha")(function* (
   }
 
   return sha;
+});
+
+export const UpstreamFileChange = Schema.Struct({
+  path: Schema.String,
+  status: Schema.Literals(["added", "modified", "removed"]),
+});
+
+export interface UpstreamFileChange extends Schema.Schema.Type<
+  typeof UpstreamFileChange
+> {}
+
+/** Upstream directory holding the skill: the origin itself, or a SKILL.md origin's parent. */
+export const originDirectory = (origin: SkillOrigin) =>
+  origin.type === "file"
+    ? origin.path.split("/").slice(0, -1).join("/")
+    : origin.path;
+
+export const parseNameStatus = (output: string): UpstreamFileChange[] => {
+  const fields = output.split("\0");
+  const changes: UpstreamFileChange[] = [];
+
+  for (let index = 0; index + 1 < fields.length; index += 2) {
+    const status = fields[index];
+    const path = fields[index + 1];
+
+    if (!status || !path) continue;
+    changes.push({
+      path,
+      status: Match.value(status).pipe(
+        Match.when("A", () => "added" as const),
+        Match.when("D", () => "removed" as const),
+        Match.orElse(() => "modified" as const),
+      ),
+    });
+  }
+
+  return changes;
+};
+
+/** Files changed under the skill's upstream directory between two commits. */
+export const upstreamFileChanges = Effect.fn("Upstream.fileChanges")(function* (
+  origin: SkillOrigin,
+  before: string,
+  after: string,
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const executor = yield* CommandExecutor;
+
+  return yield* Effect.scoped(
+    Effect.gen(function* () {
+      const temp = yield* fs.makeTempDirectoryScoped({
+        prefix: "skill-upstream-diff-",
+      });
+
+      const checkout = path.join(temp, "source.git");
+      yield* executor.run("git", [
+        "clone",
+        "--quiet",
+        "--bare",
+        "--filter=blob:none",
+        `https://github.com/${origin.owner}/${origin.repo}.git`,
+        checkout,
+      ]);
+
+      // Tree comparison only: rename detection would fetch every blob.
+      const output = yield* executor.run("git", [
+        "-C",
+        checkout,
+        "diff",
+        "--name-status",
+        "--no-renames",
+        "-z",
+        before,
+        after,
+        "--",
+        originDirectory(origin) || ".",
+      ]);
+
+      return parseNameStatus(output);
+    }),
+  );
 });
 
 export const originExists = Effect.fn("Upstream.originExists")(function* (
