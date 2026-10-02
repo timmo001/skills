@@ -4,9 +4,9 @@ compatibility: Requires Git, authenticated GitHub CLI with the gh stack extensio
 description: Manage stacked branches and pull requests with GitHub's `gh stack` extension. Use when work involves stacked PRs, dependent branches, stack creation, navigation, submission, synchronisation, rebasing, restructuring, linking, or merging.
 license: MIT
 # origin: https://github.com/github/gh-stack/tree/main/skills/gh-stack
-# upstream-sha: cf65746bd737920a5932a8511fae044fba599614
+# upstream-sha: 7cb154450f413291a51ba0b9c69e064edde56a98
 # local-edits:
-#   - SKILL.md: condensed upstream reference and replaced mutation instructions with local authorisation rules; upstream reference files intentionally omitted
+#   - SKILL.md: condensed upstream reference, replaced mutation instructions with local authorisation rules, and summarised distributed-worktree modify behavior; upstream reference files intentionally omitted
 #   - SKILL.md: added compatibility metadata for concrete environment requirements
 ---
 
@@ -169,6 +169,23 @@ continuation or editor workarounds when the extension owns the operation.
 If local and remote stack composition diverge, stop and present the actual
 local/remote chains. Do not automatically choose the remote, delete the remote
 stack, or unstack. Those choices can discard tracking decisions.
+
+## Worktrees And Distributed Modify
+
+`rebase` and `sync` update affected clean worktrees. They do not auto-stash or
+create or remove worktrees. Paused operations use their recorded worktree owners
+for recovery.
+
+`modify` remains TUI-only and must not be launched by an agent. It now supports
+stack branches checked out across worktrees. It checks affected worktree owners
+before applying changes; unrelated and read-only worktrees are left alone, and
+unoccupied branches use the initiating worktree. Dropped and folded source
+branches and their worktrees are preserved.
+
+If a modification conflicts, resolve and stage the files in the worktree named
+by the conflict. `gh stack modify --continue` and `--abort` can be invoked from
+any linked worktree, but operate in the recorded owners. No worktree is
+automatically stashed, created, or removed.
 
 ## Restructure Without The TUI
 
