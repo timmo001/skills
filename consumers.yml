@@ -260,5 +260,6 @@ repositories:
     skills:
       - changeset-scope
       - code-review
+      - effect-principles
       - testing
       - writing-style
