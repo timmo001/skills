@@ -24,7 +24,7 @@ description: Choose tests for their concrete regression value and avoid low-valu
 ## Verification
 
 - Run relevant existing checks and repository-required validation. Prefer the smallest reliable check or direct observation for the changed behaviour.
-- When checks and result collection form useful independent work, apply `session-coordination` to propose a smaller, lower-effort Herdr worker against a stable revision. Use a background shell for a known command that needs no interpretation. Test design and unexplained failures can require stronger reasoning; do not route all testing work to a smaller model or let a check runner weaken assertions.
+- When checks and result collection form useful independent work and delegation is available, hand them to a smaller, lower-effort helper against a stable revision. Use a background shell for a known command that needs no interpretation. Test design and unexplained failures can require stronger reasoning; do not route all testing work to a smaller model or let a check runner weaken assertions.
 - Maintain an existing test when an intentional behaviour change makes it stale; that does not authorise extra cases or broader coverage. Do not delete or weaken tests just to obtain a pass.
 - Do not introduce test infrastructure, extract helpers, or redesign production code solely to make an optional test possible.
 - After checks pass, broaden or repeat them only for new changes, failures, or unresolved concerns. State verification limits plainly.
