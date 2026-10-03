@@ -7,7 +7,7 @@ Generated from each top-level skill's `SKILL.md` frontmatter (`name` and `descri
 # or: mise run catalogue
 ```
 
-This repository currently documents **50** tracked skills. External imports are installed from their origin and are not listed here.
+External imports are installed from their origin and are not listed here.
 
 ## Portable
 
@@ -22,7 +22,6 @@ General engineering and writing skills that work across Agent Skills clients.
 | [`chill`](./chill/) | Stop overengineering and reinventing the wheel. Use ONLY when the user explicitly invokes /chill or asks to simplify an approach that has become unnecessarily complex. |
 | [`cleanup-unnecessary-variables`](./cleanup-unnecessary-variables/) | Safe removal of unnecessary variables during code review and refactoring. Use when simplifying code, inlining temporary or single-use variables, or removing redundant aliases, while preserving runtime behaviour, evaluation order, and variables kept for readability or debugging. |
 | [`code-review`](./code-review/) | Review a pull request, branch, work-in-progress changes, or diff for concrete defects, unmet requirements, and repository convention violations. Keep findings scoped, evidenced, and proportionate. |
-| [`css-motion-systems`](./css-motion-systems/) | CSS motion design and implementation for web interfaces. Use when designing or building transitions, animations, `linear()` easing, transform strategy, View Transitions API patterns, motion tokens, or reviewing motion quality and accessibility. |
 | [`diagnose`](./diagnose/) | Investigate bugs using source, observed failures, and proportionate verification. Use for regressions, intermittent failures, incorrect behaviour, or performance problems whose cause needs investigation. |
 | [`effect-principles`](./effect-principles/) | Apply the Effect way of reasoning in codebases that do not use Effect, in any programming language. Use when editing or reviewing non-Effect code so dependencies, failures, state, boundaries, resources, time, and workflows stay explicit without adding Effect-shaped architecture or broader scope. |
 | [`evidence-first`](./evidence-first/) | Check questions and uncertain statements before answering, while following clear user choices and limits. Use in any agent mode when the user asks why or how something works, says things like I think, I remember, or I don't think, asks whether something is correct, requests advice, or gives a firm preference such as I don't want this, reduce the scope, or this is going too far. |

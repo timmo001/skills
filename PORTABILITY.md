@@ -17,7 +17,6 @@ These skills use general engineering concepts and ordinary agent capabilities. T
 | `chill` | Explicit-invocation workflow. |
 | `cleanup-unnecessary-variables` | General code guidance. |
 | `code-review` | General review workflow with optional delegation. |
-| `css-motion-systems` | Web platform guidance with colocated references. |
 | `diagnose` | General diagnosis workflow with optional client metadata. |
 | `effect-principles` | General engineering guidance. |
 | `evidence-first` | General evidence and decision guidance. |
