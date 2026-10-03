@@ -740,11 +740,41 @@ const commitConsumers = Effect.fn("Consumers.commit")(function* (
     { cwd: root },
   );
 
-  if (code !== 0)
-    return yield* editError(
-      `Commit or push failed; check ${CONSUMERS_FILE} in ${root}`,
-    );
+  if (code === 0) return;
+
+  // A failed commit leaves the edit behind, which would block the next edit.
+  // A failed push has already committed it, so there is nothing to restore.
+  const uncommitted = yield* executor
+    .run("git", ["status", "--porcelain", "--", CONSUMERS_FILE], { cwd: root })
+    .pipe(consumersError("source.git"));
+
+  if (uncommitted.trim())
+    yield* fs
+      .writeFileString(file, source)
+      .pipe(consumersError("consumers.restore"));
+
+  return yield* editError(
+    uncommitted.trim()
+      ? `Commit failed, so ${CONSUMERS_FILE} was restored`
+      : `Committed, but the push failed; push ${root} before the next edit`,
+  );
 });
+
+/**
+ * A commit subject naming every skill, or counting them when the names would
+ * make it too long.
+ */
+const editSubject = (
+  verb: string,
+  names: readonly string[],
+  target: string,
+) => {
+  const full = `${verb} ${names.join(", ")} with ${target}`;
+
+  return full.length <= 72
+    ? full
+    : `${verb} ${names.length} skills with ${target}`;
+};
 
 /** Sync one repository after its entry changed; the timer retries a failure. */
 const syncNow = Effect.fn("Consumers.syncNow")(function* (
@@ -796,7 +826,7 @@ export const addConsumerSkills = Effect.fn("Consumers.addSkills")(function* (
     root,
     config,
     { ...config.repositories, [target]: { skills: wanted } },
-    `Share ${added.join(", ")} with ${target}`,
+    editSubject("Share", added, target),
   );
 
   yield* syncNow(target, wanted, catalogue);
@@ -840,7 +870,7 @@ export const removeConsumerSkills = Effect.fn("Consumers.removeSkills")(
         root,
         config,
         { ...config.repositories, [target]: { skills: remaining } },
-        `Stop sharing ${removed.join(", ")} with ${target}`,
+        editSubject("Stop sharing", removed, target),
       );
 
       yield* syncNow(target, remaining, catalogue);
