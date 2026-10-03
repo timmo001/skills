@@ -242,3 +242,9 @@ repositories:
       - effect-principles
       - testing
       - writing-style
+  timmo001/omarchy-momentumctl:
+    skills:
+      - changeset-scope
+      - code-review
+      - testing
+      - writing-style
