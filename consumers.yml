@@ -131,3 +131,9 @@ repositories:
       - testing
       - types-enforce-ts
       - writing-style
+  timmo001/context:
+    skills:
+      - changeset-scope
+      - code-review
+      - testing
+      - writing-style
