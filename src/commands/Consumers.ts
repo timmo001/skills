@@ -320,13 +320,13 @@ interface Catalogue {
 
 /**
  * Resolve every skill that could be shared, with committed skills pinned to
- * the source checkout's `HEAD`. Installing needs that commit published and
- * the checkout clean; removing does not.
+ * the source checkout's `HEAD`. Installing `installs` needs that commit
+ * published and their folders and `imports.json` unchanged; removing does not.
  */
 const loadCatalogue = Effect.fn("Consumers.loadCatalogue")(function* (
   root: string,
   source: string,
-  options: { readonly published: boolean },
+  installs: readonly string[],
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -339,21 +339,6 @@ const loadCatalogue = Effect.fn("Consumers.loadCatalogue")(function* (
     );
 
   const commit = yield* git("rev-parse", "HEAD");
-
-  if (
-    options.published &&
-    !(yield* git("branch", "--remotes", "--contains", commit))
-  )
-    return yield* new ConsumersError({
-      operation: "source.commit",
-      message: `${commit} is not pushed, so consumers cannot install from it`,
-    });
-
-  if (options.published && (yield* git("status", "--porcelain")))
-    return yield* new ConsumersError({
-      operation: "source.status",
-      message: "The skills checkout has uncommitted changes",
-    });
 
   const imports = yield* readImports(root).pipe(consumersError("imports.read"));
 
@@ -376,6 +361,28 @@ const loadCatalogue = Effect.fn("Consumers.loadCatalogue")(function* (
 
     if (origin.success.kind === "committed")
       hashes.set(name, yield* skillFolderHash(path.join(root, name)));
+  }
+
+  if (installs.length > 0) {
+    if (!(yield* git("branch", "--remotes", "--contains", commit)))
+      return yield* new ConsumersError({
+        operation: "source.commit",
+        message: `${commit} is not pushed, so consumers cannot install from it`,
+      });
+
+    const changed = yield* git(
+      "status",
+      "--porcelain",
+      "--",
+      "imports.json",
+      ...installs.filter((name) => hashes.has(name)),
+    );
+
+    if (changed)
+      return yield* new ConsumersError({
+        operation: "source.status",
+        message: `Commit and push these first:\n${changed}`,
+      });
   }
 
   return {
@@ -555,9 +562,11 @@ export const syncConsumers = Effect.fn("Consumers.sync")(function* (
       message: `${options.repository} is not listed in ${CONSUMERS_FILE}`,
     });
 
-  const catalogue = yield* loadCatalogue(root, config.source, {
-    published: true,
-  });
+  const catalogue = yield* loadCatalogue(
+    root,
+    config.source,
+    repositories.flatMap(([, { skills }]) => skills),
+  );
 
   const failed: string[] = [];
 
@@ -627,6 +636,11 @@ const checkEligible = Effect.fn("Consumers.checkEligible")(function* (
 });
 
 /** Load `consumers.yml` for an edit, with the target repository resolved. */
+/**
+ * Load `consumers.yml` for an edit, with the target repository resolved.
+ * The edit is pushed, so the skills checkout must not hold other unpushed
+ * commits.
+ */
 const startEdit = Effect.fn("Consumers.startEdit")(function* (
   root: string,
   repository: string | undefined,
@@ -634,6 +648,12 @@ const startEdit = Effect.fn("Consumers.startEdit")(function* (
   const executor = yield* CommandExecutor;
   const github = yield* GitHub;
   const config = yield* readConsumers(root);
+
+  const git = (...args: string[]) =>
+    executor.run("git", args, { cwd: root }).pipe(
+      Effect.map((output) => output.trim()),
+      consumersError("source.git"),
+    );
 
   const target =
     repository ??
@@ -647,21 +667,24 @@ const startEdit = Effect.fn("Consumers.startEdit")(function* (
         consumersError("repository.detect"),
       ));
 
-  if (
-    (yield* executor.run(
-      "git",
-      ["status", "--porcelain", "--", CONSUMERS_FILE],
-      { cwd: root },
-    )).trim()
-  )
+  if (yield* git("status", "--porcelain", "--", CONSUMERS_FILE))
     return yield* editError(`${CONSUMERS_FILE} has uncommitted changes`);
+
+  yield* git("fetch", "--quiet");
+
+  const unpushed = yield* git("log", "--oneline", "@{upstream}..HEAD");
+
+  if (unpushed)
+    return yield* editError(
+      `The skills checkout has unpushed commits; push or drop them first:\n${unpushed}`,
+    );
 
   return { config, target, existing: config.repositories[target]?.skills };
 });
 
 /**
  * Write `repositories` to `consumers.yml`, keeping its header comments, then
- * validate and commit it. An invalid edit is reverted.
+ * validate, commit and push it. An invalid edit is reverted.
  */
 const commitConsumers = Effect.fn("Consumers.commit")(function* (
   root: string,
@@ -713,21 +736,42 @@ const commitConsumers = Effect.fn("Consumers.commit")(function* (
 
   const code = yield* executor.inherit(
     "dot",
-    ["git-commit", "--message", message, "--path", CONSUMERS_FILE],
+    ["git-commit", "--message", message, "--path", CONSUMERS_FILE, "--push"],
     { cwd: root },
   );
 
   if (code !== 0)
     return yield* editError(
-      `Commit failed; the ${CONSUMERS_FILE} edit remains for review`,
+      `Commit or push failed; check ${CONSUMERS_FILE} in ${root}`,
     );
 });
 
+/** Sync one repository after its entry changed; the timer retries a failure. */
+const syncNow = Effect.fn("Consumers.syncNow")(function* (
+  repository: string,
+  wanted: readonly string[],
+  catalogue: Catalogue,
+) {
+  const result = yield* Effect.result(
+    Effect.scoped(
+      syncRepository(repository, wanted, { catalogue, dryRun: false }),
+    ),
+  );
+
+  if (Result.isFailure(result)) {
+    const error = result.failure;
+
+    return yield* editError(
+      `${repository}: saved, but the sync failed and the timer will retry: ${"stderr" in error ? `${error.command}: ${error.stderr}` : error.message}`,
+    );
+  }
+});
+
 /**
- * Share `skills` with a consumer repository by adding them to its
- * `consumers.yml` entry, creating the entry if needed, and commit the change.
- * Without `repository`, use the GitHub repository of the working directory.
- * The next sync installs them.
+ * Share `skills` with a consumer repository: add them to its `consumers.yml`
+ * entry, creating the entry if needed, commit and push that, then install
+ * them in the repository straight away. Without `repository`, use the GitHub
+ * repository of the working directory.
  */
 export const addConsumerSkills = Effect.fn("Consumers.addSkills")(function* (
   root: string,
@@ -745,26 +789,24 @@ export const addConsumerSkills = Effect.fn("Consumers.addSkills")(function* (
   if (added.length === 0)
     return yield* editError(`${target} already has ${skills.join(", ")}`);
 
+  const wanted = [...(existing ?? []), ...added].sort();
+  const catalogue = yield* loadCatalogue(root, config.source, wanted);
+
   yield* commitConsumers(
     root,
     config,
-    {
-      ...config.repositories,
-      [target]: { skills: [...(existing ?? []), ...added].sort() },
-    },
+    { ...config.repositories, [target]: { skills: wanted } },
     `Share ${added.join(", ")} with ${target}`,
   );
 
-  yield* Console.log(
-    `${target}: ${existing === undefined ? "added with" : "now also gets"} ${added.join(", ")}`,
-  );
+  yield* syncNow(target, wanted, catalogue);
 });
 
 /**
  * Stop sharing `skills` with a consumer repository, or every skill with
- * `all`, and commit the change. Dropping the last skill removes the
- * repository's entry, so its copies are removed and pushed straight away:
- * the sync no longer visits it afterwards.
+ * `all`: update its entry, commit and push that, and remove the copies from
+ * the repository straight away. Dropping the last skill removes the entry,
+ * after the copies are gone, since the sync no longer visits it.
  */
 export const removeConsumerSkills = Effect.fn("Consumers.removeSkills")(
   function* (
@@ -781,16 +823,17 @@ export const removeConsumerSkills = Effect.fn("Consumers.removeSkills")(
     if (existing === undefined)
       return yield* editError(`${target} is not listed in ${CONSUMERS_FILE}`);
 
-    const removed = all
-      ? existing
-      : existing.filter((name) => skills.includes(name));
-
     const missing = skills.filter((name) => !existing.includes(name));
 
     if (missing.length > 0)
       return yield* editError(`${target} does not have ${missing.join(", ")}`);
 
+    const removed = all
+      ? existing
+      : existing.filter((name) => skills.includes(name));
+
     const remaining = existing.filter((name) => !removed.includes(name));
+    const catalogue = yield* loadCatalogue(root, config.source, remaining);
 
     if (remaining.length > 0) {
       yield* commitConsumers(
@@ -799,21 +842,13 @@ export const removeConsumerSkills = Effect.fn("Consumers.removeSkills")(
         { ...config.repositories, [target]: { skills: remaining } },
         `Stop sharing ${removed.join(", ")} with ${target}`,
       );
-      yield* Console.log(
-        `${target}: no longer gets ${removed.join(", ")}; the next sync removes them`,
-      );
+
+      yield* syncNow(target, remaining, catalogue);
 
       return;
     }
 
-    yield* Effect.scoped(
-      syncRepository(target, [], {
-        catalogue: yield* loadCatalogue(root, config.source, {
-          published: false,
-        }),
-        dryRun: false,
-      }),
-    );
+    yield* syncNow(target, [], catalogue);
 
     yield* commitConsumers(
       root,
