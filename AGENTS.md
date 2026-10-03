@@ -28,7 +28,7 @@
 - Keep adapted imports as top-level reviewed snapshots. `imports.json` owns origin, reviewed SHA, licence, local-edit metadata, and distribution mode. Materialise its provenance overlay in every committed imported skill; the installer adds it to external copies.
 - Build `dist/skill-maintenance`, then materialise metadata with `./dist/skill-maintenance import <name> --metadata-only`; compare upstream changes with the same command.
 - Do not add client-specific marketplace packaging or duplicate canonical skill content.
-- `consumers.yml` lists the repositories that receive project copies of skills from here. Only committed skills can be listed; `skill-maintenance consumers` pushes to those repositories, so run it with `--dry-run` unless the user asked for the push.
+- `consumers.yml` lists the repositories that receive project copies of skills from here. Only committed skills can be listed. `skill-maintenance consumers add` adds skills to an entry, creating it if needed, and `consumers remove` takes them out; both commit the change. Removing the last skill, or `--all`, pushes the copy removal to that repository straight away. `skill-maintenance consumers` pushes to those repositories, so run it with `--dry-run` unless the user asked for the push.
 
 ## Verification
 

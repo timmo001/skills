@@ -8,7 +8,11 @@ import {
   writeSkillsCatalogue,
 } from "../commands/Catalogue.js";
 import { check } from "../commands/Check.js";
-import { syncConsumers } from "../commands/Consumers.js";
+import {
+  addConsumerSkills,
+  removeConsumerSkills,
+  syncConsumers,
+} from "../commands/Consumers.js";
 import { importSkill } from "../commands/Import.js";
 import { install } from "../commands/Install.js";
 import { updates } from "../commands/Updates.js";
@@ -208,6 +212,57 @@ export const updatesAgentCommand = Command.make("updates-agent").pipe(
   Command.withDescription("Run scheduled skill update automation"),
 );
 
+const consumerRepoFlag = Flag.String("repo").pipe(
+  Flag.optional,
+  Flag.withDescription(
+    "owner/name of the consumer repository (default: the current directory's GitHub repository)",
+  ),
+);
+
+export const consumersAddCommand = Command.make(
+  "add",
+  {
+    repo: consumerRepoFlag,
+    skills: Argument.String("skill").pipe(
+      Argument.atLeast(1),
+      Argument.withDescription("Skills to share with the repository"),
+    ),
+  },
+  ({ repo, skills }) =>
+    resolveSkillsRoot().pipe(
+      Effect.flatMap((root) => addConsumerSkills(root, optional(repo), skills)),
+    ),
+).pipe(
+  Command.withDescription(
+    "Share skills with a repository through consumers.yml and commit the change",
+  ),
+);
+
+export const consumersRemoveCommand = Command.make(
+  "remove",
+  {
+    repo: consumerRepoFlag,
+    all: bool(
+      "all",
+      "Stop sharing every skill, remove the copies now and drop the repository",
+    ),
+    skills: Argument.String("skill").pipe(
+      Argument.atLeast(0),
+      Argument.withDescription("Skills to stop sharing with the repository"),
+    ),
+  },
+  ({ repo, all, skills }) =>
+    resolveSkillsRoot().pipe(
+      Effect.flatMap((root) =>
+        removeConsumerSkills(root, optional(repo), skills, all),
+      ),
+    ),
+).pipe(
+  Command.withDescription(
+    "Stop sharing skills with a repository through consumers.yml and commit the change",
+  ),
+);
+
 export const consumersCommand = Command.make(
   "consumers",
   {
@@ -227,6 +282,7 @@ export const consumersCommand = Command.make(
   Command.withDescription(
     "Sync project skill copies in the repositories listed in consumers.yml",
   ),
+  Command.withSubcommands([consumersAddCommand, consumersRemoveCommand]),
 );
 
 export const skillMaintenanceCommand = Command.make("skill-maintenance").pipe(

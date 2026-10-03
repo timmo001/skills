@@ -42,9 +42,11 @@ Claude Code is supported through the same cross-agent installer. This repository
 
 ## Consumer repositories
 
-Repositories listed in [`consumers.yml`](./consumers.yml) keep project copies of the skills listed for them, so contributors get those skills without installing them. Add a repository or skill there to opt it in, and remove one to take it out.
+Repositories listed in [`consumers.yml`](./consumers.yml) keep project copies of the skills listed for them, so contributors get those skills without installing them. `consumers add` shares skills with a repository and `consumers remove` stops sharing them, each committing the change. Both use the current directory's GitHub repository unless `--repo` is given. `add` only accepts new repositories that are public, owned by the source's owner, and not forks or archived. Removing a repository's last skill, or `remove --all`, deletes its copies and pushes that straight away, then drops its entry, since the sync no longer visits it.
 
 ```bash
+./dist/skill-maintenance consumers add [--repo <owner/repo>] <skill>...
+./dist/skill-maintenance consumers remove [--repo <owner/repo>] [--all] [<skill>...]
 ./dist/skill-maintenance consumers --dry-run
 ./dist/skill-maintenance consumers
 ```
