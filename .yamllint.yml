@@ -7,6 +7,7 @@ extends: default
 ignore: |
   node_modules/
   dist/
+  .mise/
 
 rules:
   # Every document must start with "---" (enforced).
