@@ -141,3 +141,9 @@ repositories:
       - testing
       - types-enforce-ts
       - writing-style
+  timmo001/workflows:
+    skills:
+      - changeset-scope
+      - code-review
+      - testing
+      - writing-style
