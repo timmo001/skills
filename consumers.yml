@@ -256,3 +256,9 @@ repositories:
       - effect-principles
       - testing
       - writing-style
+  timmo001/system-bridge-connector:
+    skills:
+      - changeset-scope
+      - code-review
+      - testing
+      - writing-style
