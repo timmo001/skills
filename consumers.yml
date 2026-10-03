@@ -95,3 +95,9 @@ repositories:
       - testing
       - types-enforce-ts
       - writing-style
+  timmo001/chromium-relaunch-as-app:
+    skills:
+      - changeset-scope
+      - code-review
+      - testing
+      - writing-style
