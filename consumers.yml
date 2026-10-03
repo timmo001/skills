@@ -7,4 +7,6 @@ source: timmo001/skills
 repositories:
   timmo001/ha-bridge:
     skills:
+      - effect
+      - effect-service-design
       - testing
