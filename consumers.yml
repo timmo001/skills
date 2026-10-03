@@ -7,6 +7,10 @@ source: timmo001/skills
 repositories:
   timmo001/ha-bridge:
     skills:
+      - changeset-scope
+      - code-review
       - effect
       - effect-service-design
       - testing
+      - types-enforce-ts
+      - writing-style
