@@ -11,6 +11,12 @@ import {
 import { Yaml } from "effect/encoding";
 import { CommandExecutor } from "../services/CommandExecutor.js";
 import { GitHub, GitHubError } from "../services/GitHub.js";
+import {
+  type ImportsFile,
+  isExternal,
+  readImports,
+} from "../imports/metadata.js";
+import { originDirectory, parseOrigin } from "../imports/upstream.js";
 import { SkillsCli } from "../services/SkillsCli.js";
 
 /** Lists the repositories that receive project copies of skills from this repository. */
@@ -43,10 +49,13 @@ const SkillsLock = Schema.Struct({
     Schema.String,
     Schema.Struct({
       source: Schema.String,
+      ref: Schema.optionalKey(Schema.String),
       computedHash: Schema.String,
     }),
   ),
 });
+
+type LockEntry = (typeof SkillsLock.Type)["skills"][string];
 
 export class ConsumersError extends Schema.TaggedError<ConsumersError>()(
   "ConsumersError",
@@ -67,35 +76,123 @@ const consumersError = (operation: string) =>
       }),
   );
 
+/**
+ * Where a shared skill is installed from: a skill committed in the source
+ * repository, or an external import at its reviewed upstream commit.
+ */
+export type SkillOrigin =
+  | { readonly kind: "committed"; readonly source: string }
+  | {
+      readonly kind: "external";
+      readonly source: string;
+      readonly ref: string;
+      readonly path: string;
+    };
+
+/**
+ * Resolve a skill name to its origin. External imports must keep their
+ * upstream name and carry a licence that allows redistribution.
+ */
+const skillOrigin = Effect.fn("Consumers.skillOrigin")(function* (
+  root: string,
+  source: string,
+  imports: ImportsFile,
+  name: string,
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+
+  const fail = (message: string) =>
+    new ConsumersError({ operation: "consumers.validate", message });
+
+  if (
+    yield* fs
+      .exists(path.join(root, name, "SKILL.md"))
+      .pipe(consumersError("skill.read"))
+  )
+    return { kind: "committed", source } satisfies SkillOrigin;
+
+  const metadata = imports.imports[name];
+
+  if (!metadata || !isExternal(metadata))
+    return yield* fail(
+      `${name} is not a skill committed in this repository or an external import`,
+    );
+
+  if (metadata.license === "UNLICENSED")
+    return yield* fail(`${name} is unlicensed, so it cannot be shared`);
+
+  if (metadata.sourceName && metadata.sourceName !== name)
+    return yield* fail(
+      `${name} is published upstream as ${metadata.sourceName}, so it cannot be shared`,
+    );
+
+  const origin = yield* parseOrigin(metadata.origin).pipe(
+    Effect.mapError(() => fail(`${name} has an invalid origin`)),
+  );
+
+  return {
+    kind: "external",
+    source: `${origin.owner}/${origin.repo}`,
+    ref: metadata.upstreamSha,
+    path: originDirectory(origin),
+  } satisfies SkillOrigin;
+});
+
 /** How each listed skill in a consumer repository should change. */
 export interface ConsumerPlan {
   readonly add: readonly string[];
   readonly update: readonly string[];
+  readonly upToDate: readonly string[];
   readonly remove: readonly string[];
   /** Copies changed in the consumer since they were installed; never overwritten or removed. */
   readonly edited: readonly string[];
+  /** Listed skills the consumer installed from another source or keeps itself; left alone. */
+  readonly foreign: readonly string[];
 }
 
 /**
- * Compare the wanted skills with the consumer's lock. Only skills installed
- * from `source` are managed, so skills from other sources are left alone.
+ * Compare the wanted skills with the consumer's lock. Only lock entries
+ * installed from a skill's own origin are managed, so skills from other
+ * sources, and unlocked skills the consumer keeps itself, are left alone.
+ * `current` says whether a managed copy matches what the origin would
+ * install now.
  */
 export const planConsumer = (
   wanted: readonly string[],
-  locked: Readonly<Record<string, string>>,
+  locked: Readonly<Record<string, LockEntry>>,
+  present: ReadonlySet<string>,
+  managed: (name: string, entry: LockEntry) => boolean,
   unedited: ReadonlySet<string>,
+  current: (name: string, entry: LockEntry) => boolean,
 ): ConsumerPlan => {
-  const installed = Object.keys(locked);
+  const owned = Object.entries(locked).filter(([name, entry]) =>
+    managed(name, entry),
+  );
+
+  const ownedNames = owned.map(([name]) => name);
+
+  const fresh = owned
+    .filter(([name, entry]) => unedited.has(name) && current(name, entry))
+    .map(([name]) => name);
 
   return {
-    add: wanted.filter((name) => !installed.includes(name)),
+    add: wanted.filter((name) => !(name in locked) && !present.has(name)),
     update: wanted.filter(
-      (name) => installed.includes(name) && unedited.has(name),
+      (name) =>
+        ownedNames.includes(name) &&
+        unedited.has(name) &&
+        !fresh.includes(name),
     ),
-    remove: installed.filter(
+    upToDate: wanted.filter((name) => fresh.includes(name)),
+    remove: ownedNames.filter(
       (name) => !wanted.includes(name) && unedited.has(name),
     ),
-    edited: installed.filter((name) => !unedited.has(name)),
+    edited: ownedNames.filter((name) => !unedited.has(name)),
+    foreign: wanted.filter(
+      (name) =>
+        (name in locked || present.has(name)) && !ownedNames.includes(name),
+    ),
   };
 };
 
@@ -150,6 +247,10 @@ export const skillFolderHash = Effect.fn("Consumers.skillFolderHash")(
   },
 );
 
+/**
+ * Read `consumers.yml` and check every listed skill resolves to a shareable
+ * origin.
+ */
 export const readConsumers = Effect.fn("Consumers.read")(function* (
   root: string,
 ) {
@@ -172,21 +273,24 @@ export const readConsumers = Effect.fn("Consumers.read")(function* (
     consumersError("consumers.decode"),
   );
 
+  const imports = yield* readImports(root).pipe(consumersError("imports.read"));
+
   for (const [repository, { skills }] of Object.entries(config.repositories))
     for (const name of skills)
-      if (!(yield* fs.exists(path.join(root, name, "SKILL.md"))))
-        return yield* new ConsumersError({
-          operation: "consumers.validate",
-          message: `${repository}: ${name} is not a skill committed in this repository`,
-        });
+      yield* skillOrigin(root, config.source, imports, name).pipe(
+        Effect.mapError(
+          (error) =>
+            new ConsumersError({
+              operation: error.operation,
+              message: `${repository}: ${error.message}`,
+            }),
+        ),
+      );
 
   return config;
 });
 
-const readLock = Effect.fn("Consumers.readLock")(function* (
-  checkout: string,
-  source: string,
-) {
+const readLock = Effect.fn("Consumers.readLock")(function* (checkout: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const file = path.join(checkout, LOCK_FILE);
@@ -201,18 +305,100 @@ const readLock = Effect.fn("Consumers.readLock")(function* (
     consumersError("lock.decode"),
   );
 
-  return Object.fromEntries(
-    Object.entries(lock.skills)
-      .filter(([, entry]) => entry.source === source)
-      .map(([name, entry]) => [name, entry.computedHash]),
-  );
+  return lock.skills;
 });
+
+/** Everything a sync needs to know about the shared skills on offer. */
+interface Catalogue {
+  readonly source: string;
+  /** Published commit of the source repository that committed skills install from. */
+  readonly commit: string;
+  readonly origin: (name: string) => SkillOrigin | undefined;
+  /** Folder hash of each committed skill at `commit`. */
+  readonly hash: (name: string) => string | undefined;
+}
+
+/**
+ * Resolve every skill that could be shared, with committed skills pinned to
+ * the source checkout's `HEAD`. Installing needs that commit published and
+ * the checkout clean; removing does not.
+ */
+const loadCatalogue = Effect.fn("Consumers.loadCatalogue")(function* (
+  root: string,
+  source: string,
+  options: { readonly published: boolean },
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const executor = yield* CommandExecutor;
+
+  const git = (...args: string[]) =>
+    executor.run("git", args, { cwd: root }).pipe(
+      Effect.map((output) => output.trim()),
+      consumersError("source.git"),
+    );
+
+  const commit = yield* git("rev-parse", "HEAD");
+
+  if (
+    options.published &&
+    !(yield* git("branch", "--remotes", "--contains", commit))
+  )
+    return yield* new ConsumersError({
+      operation: "source.commit",
+      message: `${commit} is not pushed, so consumers cannot install from it`,
+    });
+
+  if (options.published && (yield* git("status", "--porcelain")))
+    return yield* new ConsumersError({
+      operation: "source.status",
+      message: "The skills checkout has uncommitted changes",
+    });
+
+  const imports = yield* readImports(root).pipe(consumersError("imports.read"));
+
+  const candidates = [
+    ...(yield* fs.readDirectory(root).pipe(consumersError("source.read"))),
+    ...Object.keys(imports.imports),
+  ];
+
+  const origins = new Map<string, SkillOrigin>();
+  const hashes = new Map<string, string>();
+
+  for (const name of new Set(candidates)) {
+    const origin = yield* Effect.result(
+      skillOrigin(root, source, imports, name),
+    );
+
+    if (Result.isFailure(origin)) continue;
+
+    origins.set(name, origin.success);
+
+    if (origin.success.kind === "committed")
+      hashes.set(name, yield* skillFolderHash(path.join(root, name)));
+  }
+
+  return {
+    source,
+    commit,
+    origin: (name) => origins.get(name),
+    hash: (name) => hashes.get(name),
+  } satisfies Catalogue;
+});
+
+const installUrl = (catalogue: Catalogue, name: string) => {
+  const origin = catalogue.origin(name);
+
+  return origin?.kind === "external"
+    ? `https://github.com/${origin.source}/tree/${origin.ref}/${origin.path}`
+    : `https://github.com/${catalogue.source}/tree/${catalogue.commit}/${name}`;
+};
 
 const syncRepository = Effect.fn("Consumers.syncRepository")(function* (
   repository: string,
   wanted: readonly string[],
   options: {
-    readonly source: string;
+    readonly catalogue: Catalogue;
     readonly dryRun: boolean;
   },
 ) {
@@ -221,6 +407,7 @@ const syncRepository = Effect.fn("Consumers.syncRepository")(function* (
   const executor = yield* CommandExecutor;
   const github = yield* GitHub;
   const skillsCli = yield* SkillsCli;
+  const { catalogue } = options;
   const checkout = path.join(yield* fs.makeTempDirectoryScoped(), "repo");
 
   const git = (...args: string[]) =>
@@ -239,34 +426,60 @@ const syncRepository = Effect.fn("Consumers.syncRepository")(function* (
   ]);
 
   const branch = (yield* git("rev-parse", "--abbrev-ref", "HEAD")).trim();
-  const locked = yield* readLock(checkout, options.source);
+  const locked = yield* readLock(checkout);
   const unedited = new Set<string>();
 
-  for (const [name, hash] of Object.entries(locked)) {
+  for (const [name, entry] of Object.entries(locked)) {
     const directory = path.join(checkout, ".agents", "skills", name);
 
     if (
       (yield* fs.exists(directory)) &&
-      (yield* skillFolderHash(directory)) === hash
+      (yield* skillFolderHash(directory)) === entry.computedHash
     )
       unedited.add(name);
   }
 
-  const plan = planConsumer(wanted, locked, unedited);
+  const skillsDirectory = path.join(checkout, ".agents", "skills");
 
-  if (plan.add.length > 0)
+  const present = new Set(
+    (yield* fs.exists(skillsDirectory))
+      ? yield* fs.readDirectory(skillsDirectory)
+      : [],
+  );
+
+  const plan = planConsumer(
+    wanted,
+    locked,
+    present,
+    (name, entry) =>
+      entry.source === catalogue.source ||
+      entry.source === catalogue.origin(name)?.source,
+    unedited,
+    (name, entry) => {
+      const origin = catalogue.origin(name);
+
+      return origin?.kind === "external"
+        ? entry.ref === origin.ref
+        : entry.computedHash === catalogue.hash(name);
+    },
+  );
+
+  // Updates reinstall from scratch, which also clears links to agents that
+  // are no longer installed to.
+  if (plan.remove.length + plan.update.length > 0)
+    yield* skills("remove", ...plan.remove, ...plan.update, "-y");
+
+  for (const name of [...plan.add, ...plan.update])
     yield* skills(
       "add",
-      options.source,
-      ...plan.add.flatMap((name) => ["--skill", name]),
+      installUrl(catalogue, name),
+      "--skill",
+      name,
+      "--agent",
+      "universal",
       "--copy",
       "-y",
     );
-
-  if (plan.update.length > 0)
-    yield* skills("update", "-p", "-y", ...plan.update);
-
-  if (plan.remove.length > 0) yield* skills("remove", ...plan.remove, "-y");
 
   const changed = (yield* git(
     "status",
@@ -274,18 +487,14 @@ const syncRepository = Effect.fn("Consumers.syncRepository")(function* (
     "--untracked-files=all",
   )).trim();
 
-  const changedPaths = changed.split("\n").map((line) => line.slice(3));
-
-  const touched = (name: string) =>
-    changedPaths.some((file) => file.startsWith(`.agents/skills/${name}/`));
-
   const summary = (
     [
       ["Added", plan.add],
-      ["Updated", plan.update.filter(touched)],
+      ["Updated", plan.update],
       ["Removed", plan.remove],
-      ["Skipped, up to date", plan.update.filter((name) => !touched(name))],
+      ["Skipped, up to date", plan.upToDate],
       ["Skipped, edited in the repository", plan.edited],
+      ["Skipped, not installed from here", plan.foreign],
     ] as const
   ).flatMap(([label, names]) =>
     names.length > 0 ? [`${label}: ${names.join(", ")}`] : [],
@@ -346,13 +555,17 @@ export const syncConsumers = Effect.fn("Consumers.sync")(function* (
       message: `${options.repository} is not listed in ${CONSUMERS_FILE}`,
     });
 
+  const catalogue = yield* loadCatalogue(root, config.source, {
+    published: true,
+  });
+
   const failed: string[] = [];
 
   for (const [repository, { skills: wanted }] of repositories) {
     const result = yield* Effect.result(
       Effect.scoped(
         syncRepository(repository, wanted, {
-          source: config.source,
+          catalogue,
           dryRun: options.dryRun,
         }),
       ),
@@ -379,14 +592,13 @@ const RepositoryInfo = Schema.Struct({
   full_name: Schema.String,
   owner: Schema.Struct({ login: Schema.String }),
   private: Schema.Boolean,
-  fork: Schema.Boolean,
   archived: Schema.Boolean,
 });
 
 const editError = (message: string) =>
   new ConsumersError({ operation: "consumers.edit", message });
 
-/** Fail unless `repository` is a public, non-fork, unarchived repository owned by the source's owner. */
+/** Fail unless `repository` is a public, unarchived repository owned by the source's owner. */
 const checkEligible = Effect.fn("Consumers.checkEligible")(function* (
   source: string,
   repository: string,
@@ -410,10 +622,8 @@ const checkEligible = Effect.fn("Consumers.checkEligible")(function* (
   if (info.owner.login !== owner)
     return yield* editError(`${repository} is not owned by ${owner}`);
 
-  if (info.private || info.fork || info.archived)
-    return yield* editError(
-      `${repository} must be public and not a fork or archived`,
-    );
+  if (info.private || info.archived)
+    return yield* editError(`${repository} must be public and not archived`);
 });
 
 /** Load `consumers.yml` for an edit, with the target repository resolved. */
@@ -597,7 +807,12 @@ export const removeConsumerSkills = Effect.fn("Consumers.removeSkills")(
     }
 
     yield* Effect.scoped(
-      syncRepository(target, [], { source: config.source, dryRun: false }),
+      syncRepository(target, [], {
+        catalogue: yield* loadCatalogue(root, config.source, {
+          published: false,
+        }),
+        dryRun: false,
+      }),
     );
 
     yield* commitConsumers(
