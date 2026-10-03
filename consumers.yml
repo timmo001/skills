@@ -145,5 +145,9 @@ repositories:
     skills:
       - changeset-scope
       - code-review
+      - effect
+      - effect-gh
+      - effect-service-design
       - testing
+      - types-enforce-ts
       - writing-style
