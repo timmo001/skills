@@ -40,6 +40,17 @@ The [`skills`](https://github.com/vercel-labs/skills) CLI handles agent-specific
 
 Claude Code is supported through the same cross-agent installer. This repository does not add client-specific marketplace packaging or duplicate canonical skill content.
 
+## Consumer repositories
+
+Repositories listed in [`consumers.yml`](./consumers.yml) keep project copies of the skills listed for them, so contributors get those skills without installing them. Add a repository or skill there to opt it in, and remove one to take it out.
+
+```bash
+./dist/skill-maintenance consumers --dry-run
+./dist/skill-maintenance consumers
+```
+
+Each repository is cloned into a temporary directory. Newly listed skills are added, unedited copies are updated or removed to match the list, and the result is pushed to the default branch as one commit. A copy edited in the consumer no longer matches its `skills-lock.json` hash, so it is reported and left alone.
+
 ## Layout
 
 ```text

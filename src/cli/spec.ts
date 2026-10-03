@@ -8,6 +8,7 @@ import {
   writeSkillsCatalogue,
 } from "../commands/Catalogue.js";
 import { check } from "../commands/Check.js";
+import { syncConsumers } from "../commands/Consumers.js";
 import { importSkill } from "../commands/Import.js";
 import { install } from "../commands/Install.js";
 import { updates } from "../commands/Updates.js";
@@ -207,6 +208,27 @@ export const updatesAgentCommand = Command.make("updates-agent").pipe(
   Command.withDescription("Run scheduled skill update automation"),
 );
 
+export const consumersCommand = Command.make(
+  "consumers",
+  {
+    repository: Flag.String("repository").pipe(
+      Flag.optional,
+      Flag.withDescription("Sync only this owner/name repository"),
+    ),
+    dryRun: bool("dry-run", "Report changes without committing or pushing"),
+  },
+  ({ dryRun, repository }) =>
+    resolveSkillsRoot().pipe(
+      Effect.flatMap((root) =>
+        syncConsumers(root, { repository: optional(repository), dryRun }),
+      ),
+    ),
+).pipe(
+  Command.withDescription(
+    "Sync project skill copies in the repositories listed in consumers.yml",
+  ),
+);
+
 export const skillMaintenanceCommand = Command.make("skill-maintenance").pipe(
   Command.withSubcommands([
     validateCommand,
@@ -216,6 +238,7 @@ export const skillMaintenanceCommand = Command.make("skill-maintenance").pipe(
     updatesCommand,
     checkCommand,
     updatesAgentCommand,
+    consumersCommand,
   ]),
   Command.withDescription("Maintain the Agent Skills repository"),
 );

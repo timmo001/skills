@@ -1,0 +1,10 @@
+---
+# Repositories that keep project copies of skills from this repository, so
+# contributors without these skills installed still get them. Run
+# `skill-maintenance consumers` to add, update and remove the listed skills
+# and push the result to each repository's default branch.
+source: timmo001/skills
+repositories:
+  timmo001/ha-bridge:
+    skills:
+      - testing
