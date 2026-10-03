@@ -263,28 +263,34 @@ const syncRepository = Effect.fn("Consumers.syncRepository")(function* (
 
   if (plan.remove.length > 0) yield* skills("remove", ...plan.remove, "-y");
 
-  for (const name of plan.edited)
-    yield* Console.error(
-      `${repository}: ${name} was edited in the repository, skipped`,
-    );
+  const changed = (yield* git(
+    "status",
+    "--porcelain",
+    "--untracked-files=all",
+  )).trim();
 
-  const changed = (yield* git("status", "--porcelain")).trim();
+  const changedPaths = changed.split("\n").map((line) => line.slice(3));
 
-  if (!changed) {
-    yield* Console.log(`${repository}: up to date`);
-
-    return;
-  }
+  const touched = (name: string) =>
+    changedPaths.some((file) => file.startsWith(`.agents/skills/${name}/`));
 
   const summary = (
     [
       ["Added", plan.add],
-      ["Updated", plan.update],
+      ["Updated", plan.update.filter(touched)],
       ["Removed", plan.remove],
+      ["Skipped, up to date", plan.update.filter((name) => !touched(name))],
+      ["Skipped, edited in the repository", plan.edited],
     ] as const
   ).flatMap(([label, names]) =>
     names.length > 0 ? [`${label}: ${names.join(", ")}`] : [],
   );
+
+  if (!changed) {
+    yield* Console.log(`${repository}: up to date (${summary.join("; ")})`);
+
+    return;
+  }
 
   if (options.dryRun) {
     yield* Console.log(
