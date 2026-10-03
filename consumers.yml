@@ -235,3 +235,9 @@ repositories:
       - effect-principles
       - testing
       - writing-style
+  timmo001/omarchy-clock:
+    skills:
+      - changeset-scope
+      - code-review
+      - testing
+      - writing-style
