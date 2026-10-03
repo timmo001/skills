@@ -11,6 +11,7 @@ import {
   materialiseMetadata,
 } from "../src/imports/snapshot.js";
 import { CommandExecutor } from "../src/services/CommandExecutor.js";
+import { withSkillsCli } from "./helpers/skills-cli.js";
 
 const metadata = {
   origin: "https://github.com/org/repo/tree/main/example",
@@ -29,46 +30,49 @@ interface FixtureImportMetadata {
 }
 
 const snapshotExecutorLayer = (content: string, originExists = true) =>
-  Layer.effect(
-    CommandExecutor,
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
+  withSkillsCli(
+    Layer.effect(
+      CommandExecutor,
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
 
-      return CommandExecutor.of({
-        capture: () => Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
-        run: (command, args, options) =>
-          Effect.gen(function* () {
-            if (command === "git" && args.includes("--format=%H"))
-              return "b".repeat(40);
+        return CommandExecutor.of({
+          capture: () =>
+            Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
+          run: (command, args, options) =>
+            Effect.gen(function* () {
+              if (command === "git" && args.includes("--format=%H"))
+                return "b".repeat(40);
 
-            if (command === "mise") {
-              const sourceName = args[args.indexOf("--skill") + 1];
+              if (command === "skills") {
+                const sourceName = args[args.indexOf("--skill") + 1];
 
-              if (!options?.cwd || !sourceName)
-                return yield* Effect.die("invalid skills add fixture");
+                if (!options?.cwd || !sourceName)
+                  return yield* Effect.die("invalid skills add fixture");
 
-              const generated = path.join(
-                options.cwd,
-                ".agents",
-                "skills",
-                sourceName,
-              );
+                const generated = path.join(
+                  options.cwd,
+                  ".agents",
+                  "skills",
+                  sourceName,
+                );
 
-              yield* fs.makeDirectory(generated, { recursive: true });
-              yield* fs.writeFileString(
-                path.join(generated, "SKILL.md"),
-                content,
-              );
-            }
+                yield* fs.makeDirectory(generated, { recursive: true });
+                yield* fs.writeFileString(
+                  path.join(generated, "SKILL.md"),
+                  content,
+                );
+              }
 
-            return "";
-          }).pipe(Effect.orDie),
-        exitCode: () => Effect.succeed(originExists ? 0 : 1),
-        inherit: () => Effect.succeed(0),
-        stream: () => Stream.empty,
-      });
-    }),
+              return "";
+            }).pipe(Effect.orDie),
+          exitCode: () => Effect.succeed(originExists ? 0 : 1),
+          inherit: () => Effect.succeed(0),
+          stream: () => Stream.empty,
+        });
+      }),
+    ),
   );
 
 const importedMetadata = (

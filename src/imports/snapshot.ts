@@ -1,5 +1,6 @@
 import { Effect, FileSystem, Path, Schema } from "effect";
 import { CommandError, CommandExecutor } from "../services/CommandExecutor.js";
+import { SkillsCli } from "../services/SkillsCli.js";
 import {
   type ImportMetadata,
   isExternal,
@@ -218,6 +219,7 @@ export const withFetched = Effect.fn("Snapshot.withFetched")(function* <
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const executor = yield* CommandExecutor;
+  const skillsCli = yield* SkillsCli;
 
   const origin = yield* parseOrigin(metadata.origin).pipe(
     Effect.mapError(
@@ -299,14 +301,9 @@ export const withFetched = Effect.fn("Snapshot.withFetched")(function* <
         return yield* new DeletedOriginError({ origin: metadata.origin });
       }
 
-      yield* executor
+      yield* skillsCli
         .run(
-          "mise",
           [
-            "exec",
-            "npm:skills",
-            "--",
-            "skills",
             "add",
             path.join(checkout, origin.path),
             "--skill",

@@ -1,7 +1,8 @@
-import { Effect, FileSystem, Option } from "effect";
+import { Effect, Option } from "effect";
 import { Argument, Command, Flag } from "effect/cli";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { resolveSkillsRoot } from "../lib/root.js";
 import {
   checkSkillsCatalogue,
   writeSkillsCatalogue,
@@ -24,25 +25,6 @@ const bool = (name: string, description: string) =>
   );
 
 const optional = <A>(value: Option.Option<A>) => Option.getOrUndefined(value);
-
-export const resolveSkillsRoot = Effect.fn("resolveSkillsRoot")(function* (
-  cwd = process.cwd(),
-  home = homedir(),
-) {
-  const fs = yield* FileSystem.FileSystem;
-
-  const candidates = [
-    cwd,
-    join(home, "repos", "skills"),
-    join(home, ".config", "dotfiles", "agents", ".agents", "skills"),
-  ];
-
-  for (const candidate of candidates) {
-    if (yield* fs.exists(join(candidate, "imports.json"))) return candidate;
-  }
-
-  return cwd;
-});
 
 export const validateCommand = Command.make("validate", {}, () =>
   resolveSkillsRoot().pipe(Effect.flatMap(validate)),

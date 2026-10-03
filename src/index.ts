@@ -14,6 +14,7 @@ import {
   GitHubError,
   NetworkUnavailableError,
 } from "./services/GitHub.js";
+import { SkillsCli } from "./services/SkillsCli.js";
 
 const commandExecutorLayer = CommandExecutor.layer.pipe(
   Layer.provide(NodeServices.layer),
@@ -24,10 +25,16 @@ const githubLayer = GitHub.layer.pipe(
   Layer.provide(NodeServices.layer),
 );
 
+const skillsCliLayer = SkillsCli.layer.pipe(
+  Layer.provide(commandExecutorLayer),
+  Layer.provide(NodeServices.layer),
+);
+
 const applicationLayer = Layer.mergeAll(
   NodeServices.layer,
   commandExecutorLayer,
   githubLayer,
+  skillsCliLayer,
   CliConfig.layer(),
 );
 

@@ -38,6 +38,7 @@ import {
   CommandError,
   CommandExecutor,
 } from "../src/services/CommandExecutor.js";
+import { withSkillsCli } from "./helpers/skills-cli.js";
 import {
   GitHub,
   GitHubError,
@@ -107,7 +108,9 @@ describe("updates agent policies", () => {
           }),
         ),
         Effect.provide(
-          CommandExecutor.layer.pipe(Layer.provide(NodeServices.layer)),
+          withSkillsCli(
+            CommandExecutor.layer.pipe(Layer.provide(NodeServices.layer)),
+          ),
         ),
         Effect.provide(NodeServices.layer),
         Effect.flip,
@@ -200,52 +203,54 @@ describe("updates agent policies", () => {
       );
       const githubCalls: string[][] = [];
 
-      const commandLayer = Layer.effect(
-        CommandExecutor,
-        Effect.gen(function* () {
-          const fixtureFs = yield* FileSystem.FileSystem;
-          const fixturePath = yield* Path.Path;
+      const commandLayer = withSkillsCli(
+        Layer.effect(
+          CommandExecutor,
+          Effect.gen(function* () {
+            const fixtureFs = yield* FileSystem.FileSystem;
+            const fixturePath = yield* Path.Path;
 
-          return CommandExecutor.of({
-            capture: () =>
-              Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
-            run: (command, args, options) =>
-              Effect.gen(function* () {
-                if (command === "git" && args.includes("--format=%H"))
-                  return newSha;
+            return CommandExecutor.of({
+              capture: () =>
+                Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
+              run: (command, args, options) =>
+                Effect.gen(function* () {
+                  if (command === "git" && args.includes("--format=%H"))
+                    return newSha;
 
-                if (command === "git" && args.includes("--cached"))
-                  return shaOnlyPatch(oldSha, newSha);
+                  if (command === "git" && args.includes("--cached"))
+                    return shaOnlyPatch(oldSha, newSha);
 
-                if (command === "mise") {
-                  const sourceName = args[args.indexOf("--skill") + 1];
+                  if (command === "skills") {
+                    const sourceName = args[args.indexOf("--skill") + 1];
 
-                  if (!options?.cwd || !sourceName)
-                    return yield* Effect.die("invalid SHA-only fixture");
+                    if (!options?.cwd || !sourceName)
+                      return yield* Effect.die("invalid SHA-only fixture");
 
-                  const generated = fixturePath.join(
-                    options.cwd,
-                    ".agents",
-                    "skills",
-                    sourceName,
-                  );
+                    const generated = fixturePath.join(
+                      options.cwd,
+                      ".agents",
+                      "skills",
+                      sourceName,
+                    );
 
-                  yield* fixtureFs.makeDirectory(generated, {
-                    recursive: true,
-                  });
-                  yield* fixtureFs.writeFileString(
-                    fixturePath.join(generated, "SKILL.md"),
-                    "---\nname: upstream\ndescription: Example\n---\nSame body\n",
-                  );
-                }
+                    yield* fixtureFs.makeDirectory(generated, {
+                      recursive: true,
+                    });
+                    yield* fixtureFs.writeFileString(
+                      fixturePath.join(generated, "SKILL.md"),
+                      "---\nname: upstream\ndescription: Example\n---\nSame body\n",
+                    );
+                  }
 
-                return "";
-              }).pipe(Effect.orDie),
-            exitCode: () => Effect.succeed(0),
-            inherit: () => Effect.succeed(0),
-            stream: () => Stream.empty,
-          });
-        }),
+                  return "";
+                }).pipe(Effect.orDie),
+              exitCode: () => Effect.succeed(0),
+              inherit: () => Effect.succeed(0),
+              stream: () => Stream.empty,
+            });
+          }),
+        ),
       );
 
       yield* runGitHubSkillUpdates(root).pipe(
@@ -676,7 +681,7 @@ describe("updates agent policies", () => {
                 ),
             ),
           ),
-          Effect.provide(Layer.mock(CommandExecutor, {})),
+          Effect.provide(withSkillsCli(Layer.mock(CommandExecutor, {}))),
           Effect.provide(NodeServices.layer),
           Effect.provide(
             ConfigProvider.layer(
@@ -726,18 +731,20 @@ describe("updates agent policies", () => {
       const calls: string[][] = [];
       yield* runDeviceSkillUpdates(configFile, "42").pipe(
         Effect.provide(
-          Layer.succeed(CommandExecutor, {
-            capture: () =>
-              Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
-            run: () => Effect.succeed(""),
-            exitCode: () => Effect.succeed(0),
-            inherit: (command, args) => {
-              calls.push([command, ...args]);
+          withSkillsCli(
+            Layer.succeed(CommandExecutor, {
+              capture: () =>
+                Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
+              run: () => Effect.succeed(""),
+              exitCode: () => Effect.succeed(0),
+              inherit: (command, args) => {
+                calls.push([command, ...args]);
 
-              return Effect.succeed(0);
-            },
-            stream: () => Stream.empty,
-          }),
+                return Effect.succeed(0);
+              },
+              stream: () => Stream.empty,
+            }),
+          ),
         ),
         Effect.provide(
           githubLayer(
@@ -1078,7 +1085,7 @@ describe("updates agent policies", () => {
       });
 
       const run = runDeviceSkillUpdates(configFile, "42").pipe(
-        Effect.provide(executor),
+        Effect.provide(withSkillsCli(executor)),
         Effect.provide(github),
         Effect.provide(
           ConfigProvider.layer(

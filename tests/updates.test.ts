@@ -20,6 +20,7 @@ import {
   CommandExecutor,
   type CommandExecutorService,
 } from "../src/services/CommandExecutor.js";
+import { withSkillsCli } from "./helpers/skills-cli.js";
 import {
   GitHub,
   GitHubError,
@@ -52,60 +53,65 @@ const githubLayer = (overrides: Partial<GitHubService> = {}) =>
   });
 
 const commandLayer = (overrides: Partial<CommandExecutorService> = {}) =>
-  Layer.succeed(CommandExecutor, {
-    capture: () => Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
-    run: () => Effect.succeed(""),
-    exitCode: () => Effect.succeed(0),
-    inherit: () => Effect.succeed(0),
-    stream: () => Stream.empty,
-    ...overrides,
-  });
+  withSkillsCli(
+    Layer.succeed(CommandExecutor, {
+      capture: () => Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
+      run: () => Effect.succeed(""),
+      exitCode: () => Effect.succeed(0),
+      inherit: () => Effect.succeed(0),
+      stream: () => Stream.empty,
+      ...overrides,
+    }),
+  );
 
 const snapshotLayer = (skillContent: string, pinnedContent = skillContent) =>
-  Layer.effect(
-    CommandExecutor,
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const pinned = new Set<string>();
+  withSkillsCli(
+    Layer.effect(
+      CommandExecutor,
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const pinned = new Set<string>();
 
-      return CommandExecutor.of({
-        capture: () => Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
-        run: (command, args, options) =>
-          Effect.gen(function* () {
-            if (command === "git" && args.includes("--format=%H"))
-              return sha("b");
+        return CommandExecutor.of({
+          capture: () =>
+            Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
+          run: (command, args, options) =>
+            Effect.gen(function* () {
+              if (command === "git" && args.includes("--format=%H"))
+                return sha("b");
 
-            if (command === "git" && args.at(-1) === sha("a") && args[1])
-              pinned.add(path.dirname(args[1]));
+              if (command === "git" && args.at(-1) === sha("a") && args[1])
+                pinned.add(path.dirname(args[1]));
 
-            if (command === "mise") {
-              const sourceName = args[args.indexOf("--skill") + 1];
+              if (command === "skills") {
+                const sourceName = args[args.indexOf("--skill") + 1];
 
-              if (!options?.cwd || !sourceName)
-                return yield* Effect.die("invalid skills fixture");
+                if (!options?.cwd || !sourceName)
+                  return yield* Effect.die("invalid skills fixture");
 
-              const directory = path.join(
-                options.cwd,
-                ".agents",
-                "skills",
-                sourceName,
-              );
+                const directory = path.join(
+                  options.cwd,
+                  ".agents",
+                  "skills",
+                  sourceName,
+                );
 
-              yield* fs.makeDirectory(directory, { recursive: true });
-              yield* fs.writeFileString(
-                path.join(directory, "SKILL.md"),
-                pinned.has(options.cwd) ? pinnedContent : skillContent,
-              );
-            }
+                yield* fs.makeDirectory(directory, { recursive: true });
+                yield* fs.writeFileString(
+                  path.join(directory, "SKILL.md"),
+                  pinned.has(options.cwd) ? pinnedContent : skillContent,
+                );
+              }
 
-            return "";
-          }).pipe(Effect.orDie),
-        exitCode: () => Effect.succeed(0),
-        inherit: () => Effect.succeed(0),
-        stream: () => Stream.empty,
-      });
-    }),
+              return "";
+            }).pipe(Effect.orDie),
+          exitCode: () => Effect.succeed(0),
+          inherit: () => Effect.succeed(0),
+          stream: () => Stream.empty,
+        });
+      }),
+    ),
   );
 
 const makeRepository = Effect.fn("Test.makeRepository")(function* (
@@ -430,60 +436,64 @@ describe("versioned update reports", () => {
 
       const pinned = new Set<string>();
 
-      const executor = Layer.effect(
-        CommandExecutor,
-        Effect.gen(function* () {
-          const fixtureFs = yield* FileSystem.FileSystem;
-          const fixturePath = yield* Path.Path;
+      const executor = withSkillsCli(
+        Layer.effect(
+          CommandExecutor,
+          Effect.gen(function* () {
+            const fixtureFs = yield* FileSystem.FileSystem;
+            const fixturePath = yield* Path.Path;
 
-          return CommandExecutor.of({
-            capture: () =>
-              Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
-            run: (command, args, options) => {
-              if (command === "git" && args.includes("--format=%H"))
-                return Effect.succeed(sha("b"));
+            return CommandExecutor.of({
+              capture: () =>
+                Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
+              run: (command, args, options) => {
+                if (command === "git" && args.includes("--format=%H"))
+                  return Effect.succeed(sha("b"));
 
-              if (command === "git" && args.at(-1) === sha("a") && args[1])
-                pinned.add(fixturePath.dirname(args[1]));
+                if (command === "git" && args.at(-1) === sha("a") && args[1])
+                  pinned.add(fixturePath.dirname(args[1]));
 
-              if (command !== "mise") return Effect.succeed("");
+                if (command !== "skills") return Effect.succeed("");
 
-              if (options?.cwd?.includes("skill-import-broken-"))
-                return Effect.fail(
-                  new CommandError({
-                    command: "mise exec npm:skills",
-                    exitCode: 1,
-                    stderr: "snapshot failed",
-                  }),
-                );
-              const sourceName = args[args.indexOf("--skill") + 1];
-              const cwd = options?.cwd;
+                if (options?.cwd?.includes("skill-import-broken-"))
+                  return Effect.fail(
+                    new CommandError({
+                      command: "mise exec npm:skills",
+                      exitCode: 1,
+                      stderr: "snapshot failed",
+                    }),
+                  );
+                const sourceName = args[args.indexOf("--skill") + 1];
+                const cwd = options?.cwd;
 
-              if (!cwd || !sourceName)
-                return Effect.die("invalid report fixture");
+                if (!cwd || !sourceName)
+                  return Effect.die("invalid report fixture");
 
-              return Effect.gen(function* () {
-                const generated = fixturePath.join(
-                  cwd,
-                  ".agents",
-                  "skills",
-                  sourceName,
-                );
+                return Effect.gen(function* () {
+                  const generated = fixturePath.join(
+                    cwd,
+                    ".agents",
+                    "skills",
+                    sourceName,
+                  );
 
-                yield* fixtureFs.makeDirectory(generated, { recursive: true });
-                yield* fixtureFs.writeFileString(
-                  fixturePath.join(generated, "SKILL.md"),
-                  `---\nname: upstream\ndescription: Example\n---\n${pinned.has(cwd) ? "Old" : "New"} body\n`,
-                );
+                  yield* fixtureFs.makeDirectory(generated, {
+                    recursive: true,
+                  });
+                  yield* fixtureFs.writeFileString(
+                    fixturePath.join(generated, "SKILL.md"),
+                    `---\nname: upstream\ndescription: Example\n---\n${pinned.has(cwd) ? "Old" : "New"} body\n`,
+                  );
 
-                return "";
-              }).pipe(Effect.orDie);
-            },
-            exitCode: () => Effect.succeed(0),
-            inherit: () => Effect.succeed(0),
-            stream: () => Stream.empty,
-          });
-        }),
+                  return "";
+                }).pipe(Effect.orDie);
+              },
+              exitCode: () => Effect.succeed(0),
+              inherit: () => Effect.succeed(0),
+              stream: () => Stream.empty,
+            });
+          }),
+        ),
       );
 
       const report = yield* buildUpdateReport(root).pipe(

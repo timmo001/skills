@@ -3,6 +3,7 @@ import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, Stream } from "effect";
 import { install, MANIFEST_FILE } from "../src/commands/Install.js";
 import { CommandExecutor } from "../src/services/CommandExecutor.js";
+import { withSkillsCli } from "./helpers/skills-cli.js";
 
 const sha = (character: string) => character.repeat(40);
 
@@ -15,44 +16,47 @@ const external = (name: string) => ({
 });
 
 const fetchLayer = (fetched: string[]) =>
-  Layer.effect(
-    CommandExecutor,
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
+  withSkillsCli(
+    Layer.effect(
+      CommandExecutor,
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
 
-      return CommandExecutor.of({
-        capture: () => Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
-        run: (command, args, options) =>
-          Effect.gen(function* () {
-            const sourceName = args[args.indexOf("--skill") + 1];
+        return CommandExecutor.of({
+          capture: () =>
+            Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
+          run: (command, args, options) =>
+            Effect.gen(function* () {
+              const sourceName = args[args.indexOf("--skill") + 1];
 
-            if (command !== "mise") return "";
+              if (command !== "skills") return "";
 
-            if (!options?.cwd || !sourceName)
-              return yield* Effect.die("invalid install fixture");
-            fetched.push(sourceName);
+              if (!options?.cwd || !sourceName)
+                return yield* Effect.die("invalid install fixture");
+              fetched.push(sourceName);
 
-            const directory = path.join(
-              options.cwd,
-              ".agents",
-              "skills",
-              sourceName,
-            );
+              const directory = path.join(
+                options.cwd,
+                ".agents",
+                "skills",
+                sourceName,
+              );
 
-            yield* fs.makeDirectory(directory, { recursive: true });
-            yield* fs.writeFileString(
-              path.join(directory, "SKILL.md"),
-              `---\nname: ${sourceName}\ndescription: Example\n---\nBody\n`,
-            );
+              yield* fs.makeDirectory(directory, { recursive: true });
+              yield* fs.writeFileString(
+                path.join(directory, "SKILL.md"),
+                `---\nname: ${sourceName}\ndescription: Example\n---\nBody\n`,
+              );
 
-            return "";
-          }).pipe(Effect.orDie),
-        exitCode: () => Effect.succeed(0),
-        inherit: () => Effect.succeed(0),
-        stream: () => Stream.empty,
-      });
-    }),
+              return "";
+            }).pipe(Effect.orDie),
+          exitCode: () => Effect.succeed(0),
+          inherit: () => Effect.succeed(0),
+          stream: () => Stream.empty,
+        });
+      }),
+    ),
   );
 
 describe("external skill install", () => {

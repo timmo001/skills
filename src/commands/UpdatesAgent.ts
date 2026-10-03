@@ -32,6 +32,7 @@ import {
   upstreamFileChanges,
 } from "../imports/upstream.js";
 import { CommandError, CommandExecutor } from "../services/CommandExecutor.js";
+import { SkillsCli } from "../services/SkillsCli.js";
 import { GitHub } from "../services/GitHub.js";
 import {
   type SkillUpdatesCoordinationError,
@@ -599,11 +600,16 @@ const runOrFail = Effect.fn("UpdatesAgent.runOrFail")(function* (
 const validateRepository = Effect.fn("UpdatesAgent.validateRepository")(
   function* (root: string) {
     yield* runOrFail("bun", ["run", "validate"], root);
-    yield* runOrFail(
-      "mise",
-      ["exec", "npm:skills", "--", "skills", "add", ".", "--list"],
-      root,
-    );
+
+    const code = yield* (yield* SkillsCli).inherit(["add", ".", "--list"], {
+      cwd: root,
+    });
+
+    if (code !== 0)
+      return yield* new SkillUpdatesAgentError({
+        operation: "skills add . --list",
+        message: `Command exited with code ${code}`,
+      });
   },
 );
 
