@@ -41,3 +41,9 @@ repositories:
       - testing
       - types-enforce-ts
       - writing-style
+  timmo001/ha-card-feature-state:
+    skills:
+      - changeset-scope
+      - code-review
+      - testing
+      - writing-style
