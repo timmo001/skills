@@ -43,7 +43,7 @@ Every question follows visible chat in the same response. Thinking, tool input, 
 3. Say what each option means in practice and which you recommend, with the reason.
 4. Then ask. Never open a turn with the question. Once you have decided a question is needed, ask it in the same response as the explainer.
 
-Each question must make sense from the chat directly above it.
+Each question must make sense from the chat directly above it. If the thing being asked about (a draft, plan, proposed wording, or list of options) is not visible in this response, show it first; never ask the user to approve or choose something they cannot see.
 
 ## How to Ask
 
@@ -67,5 +67,5 @@ Details, reasoning, and trade-offs go in the chat above. The question and its op
 - Finish non-blocked read-only discovery before asking.
 - Until a must-have answer arrives, do not edit files or run state-changing commands.
 - If the user says to proceed without answering, state the assumptions in a sentence and continue with the safest defaults.
-- After the answer, restate the resulting requirement in one or two sentences and carry on.
+- After the answer, restate the resulting requirement in one or two sentences. Carry on only with what the answer actually authorised. Answering a design or clarifying question settles that detail; it is not approval to start implementing. If the work was still at the discussion or proposal stage, present the updated plan and wait for the go-ahead before editing.
 - Do not turn clarification into a multi-round interview. If a second round looks needed, divert to grilling as above.
