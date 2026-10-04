@@ -5,5 +5,6 @@ export default defineConfig({
   extends: [effectRulesConfig],
   options: {
     typeAware: true,
+    maxWarnings: 0,
   },
 });
