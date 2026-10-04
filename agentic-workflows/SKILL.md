@@ -4,7 +4,7 @@ compatibility: Requires GitHub CLI with the gh aw extension and network access t
 description: Design, create, update, debug, audit, or upgrade GitHub Agentic Workflows with the `gh aw` extension. Use when work involves workflow Markdown, compiled `.lock.yml` files, agent engines, MCP tools, safe outputs, work queues, or `gh aw` commands.
 license: MIT
 # origin: https://github.com/github/gh-aw/tree/main/.github/skills/agentic-workflows
-# upstream-sha: bec92a97e46fbdb5ba924470401725b92b18bd4e
+# upstream-sha: b1324bb6385dad4abfc8d5529dcd80ed8001b9f9
 # local-edits:
 #   - SKILL.md: made the upstream router self-contained and replaced unavailable repository-relative prompt loading with official source lookup
 #   - SKILL.md: added compatibility metadata for concrete environment requirements
@@ -51,7 +51,7 @@ compiled to GitHub Actions lock files.
    - compact Markdown charts: `asciicharts.md`
    - CLI command to MCP tool mapping: `cli-commands.md`
    - workflow architecture and patterns: `patterns.md`
-   - durable work queue orchestration or queue inspection: `work-queue.md`
+   - durable work queue orchestration (including dispatcher/worker roles) or queue inspection: `work-queue.md`
    - token usage and cost optimisation: `token-optimization.md`
    - long-running multi-agent research: `multi-agent-research.md`
    - OpenTelemetry queries and analysis: `skills/otel-queries/SKILL.md`
