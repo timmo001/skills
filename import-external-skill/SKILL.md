@@ -71,16 +71,21 @@ Before ranking external skills, understand what the user actually works on. Chec
 - **Ownership roles** -- sole owner vs. contributor/maintainer on a shared project
 - **Project types** -- libraries, applications, tooling, config repos
 
-Skills that assume full control of a project's issue tracker, labelling, or team process are only relevant for repos where the user has full ownership, not for shared projects where they are one maintainer among many.
+Skills that assume full control of a project's labelling or team process are only relevant for repos where the user has full ownership, not for shared projects where they are one maintainer among many.
 
 If recent activity does not clearly indicate the user's primary work, languages, or ownership roles, ask before ranking.
+
+## Standing Preferences
+
+- Skip or flag a skill whose core workflow is TDD, red-green-refactor, or test-first. If an otherwise useful skill includes TDD content, note the conflict and offer to adapt it with those parts removed.
+- The user writes their own issues. Skip skills that automate issue creation, break work down into issues, or turn PRDs into tickets.
 
 ## Review Mode
 
 When given a repo URL without a specific skill path, review the full skill set:
 
 1. List all available skills in the repo.
-2. Filter out domain-specific skills irrelevant to the user context above.
+2. Filter out domain-specific skills irrelevant to the user context above, and skills ruled out by the standing preferences.
 3. Compare remaining skills against the existing local skill library for overlaps.
 4. Present a recommendation table: pull in, adapt into existing, or skip -- with reasoning.
 5. Wait for the user to choose before importing or adapting anything.
