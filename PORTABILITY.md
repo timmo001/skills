@@ -28,6 +28,7 @@ These skills use general engineering concepts and ordinary agent capabilities. T
 | `remove-single-use-functions` | General code guidance. |
 | `research` | Capability-based primary-source research workflow. |
 | `show-me` | Uses ordinary text diagrams and an optional HTML artefact. |
+| `skill-prefixes` | General Agent Skills naming guidance. |
 | `staged-implementation` | General implementation sequencing. |
 | `testing` | General test-selection and verification policy based on concrete regression value. |
 | `to-questionnaire` | General channel-aware questionnaire drafting. |
