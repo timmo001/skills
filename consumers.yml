@@ -11,6 +11,7 @@ repositories:
       - code-review
       - effect
       - effect-service-design
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -20,6 +21,7 @@ repositories:
       - code-review
       - effect-principles
       - lit-rendering
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -29,6 +31,7 @@ repositories:
       - code-review
       - effect-principles
       - lit-rendering
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -38,6 +41,7 @@ repositories:
       - code-review
       - effect-principles
       - lit-rendering
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -47,6 +51,7 @@ repositories:
       - code-review
       - effect-principles
       - lit-rendering
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -56,6 +61,7 @@ repositories:
       - code-review
       - effect-principles
       - lit-rendering
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -65,6 +71,7 @@ repositories:
       - code-review
       - effect-principles
       - lit-rendering
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -74,6 +81,7 @@ repositories:
       - code-review
       - effect-principles
       - lit-rendering
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -83,6 +91,7 @@ repositories:
       - code-review
       - effect-principles
       - lit-rendering
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -92,6 +101,7 @@ repositories:
       - code-review
       - effect-principles
       - lit-rendering
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -101,6 +111,7 @@ repositories:
       - code-review
       - effect
       - effect-service-design
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -110,6 +121,7 @@ repositories:
       - code-review
       - effect
       - effect-service-design
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -119,6 +131,7 @@ repositories:
       - code-review
       - effect
       - effect-service-design
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -128,6 +141,7 @@ repositories:
       - code-review
       - effect
       - effect-service-design
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -138,6 +152,7 @@ repositories:
       - effect
       - effect-gh
       - effect-service-design
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -148,6 +163,7 @@ repositories:
       - effect
       - effect-gh
       - effect-service-design
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -158,6 +174,7 @@ repositories:
       - effect
       - effect-herdr
       - effect-service-design
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -169,6 +186,7 @@ repositories:
       - effect-gh
       - effect-herdr
       - effect-service-design
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -179,6 +197,7 @@ repositories:
       - effect
       - effect-service-design
       - opentui
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -189,6 +208,7 @@ repositories:
       - effect
       - effect-service-design
       - opentui
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -201,6 +221,7 @@ repositories:
       - effect-herdr
       - effect-service-design
       - opentui
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -209,6 +230,7 @@ repositories:
       - changeset-scope
       - code-review
       - effect-principles
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -217,6 +239,7 @@ repositories:
       - changeset-scope
       - code-review
       - effect-principles
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -225,6 +248,7 @@ repositories:
       - changeset-scope
       - code-review
       - effect-principles
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
@@ -233,6 +257,7 @@ repositories:
       - changeset-scope
       - code-review
       - effect-principles
+      - skill-prefixes
       - testing
       - writing-style
   timmo001/omarchy-clock:
@@ -240,6 +265,7 @@ repositories:
       - changeset-scope
       - code-review
       - effect-principles
+      - skill-prefixes
       - testing
       - writing-style
   timmo001/omarchy-momentumctl:
@@ -247,6 +273,7 @@ repositories:
       - changeset-scope
       - code-review
       - effect-principles
+      - skill-prefixes
       - testing
       - writing-style
   timmo001/system-bridge-connector:
@@ -254,12 +281,14 @@ repositories:
       - changeset-scope
       - code-review
       - effect-principles
+      - skill-prefixes
       - testing
       - writing-style
   timmo001/renovate-config:
     skills:
       - changeset-scope
       - code-review
+      - skill-prefixes
       - writing-style
   timmo001/upnext:
     skills:
@@ -267,6 +296,7 @@ repositories:
       - code-review
       - effect
       - effect-service-design
+      - skill-prefixes
       - testing
       - types-enforce-ts
       - writing-style
