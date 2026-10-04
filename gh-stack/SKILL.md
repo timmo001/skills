@@ -16,7 +16,7 @@ Use GitHub's official `gh stack` extension for linear stacks of dependent
 branches and pull requests. Each branch builds on the branch below it, and each
 pull request targets that immediate parent so reviewers see one layer's diff.
 
-Load `git-context` for branch and rebase operations. Load `git-commit` only
+Load `git-context` for branch and rebase operations. Load `dot-git-commit` only
 after the user explicitly requests a commit or push.
 
 ## Safety And Authorisation
@@ -24,7 +24,7 @@ after the user explicitly requests a commit or push.
 - Inspect with `gh stack view --json` before and after every mutation.
 - Do not commit through `gh stack add -m`, `-A`, or `-u`, and never run raw
   `git commit`. Commit only after explicit authorisation through
-  `dot git-commit`, following the `git-commit` skill.
+  `dot git-commit`, following the `dot-git-commit` skill.
 - Treat `push`, `submit`, `sync`, and branch arguments passed to `link` as push
   operations. Run them only when the user explicitly authorises that push.
 - `submit` and `link` can create pull requests and generate or change titles,

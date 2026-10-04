@@ -78,7 +78,7 @@ GIT_EDITOR=true git merge --continue    # After resolving merge conflicts
 GIT_EDITOR=true git revert --continue   # After resolving revert conflicts
 ```
 
-For any requested commit amendment, load `git-commit` and use its `dot git-commit --amend` gateway flow instead of raw `git commit --amend`.
+For any requested commit amendment, load `dot-git-commit` and use its `dot git-commit --amend` gateway flow instead of raw `git commit --amend`.
 
 ### Resolving rebase conflicts
 
@@ -93,7 +93,7 @@ For any requested commit amendment, load `git-commit` and use its `dot git-commi
 - `git rebase --abort` / `git merge --abort` (no editor involved)
 - `git rebase --skip` (no editor involved)
 
-Ordinary commits are outside this skill. Load `git-commit` after an explicit commit request and use its gateway.
+Ordinary commits are outside this skill. Load `dot-git-commit` after an explicit commit request and use its gateway.
 
 ## Splitting a branch by changed files
 
