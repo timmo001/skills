@@ -261,3 +261,12 @@ repositories:
       - changeset-scope
       - code-review
       - writing-style
+  timmo001/upnext:
+    skills:
+      - changeset-scope
+      - code-review
+      - effect
+      - effect-service-design
+      - testing
+      - types-enforce-ts
+      - writing-style
