@@ -510,7 +510,7 @@ const syncRepository = Effect.fn("Consumers.syncRepository")(function* (
   if (!changed) {
     yield* Console.log(`${repository}: up to date (${summary.join("; ")})`);
 
-    return;
+    return "up to date";
   }
 
   if (options.dryRun) {
@@ -518,7 +518,7 @@ const syncRepository = Effect.fn("Consumers.syncRepository")(function* (
       `${repository}: would push to ${branch}\n${changed}\n${summary.join("\n")}`,
     );
 
-    return;
+    return "would push";
   }
 
   yield* git("add", "-A");
@@ -535,15 +535,11 @@ const syncRepository = Effect.fn("Consumers.syncRepository")(function* (
   yield* Console.log(
     `${repository}: pushed to ${branch} (${summary.join("; ")})`,
   );
+
+  return "pushed";
 });
 
-/**
- * Bring every repository listed in `consumers.yml` in line with its list:
- * add newly listed skills, update and remove unedited copies, and push one
- * commit to the default branch. Each repository is cloned into a temporary
- * directory, so local checkouts are never touched.
- */
-export const syncConsumers = Effect.fn("Consumers.sync")(function* (
+const sync = Effect.fn("Consumers.sync")(function* (
   root: string,
   options: {
     readonly repository?: string | undefined;
@@ -569,6 +565,7 @@ export const syncConsumers = Effect.fn("Consumers.sync")(function* (
   );
 
   const failed: string[] = [];
+  const outcomes = new Map<string, string[]>();
 
   for (const [repository, { skills: wanted }] of repositories) {
     const result = yield* Effect.result(
@@ -587,8 +584,26 @@ export const syncConsumers = Effect.fn("Consumers.sync")(function* (
         `${repository}: failed: ${"stderr" in error ? `${error.command}: ${error.stderr}` : error.message}`,
       );
       failed.push(repository);
-    }
+    } else
+      outcomes.set(result.success, [
+        ...(outcomes.get(result.success) ?? []),
+        repository,
+      ]);
   }
+
+  const pushed = outcomes.get("pushed") ?? [];
+
+  yield* Console.log(
+    `[RESULT] ${
+      [
+        ...(pushed.length > 0 ? [`pushed ${pushed.join(", ")}`] : []),
+        ...[...outcomes].flatMap(([outcome, names]) =>
+          outcome === "pushed" ? [] : [`${names.length} ${outcome}`],
+        ),
+        ...(failed.length > 0 ? [`failed ${failed.join(", ")}`] : []),
+      ].join(", ") || "no repositories listed"
+    }`,
+  );
 
   if (failed.length > 0)
     return yield* new ConsumersError({
@@ -596,6 +611,28 @@ export const syncConsumers = Effect.fn("Consumers.sync")(function* (
       message: `Failed to sync: ${failed.join(", ")}`,
     });
 });
+
+/**
+ * Bring every repository listed in `consumers.yml` in line with its list:
+ * add newly listed skills, update and remove unedited copies, and push one
+ * commit to the default branch. Each repository is cloned into a temporary
+ * directory, so local checkouts are never touched.
+ */
+export const syncConsumers = (
+  root: string,
+  options: {
+    readonly repository?: string | undefined;
+    readonly dryRun: boolean;
+  },
+) =>
+  sync(root, options).pipe(
+    // Per-repository failures are already in the result line.
+    Effect.tapError((error) =>
+      error.operation === "consumers.sync"
+        ? Effect.void
+        : Console.log(`[RESULT] Failed: ${error.message}`),
+    ),
+  );
 
 const RepositoryInfo = Schema.Struct({
   full_name: Schema.String,
