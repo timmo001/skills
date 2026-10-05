@@ -1,45 +1,139 @@
 ---
 name: show-me
-description: Explain the current topic with a concise visual such as a tree, diagram, diff, or focused HTML artefact. Use ONLY when the user explicitly asks to see, visualise, diagram, sketch, or be shown the preceding explanation.
-license: UNLICENSED
-# origin: https://github.com/dmmulroy/.dotfiles/tree/main/home/.agents/skills/show-me
-# upstream-sha: 574e1f2a95c6f40de09691c4dd742a64df1af30c
+description: Help the user understand the current topic visually with concise diagrams, code-shape sketches, and focused HTML artifacts. Use ONLY when the user explicitly asks to see, visualise, diagram, sketch, or be shown the preceding explanation.
+license: MIT
+# origin: https://github.com/humanlayer/skills/tree/main/plugins/show-me/skills/show-me
+# upstream-sha: bba9d13ab34f0a87f1cc33df4dd196372393ddfc
 # local-edits:
-#   - SKILL.md: rewritten as a portable explicit-only visual explanation workflow; removed client-specific frontmatter and file-opening commands
+#   - SKILL.md: explicit-only description replaces disable-model-invocation
+#   - SKILL.md: HTML artefacts are reported by path and opened only on request
+#   - SKILL.md: added an Avoid section
+#   - SKILL.md: capitalised section headings
+#   - agents/openai.yaml: omitted
 ---
 
-# Show Me
+Help the user understand the current topic of conversation visually. Skip the preamble and keep prose brief. Pick the smallest view that makes the key point clear.
 
-Turn the current discussion into the smallest visual that makes its key relationship obvious. Preserve concrete names, paths, states, and decisions from the conversation; omit unrelated detail.
+- Show logic or an algorithm as pseudocode:
 
-## Choose the view
+```text
+on(save)
+  if content is unchanged
+    return cached result
+  write new content
+  return fresh result
+```
 
-Use one primary view. Add a second only when it answers a different necessary question.
+- Show runtime control flow as a call tree:
 
-- Pseudocode for decisions, algorithms, and state transitions.
-- A call tree for runtime ownership and nested control flow.
-- A component tree for UI composition, state, and module boundaries.
-- A shallow file tree for responsibility or proposed layout.
-- Mermaid for interactions, sequences, dependencies, or data flow.
-- A `diff`-shaped sketch when the point is how an existing structure changes.
-- A focused HTML artefact when spatial comparison, visual design, or density would be unclear in text or Mermaid.
+```text
+submitForm
+  createSession
+    persistPrompt
+    launchAgent
+  navigateToSession
+```
 
-Prefer a complete block when most of the target is new or omitted context would hide order or ownership. Prefer a diff when the reader already knows the surrounding structure.
+- Show UI structure as a component tree, including state and module boundaries that matter:
 
-## Build the visual
+```tsx
+<SessionPage> (apps/example/src/routes/session.tsx)
+  useSessionEvents()
+  <SessionToolbar>
+    <RunSkillButton> (packages/ui)
+```
 
-1. State the question the visual answers in one short line when it is not already obvious.
-2. Include only the calls, files, props, states, transitions, or boundaries needed for that question.
-3. Use the repository's real vocabulary and paths rather than generic placeholders.
-4. Place a brief explanation next to the visual only where interpretation is not self-evident.
-5. For HTML, create one clearly named temporary or repository-local artefact, make it responsive and accessible, and match an existing product's visual language when one exists. Report its path; open it only when the user requests that or the available client workflow explicitly supports it.
+- Show file responsibility or a broad refactor as a shallow file tree:
 
-The result is complete when the visual can answer the user's question without requiring the previous prose to be reread.
+```text
+src/
+├── commands/       # parses user actions
+├── sessions/       # owns session state
+└── transport/      # sends API requests
+```
 
-## Avoid
+- Show component interaction, control flow, or data flow with Mermaid:
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant UI
+    participant Daemon
+    User->>UI: choose command
+    UI->>Daemon: send expanded prompt
+    Daemon-->>UI: stream result
+```
+
+- Use `diff` when the point is what changes and the surrounding shape already exists. Match the diff shape to the topic.
+
+For a component change:
+
+```diff
+ <SessionPage>
+   useSessionEvents()
+   <SessionToolbar>
++    <RunSkillButton />
+   <SessionTimeline>
++    <SkillResultCard />
+```
+
+For a file-layout change:
+
+```diff
+ src/
+ ├── commands/
++│   └── show-me.ts       # expands the slash command
+ ├── sessions/
+-└── transport.ts
++└── transport/
++    ├── client.ts
++    └── stream.ts
+```
+
+For a call-tree or call-stack change:
+
+```diff
+ submitForm
+   createSession
+     persistPrompt
++    expandSkillMention
+     launchAgent
+-  navigateToSession
++  navigateToSession
++    subscribeToEvents
+```
+
+For a state or control-flow change:
+
+```diff
+ on(save)
+-  write content
++  if content is unchanged
++    return cached result
++  write new content
++  invalidate cache
+```
+
+- Show the whole block when most of it is new, when omitted context would hide ownership or order, or when the user needs a copyable target shape:
+
+```ts
+function expandSkill(command: string): string {
+  const skillName = command.slice(1)
+  return `use the ${skillName} skill`
+}
+```
+
+- For a visual UI, layout, state comparison, or concept too dense for Mermaid, write one focused HTML file — a diagram, an infographic, or a short slide deck, whichever fits the point. Match the product's colors, type, spacing, and components; use real labels and data; support desktop and mobile. Name it `show-me-{description}.html` and report its path; open it only when the user asks.
+
+### Guidance
+
+Place each visual next to the short text it supports. Keep only the calls, files, props, states, and boundaries needed to answer the user's current question or the options to resolve the current discussion point.
+
+You may use one of these, you may use several, it is unlikely you will use all of them. Use your judgement and don't overwhelm the user.
+
+### Avoid
 
 - Decorating an explanation that was already clear.
-- Showing every available representation.
 - Inventing architecture or details not established by the conversation or code.
 - Dense Mermaid diagrams when a five-line tree would communicate more clearly.
 - Leaving a generated HTML artefact in a production path without clearly marking its purpose.
