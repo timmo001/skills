@@ -92,7 +92,7 @@ When only the wording needs changing, preserve quotations, code, commands, paths
 
 ## PR and issue text
 
-Size the description to the change. Most PRs need a sentence or two; there is no fixed format.
+Size the description to the change. Most PRs need a sentence or two, such as "Fixes the incorrect URL to media source files. Started with the upgrade to 4.x.x"; there is no fixed format.
 
 - Open with what changed, verb-first in the present tense ("Adds", "Fixes", "Moves"), plus the reason when the title does not make it obvious.
 - Link rather than explain: the issue it fixes, the review it follows up, release notes or a compare link for package bumps, a line of code, the docs behind a decision. Keep links easy to spot: on their own line, or in a short `References:` list at the end for external docs and sources.
@@ -104,19 +104,30 @@ Size the description to the change. Most PRs need a sentence or two; there is no
 - Never add placeholders or notes to the author, such as "Add screenshots here", "Insert issue link", or `<!-- TODO -->`, whether drafting or editing an existing description. Leave a section empty if you have nothing for it. This applies only to text you add: keep the template's own comments, prompts, and placeholders (such as `fixes #`) exactly as written.
 - Issues: a clear title can stand alone for small tasks; add a line or link when it needs context. Use a checklist for tracking issues. For bug templates, give the problem in a sentence plus logs.
 
-Examples, each a complete description; read the one closest to the change before drafting:
+Longer examples, each a complete body; read the one closest to the change before drafting:
 
-- [Small fix](references/pr-small-fix.md): one sentence.
-- [Review follow-up](references/pr-review-follow-up.md): the change plus a link to the review.
 - [Package bump](references/pr-package-bump.md): what changed functionally plus a compare link.
 - [External sources](references/pr-with-sources.md): a short explanation, a test run link, and a `References:` list at the end.
 - [Multi-area change](references/pr-multi-area.md): bullets grouped under bold area labels.
+- [Bug issue](references/issue-bug.md): where it was reported, the log, and what should happen.
+- [Problem issue](references/issue-problem.md): the facts, why they are a problem, and the next step.
 
 ## Issue and PR comments
 
-- Reply in a line or two with what you found, what happens next, or what you need: "Fixed in the latest beta", "Same as #123", "Can you post your backend logs?".
-- Link the release, issue, or line of code instead of describing it. Quote the part you are replying to with `>` in a busy thread.
-- No headings or bullet lists unless listing steps or TODOs.
+Write in the first person, as yourself, like a reply to a colleague.
+
+- Reply in a line or two with what you found, what happens next, or what you need. A status can be a few words: "Fixed in #123", "Duplicate of #123", "Merged, will be in the next release", "Monitoring after the latest change".
+- Ask direct questions: "Is the backend running?", "Does the CPU go straight back down afterwards?", "Can you post any logs you can find?".
+- Say plainly when you are unsure or cannot test something, and ask for help when someone else can: "I'm unsure what is happening here", "I don't have a Mac to test this".
+- Point to the right place when the issue belongs elsewhere, with a link. Credit whoever found or fixed it: "Spotted and fixed by @user in #123".
+- Give opinions and decisions as your own: "Signing is not something I'm willing to do", "IMHO this is a false positive".
+- Link the release, issue, or line of code instead of describing it. Share findings as logs or code blocks. Quote the part you are replying to with `>` in a busy thread.
+- Thanks, light humour, and the odd emoji are fine. No headings or bullet lists unless listing steps or TODOs.
+
+Longer examples:
+
+- [Unsure](references/comment-unsure.md): what you tried, what you can't test, and a request for help.
+- [Explaining a cause](references/comment-cause.md): a quote, the cause, and a link to the code.
 
 ## Docs, READMEs, and code comments
 
