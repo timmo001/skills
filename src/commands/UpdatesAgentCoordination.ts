@@ -258,10 +258,11 @@ export const withSkillUpdatesClaim = <A, E, R>(
     }
 
     yield* Console.log(`Claimed workflow run ${runId}: ${claim.token}`);
+
     // Keep the claim on other failures and interruption: an agent may already
     // have published changes, or its server-side session may still be running.
     // A later run takes it over once it is stale.
-    yield* work.pipe(
+    const result = yield* work.pipe(
       Effect.tapError((error) =>
         error instanceof SkillUpdatesRetryableError
           ? finishSkillUpdatesClaim(claim.token, "retry").pipe(
@@ -272,7 +273,10 @@ export const withSkillUpdatesClaim = <A, E, R>(
           : Effect.void,
       ),
     );
+
     yield* finishSkillUpdatesClaim(claim.token, "processed");
+
+    return result;
   });
 
 export const recoverSkillUpdatesClaim = Effect.fn(

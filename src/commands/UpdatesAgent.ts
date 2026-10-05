@@ -33,7 +33,7 @@ import {
 } from "../imports/upstream.js";
 import { CommandError, CommandExecutor } from "../services/CommandExecutor.js";
 import { SkillsCli } from "../services/SkillsCli.js";
-import { GitHub } from "../services/GitHub.js";
+import { GitHub, NetworkUnavailableError } from "../services/GitHub.js";
 import {
   type SkillUpdatesCoordinationError,
   SkillUpdatesRetryableError,
@@ -124,7 +124,11 @@ export class SkillUpdatesAgentError extends Schema.TaggedError<SkillUpdatesAgent
 /** A checkout is in use, so the run waits for a later attempt. */
 export class SkillUpdatesDeferredError extends Schema.TaggedError<SkillUpdatesDeferredError>()(
   "SkillUpdatesDeferredError",
-  { message: Schema.String },
+  {
+    message: Schema.String,
+    /** The locked child run already printed its `[RESULT] ` line. */
+    reported: Schema.optionalKey(Schema.Boolean),
+  },
 ) {}
 
 /** Exit status the service monitor maps to a warning. */
@@ -1613,257 +1617,287 @@ const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
   },
 );
 
-export const runDeviceSkillUpdates = Effect.fn("UpdatesAgent.runDevice")(
-  function* (configPath?: string, runId?: string) {
-    if (!configPath)
-      return yield* new SkillUpdatesAgentError({
-        operation: "config.resolve",
-        message: "--config is required",
-      });
+const runDevice = Effect.fn("UpdatesAgent.runDevice")(function* (
+  configPath?: string,
+  runId?: string,
+) {
+  if (!configPath)
+    return yield* new SkillUpdatesAgentError({
+      operation: "config.resolve",
+      message: "--config is required",
+    });
 
-    const locked = yield* Config.Boolean("SKILL_MAINTENANCE_AGENT_LOCKED").pipe(
-      Config.withDefault(false),
-    );
+  const locked = yield* Config.Boolean("SKILL_MAINTENANCE_AGENT_LOCKED").pipe(
+    Config.withDefault(false),
+  );
 
-    if (runId && !locked) {
-      const github = yield* GitHub;
-      yield* github.waitForNetwork();
-      yield* github
-        .stream(
-          [
-            "run",
-            "watch",
-            runId,
-            "--repo",
-            "timmo001/skills",
-            "--compact",
-            "--exit-status",
-            "--interval",
-            "10",
-          ],
-          { cwd: process.cwd(), timeout: null },
-        )
-        .pipe(
-          Stream.mapError((error) =>
-            error.exitCode === -1
-              ? new CommandError({
-                  command: error.command,
-                  exitCode: error.exitCode,
-                  stderr: error.stderr,
-                })
-              : new SkillUpdatesAgentError({
-                  operation: error.command,
-                  message: `Command exited with code ${error.exitCode}`,
-                }),
-          ),
-          Stream.runForEach((chunk) =>
-            Effect.callback<void, SkillUpdatesAgentError>((resume) => {
-              const output = GhChunk.guards.Stdout(chunk)
-                ? process.stdout
-                : process.stderr;
-
-              output.write(chunk.text, (error) =>
-                resume(
-                  error
-                    ? Effect.fail(
-                        new SkillUpdatesAgentError({
-                          operation: "workflow.output",
-                          message: String(error),
-                        }),
-                      )
-                    : Effect.void,
-                ),
-              );
-            }),
-          ),
-        );
-    }
-
-    const config = yield* loadConfig(configPath);
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const executor = yield* CommandExecutor;
-    const primaryRepository = config.repositories[0];
-
-    if (!primaryRepository)
-      return yield* new SkillUpdatesAgentError({
-        operation: "config.decode",
-        message: "At least one repository is required",
-      });
-
-    if (!locked) {
-      yield* fs.makeDirectory(path.dirname(config.stateFile), {
-        recursive: true,
-      });
-      const lockFile = `${config.stateFile}.lock`;
-      yield* migrateLegacyLock(lockFile);
-
-      const code = yield* executor.inherit("flock", [
-        "--nonblock",
-        "--conflict-exit-code",
-        "75",
-        lockFile,
-        "env",
-        "SKILL_MAINTENANCE_AGENT_LOCKED=true",
-        process.execPath,
-        "updates-agent",
-        "device",
-        "--config",
-        configPath,
-        ...(runId ? ["--run-id", runId] : []),
-      ]);
-
-      if (code === 75)
-        return yield* new SkillUpdatesDeferredError({
-          message:
-            "Another skill updates agent run is active; deferring skill updates",
-        });
-
-      if (code === SKILL_UPDATES_DEFERRED_EXIT_CODE)
-        return yield* new SkillUpdatesDeferredError({
-          message: "Skill updates deferred to a later run",
-        });
-
-      if (code !== 0)
-        return yield* new SkillUpdatesAgentError({
-          operation: "run.child",
-          message: `Locked skill updates agent exited with code ${code}`,
-        });
-
-      return;
-    }
-
-    // A crashed run can leave the checkout on its own update branch.
-    for (const { description } of yield* recoverUpdateBranches(
-      config.repositories,
-    ))
-      yield* Console.error(`Recovered from an interrupted run: ${description}`);
-
-    // Local work in a checkout is not a failure: defer before claiming the run.
-    yield* requireCleanRepositories(config.repositories).pipe(
-      Effect.catchTag(
-        "SkillUpdatesAgentError",
-        (
-          error,
-        ): Effect.Effect<
-          never,
-          SkillUpdatesAgentError | SkillUpdatesDeferredError
-        > =>
-          error.operation === "repository.dirty" ||
-          error.operation === "repository.branch"
-            ? Effect.fail(
-                new SkillUpdatesDeferredError({
-                  message: `${error.message}; deferring skill updates`,
-                }),
-              )
-            : Effect.fail(error),
-      ),
-    );
-
-    yield* (yield* GitHub).waitForNetwork();
-
-    const run = yield* fetchRun(config, runId);
-
-    yield* withSkillUpdatesClaim(
-      run.id,
-      Effect.gen(function* () {
-        // Nothing has been published before the first model attempt.
-        const { states, initialPr, pending } = yield* Effect.gen(function* () {
-          const states = yield* requireCleanRepositories(config.repositories);
-          const initialPr = yield* latestPullRequestNumber();
-          // The update report reads local metadata, so match origin first.
-          yield* runOrFail("git", ["pull", "--ff-only"], primaryRepository);
-          const pending = yield* pendingSkillUpdates(primaryRepository);
-
-          return { states, initialPr, pending };
-        }).pipe(
-          Effect.mapError(
-            (error) =>
-              new SkillUpdatesRetryableError({
-                operation: "run.prepare",
-                message: describeFailure(error),
+  if (runId && !locked) {
+    const github = yield* GitHub;
+    yield* github.waitForNetwork();
+    yield* github
+      .stream(
+        [
+          "run",
+          "watch",
+          runId,
+          "--repo",
+          "timmo001/skills",
+          "--compact",
+          "--exit-status",
+          "--interval",
+          "10",
+        ],
+        { cwd: process.cwd(), timeout: null },
+      )
+      .pipe(
+        Stream.mapError((error) =>
+          error.exitCode === -1
+            ? new CommandError({
+                command: error.command,
+                exitCode: error.exitCode,
+                stderr: error.stderr,
+              })
+            : new SkillUpdatesAgentError({
+                operation: error.command,
+                message: `Command exited with code ${error.exitCode}`,
               }),
-          ),
-        );
+        ),
+        Stream.runForEach((chunk) =>
+          Effect.callback<void, SkillUpdatesAgentError>((resume) => {
+            const output = GhChunk.guards.Stdout(chunk)
+              ? process.stdout
+              : process.stderr;
 
-        let attempts: readonly SkillUpdatesAttempt[] = [];
-
-        if (pending.length === 0)
-          yield* Console.log(
-            "Every pending skill update already has an open pull request; skipping the model",
-          );
-        else {
-          yield* Console.log(`Updates needing work: ${pending.join(", ")}`);
-          attempts = yield* processWithFallback(
-            config,
-            skillUpdatesAgentPrompt(config, run),
-            states,
-            initialPr,
-          );
-        }
-
-        yield* requireRepositoryState(states);
-        yield* validatePullRequestPolicy(initialPr);
-
-        // Upstream links help review; never fail a published run on them.
-        if (attempts.length > 0)
-          yield* linkUpstreamChanges(initialPr).pipe(
-            Effect.catch((error) =>
-              Console.error(
-                `Unable to add upstream changes to pull requests: ${describeFailure(error)}`,
+            output.write(chunk.text, (error) =>
+              resume(
+                error
+                  ? Effect.fail(
+                      new SkillUpdatesAgentError({
+                        operation: "workflow.output",
+                        message: String(error),
+                      }),
+                    )
+                  : Effect.void,
               ),
-            ),
-          );
+            );
+          }),
+        ),
+      );
+  }
 
-        // Benchmark figures are informational; never fail a published run on them.
-        if (attempts.length > 0)
-          yield* annotatePullRequests(initialPr, attempts, {
-            agent: config.opencodeAgent,
-            runUrl: run.url,
-          }).pipe(
-            Effect.catch((error) =>
-              Console.error(
-                `Unable to add agent run details to pull requests: ${describeFailure(error)}`,
-              ),
-            ),
-          );
-        yield* refreshDashboard(primaryRepository);
-      }),
-    ).pipe(
-      // Another device is working on the run, so this one is not needed.
-      Effect.catchTag(
-        "SkillUpdatesCoordinationError",
-        (
-          error,
-        ): Effect.Effect<
-          never,
-          SkillUpdatesCoordinationError | SkillUpdatesDeferredError
-        > =>
-          error.operation === "coordination.busy"
-            ? Effect.fail(
-                new SkillUpdatesDeferredError({ message: error.message }),
-              )
-            : Effect.fail(error),
-      ),
-      // A lost OpenCode server is not a fault in the run; retry later.
-      Effect.mapError((error) =>
-        (error instanceof SkillUpdatesAgentError ||
-          error instanceof SkillUpdatesRetryableError) &&
-        error.operation === serverUnavailableOperation
-          ? new SkillUpdatesDeferredError({ message: error.message })
-          : error,
-      ),
-    );
+  const config = yield* loadConfig(configPath);
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const executor = yield* CommandExecutor;
+  const primaryRepository = config.repositories[0];
+
+  if (!primaryRepository)
+    return yield* new SkillUpdatesAgentError({
+      operation: "config.decode",
+      message: "At least one repository is required",
+    });
+
+  if (!locked) {
     yield* fs.makeDirectory(path.dirname(config.stateFile), {
       recursive: true,
     });
-    const temporary = `${config.stateFile}.${process.pid}`;
-    yield* fs.writeFileString(temporary, `${run.id}\n`);
-    yield* fs.chmod(temporary, 0o600);
-    yield* fs.rename(temporary, config.stateFile);
-    yield* Console.log(`Processed workflow run ${run.id}`);
-  },
-);
+    const lockFile = `${config.stateFile}.lock`;
+    yield* migrateLegacyLock(lockFile);
+
+    const code = yield* executor.inherit("flock", [
+      "--nonblock",
+      "--conflict-exit-code",
+      "75",
+      lockFile,
+      "env",
+      "SKILL_MAINTENANCE_AGENT_LOCKED=true",
+      process.execPath,
+      "updates-agent",
+      "device",
+      "--config",
+      configPath,
+      ...(runId ? ["--run-id", runId] : []),
+    ]);
+
+    if (code === 75)
+      return yield* new SkillUpdatesDeferredError({
+        message:
+          "Another skill updates agent run is active; deferring skill updates",
+      });
+
+    if (code === SKILL_UPDATES_DEFERRED_EXIT_CODE)
+      return yield* new SkillUpdatesDeferredError({
+        message: "Skill updates deferred to a later run",
+        reported: true,
+      });
+
+    if (code !== 0)
+      return yield* new SkillUpdatesAgentError({
+        operation: "run.child",
+        message: `Locked skill updates agent exited with code ${code}`,
+      });
+
+    return;
+  }
+
+  // A crashed run can leave the checkout on its own update branch.
+  for (const { description } of yield* recoverUpdateBranches(
+    config.repositories,
+  ))
+    yield* Console.error(`Recovered from an interrupted run: ${description}`);
+
+  // Local work in a checkout is not a failure: defer before claiming the run.
+  yield* requireCleanRepositories(config.repositories).pipe(
+    Effect.catchTag(
+      "SkillUpdatesAgentError",
+      (
+        error,
+      ): Effect.Effect<
+        never,
+        SkillUpdatesAgentError | SkillUpdatesDeferredError
+      > =>
+        error.operation === "repository.dirty" ||
+        error.operation === "repository.branch"
+          ? Effect.fail(
+              new SkillUpdatesDeferredError({
+                message: `${error.message}; deferring skill updates`,
+              }),
+            )
+          : Effect.fail(error),
+    ),
+  );
+
+  yield* (yield* GitHub).waitForNetwork();
+
+  const run = yield* fetchRun(config, runId);
+
+  const outcome = yield* withSkillUpdatesClaim(
+    run.id,
+    Effect.gen(function* () {
+      // Nothing has been published before the first model attempt.
+      const { states, initialPr, pending } = yield* Effect.gen(function* () {
+        const states = yield* requireCleanRepositories(config.repositories);
+        const initialPr = yield* latestPullRequestNumber();
+        // The update report reads local metadata, so match origin first.
+        yield* runOrFail("git", ["pull", "--ff-only"], primaryRepository);
+        const pending = yield* pendingSkillUpdates(primaryRepository);
+
+        return { states, initialPr, pending };
+      }).pipe(
+        Effect.mapError(
+          (error) =>
+            new SkillUpdatesRetryableError({
+              operation: "run.prepare",
+              message: describeFailure(error),
+            }),
+        ),
+      );
+
+      let attempts: readonly SkillUpdatesAttempt[] = [];
+
+      if (pending.length === 0)
+        yield* Console.log(
+          "Every pending skill update already has an open pull request; skipping the model",
+        );
+      else {
+        yield* Console.log(`Updates needing work: ${pending.join(", ")}`);
+        attempts = yield* processWithFallback(
+          config,
+          skillUpdatesAgentPrompt(config, run),
+          states,
+          initialPr,
+        );
+      }
+
+      yield* requireRepositoryState(states);
+      yield* validatePullRequestPolicy(initialPr);
+
+      // Upstream links help review; never fail a published run on them.
+      if (attempts.length > 0)
+        yield* linkUpstreamChanges(initialPr).pipe(
+          Effect.catch((error) =>
+            Console.error(
+              `Unable to add upstream changes to pull requests: ${describeFailure(error)}`,
+            ),
+          ),
+        );
+
+      // Benchmark figures are informational; never fail a published run on them.
+      if (attempts.length > 0)
+        yield* annotatePullRequests(initialPr, attempts, {
+          agent: config.opencodeAgent,
+          runUrl: run.url,
+        }).pipe(
+          Effect.catch((error) =>
+            Console.error(
+              `Unable to add agent run details to pull requests: ${describeFailure(error)}`,
+            ),
+          ),
+        );
+      yield* refreshDashboard(primaryRepository);
+
+      const model = attempts.findLast((attempt) => attempt.succeeded)?.model;
+
+      return pending.length === 0
+        ? "no updates needing work"
+        : `worked on ${pending.join(", ")}${model ? ` with ${model}` : ""}`;
+    }),
+  ).pipe(
+    // Another device is working on the run, so this one is not needed.
+    Effect.catchTag(
+      "SkillUpdatesCoordinationError",
+      (
+        error,
+      ): Effect.Effect<
+        never,
+        SkillUpdatesCoordinationError | SkillUpdatesDeferredError
+      > =>
+        error.operation === "coordination.busy"
+          ? Effect.fail(
+              new SkillUpdatesDeferredError({ message: error.message }),
+            )
+          : Effect.fail(error),
+    ),
+    // A lost OpenCode server is not a fault in the run; retry later.
+    Effect.mapError((error) =>
+      (error instanceof SkillUpdatesAgentError ||
+        error instanceof SkillUpdatesRetryableError) &&
+      error.operation === serverUnavailableOperation
+        ? new SkillUpdatesDeferredError({ message: error.message })
+        : error,
+    ),
+  );
+
+  yield* fs.makeDirectory(path.dirname(config.stateFile), {
+    recursive: true,
+  });
+  const temporary = `${config.stateFile}.${process.pid}`;
+  yield* fs.writeFileString(temporary, `${run.id}\n`);
+  yield* fs.chmod(temporary, 0o600);
+  yield* fs.rename(temporary, config.stateFile);
+  yield* Console.log(`Processed workflow run ${run.id}`);
+  yield* Console.log(
+    `[RESULT] Run ${run.id}: ${outcome ?? "already processed"}`,
+  );
+});
+
+/** Process one completed update workflow run on this device. */
+export const runDeviceSkillUpdates = (configPath?: string, runId?: string) =>
+  runDevice(configPath, runId).pipe(
+    // The locked child prints its own result, which must stay the last one.
+    Effect.tapError((error) =>
+      (error instanceof SkillUpdatesDeferredError && error.reported) ||
+      (error instanceof SkillUpdatesAgentError &&
+        error.operation === "run.child")
+        ? Effect.void
+        : Console.log(
+            error instanceof SkillUpdatesDeferredError ||
+              error instanceof NetworkUnavailableError
+              ? `[RESULT] Deferred: ${error.message}`
+              : `[RESULT] Failed: ${describeFailure(error)}`,
+          ),
+    ),
+  );
 
 export const migrateLegacyLock = Effect.fn("UpdatesAgent.migrateLegacyLock")(
   function* (lockFile: string) {
