@@ -300,3 +300,13 @@ repositories:
       - testing
       - types-enforce-ts
       - writing-style
+  timmo001/triage:
+    skills:
+      - changeset-scope
+      - code-review
+      - effect
+      - effect-service-design
+      - skill-prefixes
+      - testing
+      - types-enforce-ts
+      - writing-style
