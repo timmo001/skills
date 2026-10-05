@@ -4,7 +4,7 @@ compatibility: Requires a Chromium-family browser with the Browser Control exten
 description: Drive the user's existing Chromium-family browser with deterministic Playwright. Use when asked to inspect, automate, test, or interact with a visible browser tab; continue an authenticated browser workflow; handle 2FA, passkeys, CAPTCHAs, or payment confirmation; record browser behavior; or capture an authenticated network flow.
 license: MIT
 # origin: https://github.com/anomalyco/browser-control/tree/main/skills/browser-control
-# upstream-sha: d27c78dfaf2f89e811bb55d336b61822bf814c72
+# upstream-sha: 66b6b3cf3ca89c46114504ff573e9ac7cf1ad23f
 # local-edits:
 #   - SKILL.md: added compatibility metadata and browser-access routing; distinguish other browser drivers
 #   - SKILL.md: create or update project todos only when requested
@@ -508,7 +508,22 @@ values fail instead of silently clamping. The start result reports the chosen ra
 
 `--mode auto` uses tab capture for user-owned tabs and CDP for relay-owned tabs.
 Tab capture can include audio; CDP requires `ffmpeg` and has no audio. Use the
-command's `--help` for format and cursor options. Inside `execute`, `showGhostCursor({ style?, clickStyle? })` keeps the on-page cursor visible across steps, `ghostCursor.caption(title, { step?, subtitle?, tone? })` renders a lower-third step banner, and `ghostCursor.callout(target, label, { detail?, tone? })` highlights a verified element.
+command's `--help` for format and cursor options.
+
+Playwright mouse actions automatically reveal the on-page Ghost Cursor
+(`distance-glide` motion + `tactile-bloom` click shockwave). When recording a
+user-facing proof or PR walkthrough video, opt into the `ghostCursor` helpers
+inside `execute` to focus attention on key steps and verified postconditions:
+
+```ts
+await showGhostCursor()
+await ghostCursor.caption("Verify cluster & promote release", { step: "01", tone: "neutral" })
+await ghostCursor.zoom("#release-card", { scale: 1.45 })
+await page.locator("#promote-btn").click()
+await ghostCursor.keys("⌘+⇧+P", "Promote Release")
+await ghostCursor.resetZoom()
+await ghostCursor.spotlight("#status-badge", { label: "Verified", detail: "200 OK", tone: "success" })
+```
 
 CDP recordings preserve the starting CSS viewport (not a fixed 720p canvas),
 use high-quality source frames, and default to 60 fps. Use `--frame-rate 30`
