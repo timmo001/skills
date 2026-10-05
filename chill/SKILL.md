@@ -1,7 +1,7 @@
 ---
 name: chill
 license: Apache-2.0
-description: Stop overengineering and reinventing the wheel. Use ONLY when the user explicitly invokes /chill or asks to simplify an approach that has become unnecessarily complex.
+description: Stop overengineering and reinventing the wheel. When a change has become overly complicated and out of scope.
 ---
 
 # Chill
@@ -13,3 +13,6 @@ Reassess the current approach and choose the smallest ordinary solution that mee
 Prefer existing code, dependencies, platform features, and established project patterns over new abstractions or custom machinery. Remove speculative flexibility, premature generalisation, unnecessary helpers, and work not required now.
 
 Preserve complexity that is justified by concrete constraints, correctness, or evidence. Briefly state the simpler approach, then follow it if implementation was requested. Do not use simplification as a reason to discard requirements or widen the task.
+
+
+If the changes is all.required for the scope the user asked for, suggest splitting into stages, either by using gh stack or handoff(s), depending on the amount of change.
