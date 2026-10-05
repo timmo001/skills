@@ -72,6 +72,7 @@ These encode the current OpenCode, dotfiles, notes, or maintainer workflow. Comp
 | `git-context` | Uses the `context-cli` skill for repository snapshots, BranchContextPlugin for required injections, and dotfiles Git helpers. |
 | `handoff` | Uses `notes-cli` for repository-note storage and cleanup. |
 | `import-external-skill` | Depends on this repository's imports.json and built skill-maintenance CLI, Git, mise, Skills CLI, authenticated GitHub CLI, and upstream access. |
+| `retro` | Reads other sessions through the OpenCode 2 CLI and routes findings to the dot-managed skills, dotfiles, and private overlay repositories. |
 | `session-coordination` | Herdr-managed sessions or explicitly requested native child sessions; uses host background completion notifications when available. |
 | `task-focus` | Uses BTW or fresh sessions, context usage when available, and Herdr-managed workspaces/worktrees through the separately installed `herdr` skill. |
 
