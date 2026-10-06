@@ -6,7 +6,7 @@ description: Keep documentation current and accurate with recent code changes, a
 
 # Maintain docs
 
-Keep documentation current and accurate as the codebase evolves. Cover recently changed subsystems with weak, stale, or inaccurate docs, public interfaces, workflows, operational runbooks, and setup or troubleshooting notes. This is authoring against verified behaviour, distinct from `/research` (external primary-source lookup) and `/explore-codebase` (internal discovery).
+Keep documentation current and accurate as the codebase evolves. Cover recently changed subsystems with weak, stale, or inaccurate docs, public interfaces, workflows, operational runbooks, and setup or troubleshooting notes. This is authoring against verified behaviour, distinct from `research` (external primary-source lookup) and reading the codebase to discover how it works.
 
 ## Guardrails (always)
 
