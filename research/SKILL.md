@@ -6,7 +6,7 @@ description: Investigate a topic against primary sources and return cited findin
 
 # Research
 
-Answer a question by reading the sources that own the answer, then hand back findings with every claim tied to its source. This is external primary-source research, distinct from `/investigate` (local triage and diagnosis) and `/explore-codebase` (internal codebase discovery).
+Answer a question by reading the sources that own the answer, then hand back findings with every claim tied to its source. This is external primary-source research, distinct from `diagnose` (local triage and diagnosis) and reading the local codebase directly.
 
 ## Source discipline
 
