@@ -44,7 +44,7 @@ These are agent-agnostic in format, but their workflows or specific branches dep
 | --- | --- |
 | `agentic-workflows` | GitHub `gh aw` extension and Agentic Workflows. |
 | `browser-control` | Browser Control relay, extension, and CLI or MCP tools. |
-| `decision-models` | A decision model provider: local Ollaya (CLI, MCP server or HTTP API), or hosted Cloudflare Clef via the Cloudflare API MCP server or authenticated Workers AI API access, billed per input token beyond the free daily allocation. |
+| `decision-models` | A decision model provider: local Ollaya (CLI, MCP server or HTTP API) or Ollama 0.35.0 or later (HTTP API), or hosted Cloudflare Clef via the Cloudflare API MCP server or authenticated Workers AI API access, billed per input token beyond the free daily allocation. |
 | `gh-stack` | GitHub `gh stack` extension. |
 | `github-development-rulesets` | Authenticated GitHub CLI, jq, Bash, and ruleset write access for mutations. Includes the Development JSON baseline for creation. |
 | `github-repository-setup` | Authenticated GitHub CLI, Git, jq, and repository creation/settings write access. Encodes preferred personal repository defaults, discovers workflow examples from the authenticated account, and uses the owner-selected shared source, including `timmo001/workflows` for the personal Renovate caller. Delegates reusable workflows and post-push rulesets to `shared-workflows` and `github-development-rulesets`. |

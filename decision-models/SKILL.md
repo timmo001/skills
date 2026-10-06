@@ -1,7 +1,7 @@
 ---
 name: decision-models
-description: "Make typed, calibrated decisions about text, JSON or images with decision models, locally through Ollaya or hosted as Cloudflare Clef on Workers AI: classify (choice), rate (score) or check a yes/no statement (noul), with probabilities you can threshold. Use it to triage tickets and emails, route requests, moderate posts, screen prompts for jailbreaks or injections, or any step where the agent needs a quick judgement it can act on, instead of reasoning it out in text. Also use it whenever the user names a decision model such as laya, winnow, clef or clef-flash, which are models, not commands. Works through the Ollaya MCP server (the `decide` tool), the `ollaya` CLI or local HTTP API, or the Cloudflare API MCP server."
-compatibility: Requires local Ollaya (CLI, MCP server or HTTP API, plus nvidia-smi on machines with an NVIDIA GPU) or hosted Cloudflare Clef on Workers AI through the Cloudflare API MCP server or an authenticated API token. Hosted requests are billed per input token beyond the free daily allocation.
+description: "Make typed, calibrated decisions about text, JSON or images with decision models, locally through Ollaya or Ollama or hosted as Cloudflare Clef on Workers AI: classify (choice), rate (score) or check a yes/no statement (noul), with probabilities you can threshold. Use it to triage tickets and emails, route requests, moderate posts, screen prompts for jailbreaks or injections, or any step where the agent needs a quick judgement it can act on, instead of reasoning it out in text. Also use it whenever the user names a decision model such as laya, winnow, tev1, nimble, clef or clef-flash, which are models, not commands. Works through the Ollaya MCP server (the `decide` tool), the `ollaya` CLI or local HTTP API, Ollama's local HTTP API, or the Cloudflare API MCP server."
+compatibility: Requires a local runtime, either Ollaya (CLI, MCP server or HTTP API) or Ollama 0.35.0 or later (HTTP API), plus nvidia-smi on machines with an NVIDIA GPU, or hosted Cloudflare Clef on Workers AI through the Cloudflare API MCP server or an authenticated API token. Hosted requests are billed per input token beyond the free daily allocation.
 license: Apache-2.0
 # origin: https://github.com/ollaya-dev/ollaya/tree/main/skills/ollaya-decisions
 # upstream-sha: 798a9b56477c9d8ab457aa3887a71c5103acedd4
@@ -12,11 +12,13 @@ license: Apache-2.0
 #   - SKILL.md: added a cascade that starts on winnow:e4b with an NVIDIA GPU or laya on CPU and escalates unclear answers to local or hosted Clef
 #   - SKILL.md: replaced the upstream model advice with a pointer to that cascade
 #   - SKILL.md: retained hosted Clef support and the local decision cascade alongside the upstream Arbiter model entry
+#   - SKILL.md: added Ollama's HTTP API as an equal local runtime alongside Ollaya, with its decision models in the cascade
 ---
 
-# Typed decisions with Ollaya or Cloudflare Clef
+# Typed decisions with Ollaya, Ollama or Cloudflare Clef
 
-Ollaya runs *decision models* on this machine, and Cloudflare hosts its Clef models on Workers AI.
+Ollaya and Ollama run *decision models* on this machine, and Cloudflare hosts its Clef models on
+Workers AI.
 A decision model reads a **state** (a message, an
 email, a ticket, any JSON) and a set of **typed questions**, and returns a calibrated answer to
 each question in one forward pass, in about 10 ms on a local GPU and a few hundred ms on a CPU. It never
@@ -38,45 +40,63 @@ label, block, escalate, pick a template. Keep reasoning in text for open-ended w
 A local decision costs no tokens and no API call, so it is fine to run one per item, per step.
 Hosted Clef requests are billed, so batch several questions about the same state into one request.
 
-## Choose local or hosted
+## Choose a runtime
 
-Model names such as `laya`, `winnow:e4b` and `clef` are Ollaya models (see "Picking a model"),
-run with `ollaya run <model>` or the `decide` tool; there is no `laya` command. Don't search for
-one.
+Two local runtimes serve decision models over the same TypeSafe API: Ollaya and Ollama. Neither
+is preferred; use whichever is installed. Cloudflare hosts Clef on Workers AI.
 
-If the user names a model or provider, go straight to calling it. Otherwise start with the
-lightest model that suits the machine, and escalate only the answers it can't settle:
+Model names such as `laya`, `winnow:e4b` and `clef` are models, not commands (see "Picking a
+model"); there is no `laya` command. Don't search for one. Run them with `ollaya run <model>`, the
+`decide` tool, or either runtime's HTTP API.
 
-1. **Pick the first model** once per session, when `ollaya` is on PATH:
+Check what is available once per session:
 
-   ```sh
-   nvidia-smi --query-gpu=name,memory.total --format=csv,noheader 2>/dev/null
-   ```
+```sh
+command -v ollaya
+curl -s http://127.0.0.1:11434/api/version
+nvidia-smi --query-gpu=name,memory.total --format=csv,noheader 2>/dev/null
+```
 
-   - NVIDIA GPU: start with `winnow:e4b`, the best accuracy for its speed (about 90 ms per
+Ollama needs 0.35.0 or later for decision models, 0.35.1 for Clef and 0.40.0 for Laya. When both
+runtimes are installed, use the one that has the model you need: Ollaya for `winnow`, presets
+and most of its catalogue, Ollama for `tev1` and the 27B Clef.
+
+The same name can mean a different model: Ollaya's `clef` is Clef-Flash (9B), while on Ollama
+`clef` is the 27B Clef and `clef-flash` is the 9B.
+
+If the user names a model, runtime or provider, go straight to calling it. Otherwise start with
+the lightest model that suits the machine, and escalate only the answers it can't settle:
+
+1. **Pick the first model:**
+   - Ollaya with an NVIDIA GPU: `winnow:e4b`, the best accuracy for its speed (about 90 ms per
      decision on a GPU, by Ollaya's figures).
-   - No GPU: start with `laya`, about 1 s per decision on a CPU. `laya` reads only about 1k
-     tokens, so trim the state to the lines that matter (deduplicate logs, drop noise) or split
-     it.
+   - Ollama with an NVIDIA GPU: `clef-flash` with 12 GB or more VRAM, otherwise `tev1` (4B, about
+     4.5 GB).
+   - No GPU, either runtime: `laya`, about 1 s per decision on a CPU. `laya` reads only about 1k
+     tokens on Ollaya and 512 on Ollama (English only there), so trim the state to the lines that
+     matter (deduplicate logs, drop noise) or split it.
 2. **Act on its answer when it is clear** (see "Reading answers and acting on them"). Most
    decisions stop here.
 3. **Escalate only the unclear answers**, or a state too long for the model's window:
-   - NVIDIA GPU with 24 GB or more VRAM: rerun on local `clef`. Otherwise rerun on hosted Clef on
-     Workers AI.
+   - NVIDIA GPU with 24 GB or more VRAM: rerun on local `clef` (Clef-Flash on Ollaya, the 27B
+     Clef on Ollama). Otherwise rerun on hosted Clef on Workers AI.
    - No GPU: rerun on hosted Clef on Workers AI. Larger local models are slow on CPU (a 9B model
      took over a minute), so don't pick them yourself there.
-4. **Without `ollaya`**, use hosted Clef on Workers AI from the start.
+   - On Workers AI, use `@cf/cloudflare/clef` when the unclear answer came from Clef-Flash (local
+     `clef-flash` on Ollama or `clef` on Ollaya), and the default `@cf/cloudflare/clef-flash`
+     otherwise. An answer still unclear on Ollaya's `clef` can escalate there too.
+4. **Without a local runtime**, use hosted Clef on Workers AI from the start.
 
-- **The user's choice always wins.** If they name a provider or model
-  ("use local clef", "use laya", "use Workers AI", "use clef-flash"), use exactly that, even when
-  it will be slow on CPU or too big for the GPU. "Local clef" means Ollaya's `clef`, not Workers
-  AI. Warn once if it is likely to be slow or fail for memory, then run it; fall back only if it
-  actually fails, and say so.
+- **The user's choice always wins.** If they name a runtime, provider or model
+  ("use local clef", "use laya", "use Ollama", "use Workers AI", "use clef-flash"), use exactly
+  that, even when it will be slow on CPU or too big for the GPU. "Local clef" means `clef` on
+  Ollaya or Ollama, not Workers AI. Warn once if it is likely to be slow or fail for memory, then
+  run it; fall back only if it actually fails, and say so.
 - Nothing available: on a GPU machine, tell the user how to install Ollaya
-  (`curl -fsSL https://ollaya.dev/install.sh | sh`); otherwise say the Cloudflare API MCP server
-  is needed.
+  (`curl -fsSL https://ollaya.dev/install.sh | sh`) or Ollama (<https://ollama.com/download>);
+  otherwise say the Cloudflare API MCP server is needed.
 
-Say which provider and model answered.
+Say which runtime or provider and which model answered.
 
 ## How to call it
 
@@ -103,8 +123,23 @@ Ollaya, in this order:
      -d '{"model": "laya", "state": "…", "questions": {…}}'
    ```
 
-Hosted: **Cloudflare Clef on Workers AI**, for when Ollaya is missing or not strong enough (see
-below).
+Hosted: **Cloudflare Clef on Workers AI**, for when no local runtime is available or strong
+enough (see below).
+
+### Ollama
+
+HTTP only: Ollama's CLI and its Python and JavaScript libraries can't run decision models yet.
+Pull the model first (`ollama pull tev1`), then:
+
+```sh
+curl -s http://127.0.0.1:11434/v1/systemone -H 'Content-Type: application/json' \
+  -d '{"model": "tev1", "state": "…", "questions": {…}}'
+```
+
+Send 1 to 64 questions per request; `choice` and `score` take 2 to 26 options. `clef` and
+`clef-flash` also take base64 PNG, JPEG or WebP images in `images`. Ollama has no presets: copy a
+preset's questions from `ollaya://presets/<name>` when Ollaya is installed, or write your own
+(see "Presets" for what each one asks).
 
 ### Cloudflare Clef on Workers AI
 
@@ -138,8 +173,8 @@ Workers AI access. Add images to `input.images` when the decision depends on vis
 Only input tokens are billed. The free allocation is 10,000 neurons per day: about 1.2M tokens on
 Clef-flash and about 450k on Clef. The response reports `usage.input_tokens`, and answers sit under
 `result.answers`. Workers AI has no presets: copy a preset's questions from
-`ollaya://presets/<name>` or write your own. State data is sent to Cloudflare, so prefer Ollaya for
-private content.
+`ollaya://presets/<name>` or write your own. State data is sent to Cloudflare, so prefer a local
+runtime for private content.
 
 ## Picking a model
 
@@ -165,7 +200,11 @@ private content.
 | `cygnet` | Frozen Gemma 4 12B IT with Cygnet's letter prompt; 0.683 on typed decisions; calibrated; up to 20 options | ~0.2 s GPU |
 
 Start with `winnow:e4b` on an NVIDIA GPU or `laya` without one, and escalate unclear answers as
-described in "Choose local or hosted".
+described in "Choose a runtime".
+
+The table lists Ollaya's models. Ollama's decision models are `laya`, `tev1` (4B, or
+`tev1:0.8b`), `nimble` (9B), `clef-flash` (9B) and `clef` (27B); see
+<https://ollama.com/search?c=decision> for the current list.
 
 ## Presets
 
@@ -245,7 +284,8 @@ model answered and the probability behind each action, so a person can audit it.
 
 1. Pick questions: the `triage` preset, or your own `team`/`urgency` set.
 2. For each ticket, call `decide` with `{"model": "laya", "state": {"message": ticket_text}, "preset": "triage"}`,
-   or on Workers AI call `post_accounts_ai_run` with the `triage` questions under `input`.
+   on Ollama POST the `triage` questions to `/v1/systemone`, or on Workers AI call
+   `post_accounts_ai_run` with the `triage` questions under `input`.
 3. Route by `intent`, flag `is_urgent` ≥ 0.8 or `frustration` ≥ 2, and send `churn_risk` ≥ 0.8 to
    a retention queue. Put every ticket with a low-confidence intent in a "needs review" list.
 4. Report a table: ticket, action, and the probabilities behind it.
