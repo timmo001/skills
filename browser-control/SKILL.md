@@ -4,7 +4,7 @@ compatibility: Requires a Chromium-family browser with the Browser Control exten
 description: Drive the user's existing Chromium-family browser with deterministic Playwright. Use when asked to inspect, automate, test, or interact with a visible browser tab; continue an authenticated browser workflow; handle 2FA, passkeys, CAPTCHAs, or payment confirmation; record browser behavior; or capture an authenticated network flow.
 license: MIT
 # origin: https://github.com/anomalyco/browser-control/tree/main/skills/browser-control
-# upstream-sha: 66b6b3cf3ca89c46114504ff573e9ac7cf1ad23f
+# upstream-sha: c4a9712f91cf1165cb5ccc78ce2a754ccac5f638
 # local-edits:
 #   - SKILL.md: added compatibility metadata and browser-access routing; distinguish other browser drivers
 #   - SKILL.md: create or update project todos only when requested
@@ -70,13 +70,16 @@ after five seconds if the page execution context remains unavailable; the read
 timeout does not close or replace the tab.
 
 A bare CLI execute creates a fresh session-owned page and prints the exact
-`--session <id>` continuation command. Every later CLI call must pass that id or
-set `BROWSER_CONTROL_SESSION`; bare execute never guesses from human-shell
-current state.
+`--session <id>` continuation command, or you can pass a descriptive session
+name (including an optional emoji, which appears directly on the browser tab
+group and in-page status pill). Every later CLI call must pass that id or set
+`BROWSER_CONTROL_SESSION`; bare execute never guesses from human-shell current
+state.
 
 ```bash
+browser-control session new "🎙️ elevenlabs"
+browser-control execute --session "🎙️ elevenlabs" 'return page.url()'
 browser-control execute 'return page.url()'
-browser-control execute --session cosmic-otter-866 'return page.url()'
 ```
 
 MCP keeps one implicit process session. Omit `session` for that normal path, or
@@ -404,11 +407,31 @@ before accepting it.
 
 ## TypeScript Client
 
-Applications can import `BrowserControlClient` for schema-decoded,
-same-origin requests authenticated by a session page. Use `sensitive: true`
-for token-bearing responses and reveal them through Browser Control's API, not
-the application's own Effect `Redacted` import; package-manager layouts may
-resolve separate Effect runtimes.
+Applications and CLI tools can use `BrowserControlClient.origin()` for direct
+same-origin JSON requests authenticated by a session page (with optional default
+headers and automatic in-page `handoff` recovery when a session expires or
+redirects to login):
+
+```ts
+import { BrowserControlClient } from "@opencode-ai/browser-control"
+
+const ubereats = BrowserControlClient.origin("https://www.ubereats.com", {
+  session: "🥤 karma-cafe",
+  startUrl: "/feed",
+  headers: { "x-csrf-token": "x" },
+  handoffOnAuthFailure: true,
+})
+
+const store = await ubereats.post("/_p/api/getStoreV1", {
+  storeUuid: "78cb1602-9f58-57bb-ad08-f6b8f80bb788",
+  diningMode: "DELIVERY",
+})
+```
+
+For Effect-native applications with schema decoding or `sensitive: true`
+`Redacted` responses, use `BrowserControlClient.Service`. Reveal token-bearing
+responses through Browser Control's API, not the application's own Effect
+`Redacted` import; package-manager layouts may resolve separate Effect runtimes.
 
 ```ts
 import { BrowserControlClient } from "@opencode-ai/browser-control"
