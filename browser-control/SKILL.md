@@ -4,7 +4,7 @@ compatibility: Requires a Chromium-family browser with the Browser Control exten
 description: Drive the user's existing Chromium-family browser with deterministic Playwright. Use when asked to inspect, automate, test, or interact with a visible browser tab; continue an authenticated browser workflow; handle 2FA, passkeys, CAPTCHAs, or payment confirmation; record browser behavior; or capture an authenticated network flow.
 license: MIT
 # origin: https://github.com/anomalyco/browser-control/tree/main/skills/browser-control
-# upstream-sha: c4a9712f91cf1165cb5ccc78ce2a754ccac5f638
+# upstream-sha: 6acc64f7800eb9a77a4303cbf4f23cdee908d140
 # local-edits:
 #   - SKILL.md: added compatibility metadata and browser-access routing; distinguish other browser drivers
 #   - SKILL.md: create or update project todos only when requested
@@ -152,8 +152,10 @@ Use normal Playwright first. Keep dependent interactions in one execute when
 they rely on transient UI such as an open menu, selected rows, hover state, or
 an in-progress form.
 
-If native `locator.fill()` hangs because a browser extension interferes with
-focus, use the explicit input, textarea, or contenteditable fallback:
+If native `locator.fill()` hangs, inspect the failure before using the explicit
+input, textarea, or contenteditable fallback. A `target/cross-extension-page`
+diagnostic requires human dismissal or completion first; `fillInput` is not a
+way around protected extension UI:
 
 ```js
 await fillInput(page.getByPlaceholder("Username"), "standard_user")
@@ -161,6 +163,36 @@ await fillInput(page.getByPlaceholder("Username"), "standard_user")
 
 Completion: the final return value contains evidence of the requested outcome,
 not merely evidence that an action was attempted.
+
+#### Forms and outward mutations
+
+A click returning, HTTP 200, a redirect, or cleared fields do not prove delivery.
+Register any expected navigation before clicking once, then read the destination
+and assert the workflow's specific receipt or confirmation. Coordinate rejection
+and confirmation checks with the actual page you inspected; the driver cannot
+infer business success from generic page text.
+
+```ts
+await Promise.all([
+  page.waitForURL(expectedDestination, { waitUntil: "domcontentloaded", timeout: 15_000 }),
+  ref(sendRef).click({ timeout: 15_000 }),
+])
+const observed = await snapshot()
+await expectedReceipt.waitFor({ state: "visible", timeout: 5_000 })
+return { url: page.url(), observed, receipt: await expectedReceipt.innerText() }
+```
+
+`expectedDestination`, `sendRef`, and `expectedReceipt` come from the inspected
+workflow, not guessed selectors. For same-URL navigation, register a main-frame
+navigation or response wait instead. A mouse coordinate click need not wait for
+navigation; an immediate snapshot can still be the old document.
+
+If submission timed out or the destination cannot be read, report **unverified**
+and inspect once without clicking again. Re-read only after the exact tab/context
+settles. Never replay an uncertain send, booking, purchase, or payment. An explicit
+site rejection means **rejected**, not delivered; protection requiring human
+interaction means hand off the ordinary page to the user. Do not modify protection
+tokens, spoof human signals, or dispatch DOM clicks to evade a security boundary.
 
 ### 4. Continue Or Finish Cleanly
 
@@ -273,6 +305,10 @@ webpage before triggering a human-only prompt when possible. If the prompt
 already prevents attachment, give the user the required action directly rather
 than assuming an in-page handoff can be displayed. Verify the intended webpage
 state after the prompt is completed.
+
+A page's leftover password-manager status text is not evidence that its menu is
+still open. Use current relay diagnostics and a fresh ordinary-page read after
+human dismissal, without inspecting the extension's private frame contents.
 
 ## Inspection Tools
 
@@ -429,9 +465,7 @@ const store = await ubereats.post("/_p/api/getStoreV1", {
 ```
 
 For Effect-native applications with schema decoding or `sensitive: true`
-`Redacted` responses, use `BrowserControlClient.Service`. Reveal token-bearing
-responses through Browser Control's API, not the application's own Effect
-`Redacted` import; package-manager layouts may resolve separate Effect runtimes.
+`Redacted` responses, use `BrowserControlClient.Service`:
 
 ```ts
 import { BrowserControlClient } from "@opencode-ai/browser-control"
