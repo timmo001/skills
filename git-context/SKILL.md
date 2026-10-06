@@ -1,7 +1,7 @@
 ---
 name: git-context
 license: Apache-2.0
-compatibility: Requires Git, the context-cli skill for repository snapshots, dotfiles Git helpers, and GitHub CLI for their workflows. Plugin-backed commands require BranchContextPlugin. Amendments use dot git-commit.
+compatibility: Requires Git, the context-cli skill for repository snapshots, dotfiles Git helpers, and GitHub CLI for their workflows. Amendments use dot git-commit.
 description: Patterns for working with git branches, remotes, diffs against the default branch, and rebases. Use when resolving rebase conflicts, continuing interactive rebases, amending commits, or any git operation that would open an interactive editor.
 ---
 
@@ -9,28 +9,11 @@ description: Patterns for working with git branches, remotes, diffs against the 
 
 Use this skill when working with branches, remotes, or comparing changes.
 
-## Plugin-first branch context
-
-`BranchContextPlugin` precomputes branch and scoped-work context for branch-oriented commands and scoped cleanup/type commands. It injects a `<branch-context>` block with tagged sections:
-
-- `<branch-metadata>` for default remote/branch resolution and base-ref identity
-- `<status>` for compact `git status -sb` output
-- `<work-scope>` for current work scope in this order: unstaged, staged, then branch diff
-- `<pull-request>` for PR metadata and check output on branch-focused commands when available
-- `<warnings>` for collection caveats, fallbacks, and missing data
-
-When `<branch-context>` is present:
-
-1. Use it as the primary source for branch analysis.
-2. Use `<work-scope>` instead of rebuilding scope with separate git commands.
-3. Avoid re-running `git`/`gh` commands unless the user asks for a fresh snapshot.
-4. For commands that require `BranchContextPlugin` scope, stop and report a plugin issue if context is missing instead of rebuilding scope.
-
 ## Command-line context
 
-For ad-hoc work without current injected context, load `context-cli` and use its repository snapshot workflow. That skill owns Context command options and output handling.
+Load `context-cli` and use its repository snapshot workflow. That skill owns Context command options and output handling.
 
-These commands do not replace a required plugin injection. If `context` is unavailable during ad-hoc work, report that limitation and use only the Git reads needed for the task:
+If `context` is unavailable, report that limitation and use only the Git reads needed for the task:
 
 ```bash
 git diff

@@ -67,9 +67,8 @@ These encode the current OpenCode, dotfiles, notes, or maintainer workflow. Comp
 
 | Skill | Portability work needed |
 | --- | --- |
-| `branch-context-consumer` | Decouple from BranchContextPlugin injection. |
 | `check-skill-updates` | Consumer updates use mise and the Skills CLI; repository reviews depend on the built skill-maintenance CLI, imports.json, Git, and authenticated GitHub CLI. |
-| `git-context` | Uses the `context-cli` skill for repository snapshots, BranchContextPlugin for required injections, and dotfiles Git helpers. |
+| `git-context` | Uses the `context-cli` skill for repository snapshots and dotfiles Git helpers. |
 | `handoff` | Uses `notes-cli` for repository-note storage and cleanup. |
 | `import-external-skill` | Depends on this repository's imports.json and built skill-maintenance CLI, Git, mise, Skills CLI, authenticated GitHub CLI, and upstream access. |
 | `retro` | Reads other sessions through the OpenCode 2 CLI and routes findings to the dot-managed skills, dotfiles, and private overlay repositories. |

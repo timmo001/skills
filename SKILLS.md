@@ -72,7 +72,6 @@ Skills coupled to the current OpenCode, dotfiles, notes, or maintainer workflow.
 
 | Skill | Description |
 | --- | --- |
-| [`branch-context-consumer`](./branch-context-consumer/) | Consume BranchContextPlugin injections in commands. Use when a command depends on an injected <branch-context> block for its scope. |
 | [`check-skill-updates`](./check-skill-updates/) | Check imported skills for upstream changes and review safe updates. Use when a tracked `# origin:` may have changed or when refreshing installed skills from their source repositories. |
 | [`git-context`](./git-context/) | Patterns for working with git branches, remotes, diffs against the default branch, and rebases. Use when resolving rebase conflicts, continuing interactive rebases, amending commits, or any git operation that would open an interactive editor. |
 | [`handoff`](./handoff/) | Save concise continuation context when work moves to another session or the user requests a handoff. |
