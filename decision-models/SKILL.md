@@ -4,13 +4,14 @@ description: "Make typed, calibrated decisions about text, JSON or images with d
 compatibility: Requires local Ollaya (CLI, MCP server or HTTP API, plus nvidia-smi on machines with an NVIDIA GPU) or hosted Cloudflare Clef on Workers AI through the Cloudflare API MCP server or an authenticated API token. Hosted requests are billed per input token beyond the free daily allocation.
 license: Apache-2.0
 # origin: https://github.com/ollaya-dev/ollaya/tree/main/skills/ollaya-decisions
-# upstream-sha: 37fcfa9f8a35b6b389447ffca49e4b4242970f81
+# upstream-sha: 798a9b56477c9d8ab457aa3887a71c5103acedd4
 # local-edits:
 #   - SKILL.md: renamed to decision-models and added hosted Cloudflare Clef on Workers AI as a fallback provider alongside Ollaya
 #   - SKILL.md: added compatibility metadata for concrete environment requirements
 #   - SKILL.md: dropped the metadata.homepage block (https://ollaya.dev); the frontmatter validator allows no nested keys
 #   - SKILL.md: added a cascade that starts on winnow:e4b with an NVIDIA GPU or laya on CPU and escalates unclear answers to local or hosted Clef
 #   - SKILL.md: replaced the upstream model advice with a pointer to that cascade
+#   - SKILL.md: retained hosted Clef support and the local decision cascade alongside the upstream Arbiter model entry
 ---
 
 # Typed decisions with Ollaya or Cloudflare Clef
@@ -155,6 +156,7 @@ private content.
 | `decision` | Decision 1.0 Eos: fully fine-tuned Qwen3.5-0.8B with an endpoint head; rows up to 16k tokens; calibrated | ~0.2 s GPU, ~0.85 s CPU |
 | `qwen3guard` | Safety guard; answers only its built-in questions (send no `questions`) | ~40 ms GPU, ~2 s CPU |
 | `von` | ModernBERT-large, every option scored at its own marker; states up to 8k tokens; calibrated | ~25 ms GPU, ~0.8 s CPU |
+| `arbiter` | Gemma 3 4B IT with a LoRA and a fixed 24-slot head; `noul`, choices of up to 16 options, scores of exactly 6 levels (other questions are rejected); about 8 GB | ~0.15 s GPU for three or more questions |
 | `nimble` | Bespoke Labs' Nimble (LoRA on Qwen3.5-9B): reads the whole request as a schema; calibrated; up to 255 options; needs a 24 GB GPU | ~2.3 s GPU |
 | `jeeves` | PostHog's Jeeves-9B (no thinking): Qwen3.5-9B with a pointer head; calibrated; needs a 24 GB GPU | ~0.84 s GPU |
 | `clef` | Cloudflare's Clef-Flash: Qwen3.5-9B with a joint schema head, all questions in one pass; well calibrated without a temperature; needs a 24 GB GPU | ~0.53 s GPU |
