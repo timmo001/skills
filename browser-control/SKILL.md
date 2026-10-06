@@ -4,7 +4,7 @@ compatibility: Requires a Chromium-family browser with the Browser Control exten
 description: Drive the user's existing Chromium-family browser with deterministic Playwright. Use when asked to inspect, automate, test, or interact with a visible browser tab; continue an authenticated browser workflow; handle 2FA, passkeys, CAPTCHAs, or payment confirmation; record browser behavior; or capture an authenticated network flow.
 license: MIT
 # origin: https://github.com/anomalyco/browser-control/tree/main/skills/browser-control
-# upstream-sha: da63348522d91ce4aa5ae802f67a4fce99df9fc4
+# upstream-sha: 66b6b3cf3ca89c46114504ff573e9ac7cf1ad23f
 # local-edits:
 #   - SKILL.md: added compatibility metadata and browser-access routing; distinguish other browser drivers
 #   - SKILL.md: create or update project todos only when requested
@@ -85,11 +85,13 @@ sessions.
 
 To control a tab already open in the user's browser, ask the user to click the
 Browser Control toolbar button on that tab. Select it for one execute or adopt
-it for sticky reuse:
+it for sticky reuse (omit `--target-url` / `targetUrl` when only one user tab is
+attached):
 
 ```bash
-browser-control execute --target-url github.com 'return page.url()'
+browser-control session adopt --session github
 browser-control session adopt --target-url github.com --session github
+browser-control execute --target-url github.com 'return page.url()'
 ```
 
 `execute --target-url` selects a page for that call only. Continuing with just
@@ -296,8 +298,8 @@ Use the least expensive view that answers the question:
   values, custom ARIA range values, and editable content are omitted so they do
   not enter tool output. Await it separately; do not run other operations on
   the same page concurrently.
-- `screenshotWithLabels({ page, path? })` adds visual labels and metadata when
-  layout matters.
+- `screenshotWithLabels({ page?, path? })` adds visual labels and metadata when
+  layout matters, and registers its `e1..eN` labels for `ref()`.
 - `screenshotDiff({ baseline, path?, threshold?, fullPage? })` compares a saved
   PNG (absolute path or Buffer) with the current session page at CSS-pixel scale.
   It returns `matches`, `changedPixels`, `changedRatio` (0..1), dimensions, and a
@@ -334,7 +336,9 @@ diffs include visible page content: inspect for private information before shari
 
 Execute code can use `page`, `context`, `browser`, persistent `state`, selected
 Node modules through `modules` and aliases such as `fs` and `path`, plus the
-Browser Control helpers documented here. Single expressions auto-return;
+Browser Control helpers documented here. Execute code runs in Node. Use
+`page.evaluate` for `window`, `document`, storage, and same-origin `fetch`
+with page cookies. Single expressions auto-return;
 multi-statement scripts need `return`. Use `--file` for longer scripts:
 
 ```bash
@@ -506,6 +510,21 @@ values fail instead of silently clamping. The start result reports the chosen ra
 Tab capture can include audio; CDP requires `ffmpeg` and has no audio. Use the
 command's `--help` for format and cursor options.
 
+Playwright mouse actions automatically reveal the on-page Ghost Cursor
+(`distance-glide` motion + `tactile-bloom` click shockwave). When recording a
+user-facing proof or PR walkthrough video, opt into the `ghostCursor` helpers
+inside `execute` to focus attention on key steps and verified postconditions:
+
+```ts
+await showGhostCursor()
+await ghostCursor.caption("Verify cluster & promote release", { step: "01", tone: "neutral" })
+await ghostCursor.zoom("#release-card", { scale: 1.45 })
+await page.locator("#promote-btn").click()
+await ghostCursor.keys("⌘+⇧+P", "Promote Release")
+await ghostCursor.resetZoom()
+await ghostCursor.spotlight("#status-badge", { label: "Verified", detail: "200 OK", tone: "success" })
+```
+
 CDP recordings preserve the starting CSS viewport (not a fixed 720p canvas),
 use high-quality source frames, and default to 60 fps. Use `--frame-rate 30`
 for smaller files. Actual motion still depends on Chrome delivering new frames;
@@ -531,7 +550,6 @@ flight-recorder lifecycle operations are also available as MCP tools.
 Inspect an encoded frame at native size before sharing: the whole viewport must
 fill the frame, small text must be readable, and motion must not be a repeated
 still image. Do not crop and upscale a low-resolution capture to call it HD.
-
 On an older installed relay that shrinks the page into a padded corner, record
 the defect and coordinate a recorder update; changing the file's resolution is
 not a repair.
@@ -555,8 +573,9 @@ Common diagnoses:
   `page.url()` read can still work; retry the page read after the page settles.
   Ordinary missing-locator timeouts do not receive this diagnostic.
 - `connected:false`: run a relay-backed command and allow the extension startup
-  or alarm wake-up to reconnect. Reload the unpacked extension only if that loop
-  does not recover.
+  or alarm wake-up to reconnect. A sleeping extension wakes on a 30-second
+  alarm, so the command waits up to 35 seconds. Reload the unpacked extension
+  only if that loop does not recover.
 - Incompatible extension protocol: update either the extension or npm package;
   exact extension and relay release versions do not need to match.
 - Competing browser/profile connections: the active browser is preserved and
@@ -585,9 +604,11 @@ Common diagnoses:
 - Repeated execution-context errors: run one short follow-up so Browser Control
   can health-check the page. A live page is kept: Browser Control reconnects and
   re-resolves the same tab once, then fails with a `session-page/*-unresponsive`
-  diagnosis if the page still does not answer. Only a crashed, `about:blank`, or
+  diagnosis if the page still does not answer. Blank or unknown URLs are preserved:
+  they can contain unsaved content. Only a crashed or
   `chrome-error://` relay-owned page is closed and recreated. It never replaces
-  an adopted user tab. When a page stays unresponsive (bot-protected sites can
+  an adopted user tab. Main-frame navigation clears an earlier crash diagnosis;
+  child-frame navigation does not. When a page stays unresponsive (bot-protected sites can
   stall the main world for automation while rendering normally for the human),
   open a fresh tab with `context.newPage()` or hand the tab to the user.
 - Handoff ends with "page execution context did not become available": the user
