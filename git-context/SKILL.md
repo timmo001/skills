@@ -9,22 +9,11 @@ description: Patterns for working with git branches, remotes, diffs against the 
 
 Use this skill when working with branches, remotes, or comparing changes.
 
-## Command-line context
+## Repository context
 
-Load `context-cli` and use its repository snapshot workflow. That skill owns Context command options and output handling.
+For branch, working-tree, commit, diff and pull request context, including PR checks, reviews and comments, load `context-cli` and use `context git`. That skill owns the options and output handling. Use `--branch-diff` for the diff against the default branch; the commits section lists the branch's commits.
 
-If `context` is unavailable, report that limitation and use only the Git reads needed for the task:
-
-```bash
-git diff
-git diff --cached
-git remote
-git symbolic-ref refs/remotes/<remote>/HEAD
-gh repo view --json defaultBranchRef -q .defaultBranchRef.name
-git diff <remote>/<default-branch>...HEAD
-```
-
-Prefer `upstream` as the comparison remote when present, otherwise `origin`.
+`context` reads the local `<remote>/HEAD` without fetching. When the comparison must reflect the current remote, run `git-default-ref` first: it verifies and fetches the default branch.
 
 ## Default branch helpers
 
@@ -33,21 +22,9 @@ Prefer the installed helpers over rebuilding default-branch operations with ad-h
 - `git-default-ref` is the guarded resolver used by all helpers. It prefers `upstream`, falls back to `origin`, verifies local `<remote>/HEAD` against the advertised default, and fetches it. A missing or mismatched ref requires human confirmation; under `dot is-agent` or without a TTY it fails instead of prompting.
 - `git-switch-default` (`gsd`) switches to the resolved default branch and fast-forwards it.
 - `git-rebase-default` (`grd`) rebases the checked-out branch onto the resolved default with `--autostash`.
-- `git-diff-default` (`gdd`) diffs the resolved default branch's merge base against `HEAD`.
-- `git-log-default` (`gld`) lists commits in `HEAD` that are not in the resolved default branch.
 - `gra` prints a status message and runs `git rebase --abort`.
 
 These commands are stowed from `scripts/.local/bin/`; the aliases are defined in `zsh/.zshrc`.
-
-## Checking PR Status
-
-If a PR exists for the branch:
-
-```bash
-gh pr view              # Read description
-gh pr checks            # Check CI status, find failing checks
-gh pr diff              # See what's in the PR
-```
 
 ## Rebases and Interactive Editor Operations
 
