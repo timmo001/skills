@@ -1,7 +1,7 @@
 ---
 name: browser-access
 license: Apache-2.0
-description: Decide whether browser access is needed and keep authorised checks narrow. Use for frontend or UI diagnosis, before proposing or using Browser Control, Chrome DevTools, or equivalent browser automation, and when the user explicitly requests browser interaction.
+description: Decide whether browser access is needed and keep authorised checks narrow. Use for frontend or UI diagnosis, before proposing or using Chrome DevTools or other browser automation, and when the user explicitly requests browser interaction.
 ---
 
 # Browser Access
@@ -39,8 +39,7 @@ replace this permission step.
 ## 3. Run Only The Agreed Check
 
 - Apply the chosen browser driver's skill or current documentation for tool
-  mechanics. Prefer Chrome DevTools for browser diagnostics; use Browser Control
-  when it fits the requested interaction.
+  mechanics. Prefer Chrome DevTools for browser diagnostics.
 - Keep work on the agreed task and target. Reuse gathered evidence rather than
   repeating navigation, snapshots, polling, or broad audits.
 - Gather only the page state, console messages, or network requests needed for

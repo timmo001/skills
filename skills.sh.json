@@ -38,7 +38,6 @@
       "description": "Skills for named tools, services, and target repositories.",
       "skills": [
         "agentic-workflows",
-        "browser-control",
         "decision-models",
         "gh-stack",
         "github-development-rulesets",

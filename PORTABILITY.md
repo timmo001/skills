@@ -43,7 +43,6 @@ These are agent-agnostic in format, but their workflows or specific branches dep
 | Skill | Required environment |
 | --- | --- |
 | `agentic-workflows` | GitHub `gh aw` extension and Agentic Workflows. |
-| `browser-control` | Browser Control relay, extension, and CLI or MCP tools. |
 | `decision-models` | A decision model provider: local Ollaya (CLI, MCP server or HTTP API) or Ollama 0.35.0 or later (HTTP API), or hosted Cloudflare Clef via the Cloudflare API MCP server or authenticated Workers AI API access, billed per input token beyond the free daily allocation. |
 | `gh-stack` | GitHub `gh stack` extension. |
 | `github-development-rulesets` | Authenticated GitHub CLI, jq, Bash, and ruleset write access for mutations. Includes the Development JSON baseline for creation. |
