@@ -36,22 +36,13 @@ Layer these global skills over the repository guidance when their scopes apply:
 
 For Home Assistant rendering or picker work, load both `lit-rendering` and `home-assistant-lit-rendering`. Preserve the stricter TypeScript and cleanup guidance unless it conflicts with an explicit repository rule.
 
-Apply these cross-project engineering preferences without overriding explicit repository rules:
+`ha-frontend-review` owns scope, async state, readiness, and memo invalidation rules, and `ha-frontend-testing` owns test and dev server rules. Add only these preferences, without overriding explicit repository rules:
 
-### Scope And Surface
+### Lifecycle
 
-- Make one independently reviewable change at a time unless batching is explicitly requested. Stay within the requested area and preserve existing semantics during migrations unless changing them is in scope.
-- Prefer a narrow canonical helper or shared module over callback-heavy abstractions, pass-through wrappers, widened signatures, duplicate types, or ceremonial aliases.
-- Challenge optional feature surface that adds network, lifecycle, consistency, or documentation cost without supporting the core task.
-
-### Async State And Readiness
-
-- Model asynchronous UI as transitions: establish immutable baselines before awaits, guard stale responses, preserve unsaved mounted state, and classify an action's current meaning before dirty-gating it.
-- Treat readiness as the first displayable terminal result, including stable empty and error states. Do not resolve between a failed request and its fallback.
-- Every value affecting memoized output must participate in invalidation, either as an explicit key or through deliberate cache invalidation.
 - Model logical open and close lifecycle independently from DOM connection when managers can retain closed elements. Global-listener registration must be idempotent or return a cleanup handle.
 
-### Processes And Input
+### Processes And Input (`build-scripts/` and similar tooling)
 
 - Make check-then-act filesystem and PID operations atomic. Locks must cover every mutated shared resource, including watcher regeneration.
 - Terminate processes with SIGTERM, wait and verify exit, then escalate to SIGKILL. Remove process state only after confirmed exit and guard against stale PID reuse.
@@ -60,9 +51,8 @@ Apply these cross-project engineering preferences without overriding explicit re
 
 ### Test Boundaries
 
-- Apply `testing` alongside `ha-frontend-testing` and, for reviews, `ha-frontend-review`. Add tests for meaningful failures or important logic, with a concrete benefit rather than coverage for its own sake. Honour explicit requirements and the repository's rendering-test prohibition.
+- Apply `testing` alongside `ha-frontend-testing`.
 - Keep maintenance of existing test infrastructure in dedicated work. Install error tracking before navigation and never let report-merging failures suppress the original failed-suite result.
-- Prefer watched background development servers while iterating, but treat CI as final verification when local and CI environments may differ.
 
 ## Sibling Repositories
 
