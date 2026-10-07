@@ -30,6 +30,7 @@ These skills use general engineering concepts and ordinary agent capabilities. T
 | `show-me` | Uses ordinary text diagrams and an optional HTML artefact. |
 | `skill-prefixes` | General Agent Skills naming guidance. |
 | `staged-implementation` | General implementation sequencing. |
+| `task-runners` | General guidance for running and writing fast tasks; per-tool commands apply only where the project uses that tool. |
 | `testing` | General test-selection and verification policy based on concrete regression value. |
 | `to-questionnaire` | General channel-aware questionnaire drafting. |
 | `types-enforce-ts` | Requires TypeScript in the target project. |
