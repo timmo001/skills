@@ -6,7 +6,7 @@ Commands and config for running and writing fast tasks with each tool. Check `--
 
 Running:
 
-- `mise run a ::: b ::: c` runs several tasks at once, each with its own arguments after the task name. Quote it in YAML (`run: "mise run a ::: b"`): an unquoted `::: ` is read as a mapping.
+- `mise run a ::: b ::: c` runs several tasks at once, each with its own arguments after the task name. Quote it in YAML (`run: "mise run a ::: b"`): unquoted, the `:` followed by a space is read as a mapping.
 - Dependencies run in parallel, up to `--jobs` (`-j`, default 8). A dependency shared by several tasks runs once per invocation.
 - `mise run --affected` runs tasks only for monorepo projects changed in Git (`--affected-base <rev>` to compare against a branch).
 - `mise run -c` keeps going after a failure so one run reports every failing task.

@@ -15,6 +15,8 @@ module.exports = {
     MD041: false,
     // Off: table pipe spacing style is noise across skill tables.
     MD060: false,
+    // Makefile recipes must be indented with tabs.
+    MD010: { ignore_code_languages: ["make"] },
   },
   gitignore: true,
   globs: ["**/*.md"],

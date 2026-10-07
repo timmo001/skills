@@ -21,14 +21,17 @@ const checks: Check[] = [
 const run = ({ name, command }: Check): Promise<boolean> =>
   new Promise((resolve) => {
     const child = spawn(command, { shell: true, stdio: ["ignore", "pipe", "pipe"] });
+
     for (const stream of [child.stdout, child.stderr]) {
       createInterface({ input: stream }).on("line", (line) => console.log(`[${name}] ${line}`));
     }
+
     child.on("close", (code) => resolve(code === 0));
   });
 
 const results = await Promise.all(checks.map(run));
-const failed = checks.filter((_, i) => !results[i]).map((check) => check.name);
+
+const failed = checks.flatMap((check, i) => (results[i] ? [] : [check.name]));
 
 if (failed.length > 0) {
   console.error(`Failed: ${failed.join(", ")}`);
