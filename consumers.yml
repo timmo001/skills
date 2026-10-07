@@ -317,10 +317,13 @@ repositories:
     skills:
       - changeset-scope
       - code-review
+      - effect
       - effect-principles
+      - effect-service-design
       - skill-prefixes
       - task-runners
       - testing
+      - types-enforce-ts
       - writing-style
   timmo001/system-bridge-connector:
     skills:
