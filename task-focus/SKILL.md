@@ -35,9 +35,10 @@ already agreed choice.
   unless the user already chose. Continuing here can be reasonable with a small
   context window and little unrelated history.
 - At around 200k tokens of accumulated context or more, strongly recommend a
-  fresh session with a concise handoff before taking on a different task. Use
-  available context usage, never an invented count. If usage is unknown but the
-  conversation is long or heavily compacted, recommend starting fresh.
+  fresh session with a concise handoff before taking on a different task. Read
+  context usage with `dot-session-status`, never an invented count. If usage is
+  unknown but the conversation is long or heavily compacted, recommend starting
+  fresh.
 - For separate implementation, prefer a dedicated Herdr workspace with a
   Herdr-managed worktree and a fresh agent session. Include that arrangement in
   the question so agreement authorises it. Apply `herdr` for creation and launch,

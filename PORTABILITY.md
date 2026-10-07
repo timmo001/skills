@@ -71,7 +71,7 @@ These encode the current OpenCode, dotfiles, notes, or maintainer workflow. Comp
 | `import-external-skill` | Depends on this repository's imports.json and built skill-maintenance CLI, Git, mise, Skills CLI, authenticated GitHub CLI, and upstream access. |
 | `retro` | Reads other sessions through the OpenCode 2 CLI and routes findings to the dot-managed skills, dotfiles, and private overlay repositories. |
 | `session-coordination` | Herdr-managed sessions or explicitly requested native child sessions; uses host background completion notifications when available. |
-| `task-focus` | Uses BTW or fresh sessions, context usage when available, and Herdr-managed workspaces/worktrees through the separately installed `herdr` skill. |
+| `task-focus` | Uses BTW or fresh sessions, context usage from the dotfiles `dot-session-status` skill when available, and Herdr-managed workspaces/worktrees through the separately installed `herdr` skill. |
 
 ## Follow-Up
 
