@@ -14,4 +14,4 @@ Prefer existing code, dependencies, platform features, and established project p
 
 Preserve complexity that is justified by concrete constraints, correctness, or evidence. Briefly state the simpler approach, then follow it if implementation was requested. Do not use simplification as a reason to discard requirements or widen the task.
 
-If the changes is all.required for the scope the user asked for, suggest splitting into stages, either by using gh stack or handoff(s), depending on the amount of change.
+If all the changes are required for the scope the user asked for, suggest splitting them into stages with `gh-stack` or handoffs, depending on the size of the change.
