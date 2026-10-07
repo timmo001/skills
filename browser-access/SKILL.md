@@ -40,6 +40,9 @@ replace this permission step.
 
 - Apply the chosen browser driver's skill or current documentation for tool
   mechanics. Prefer Chrome DevTools for browser diagnostics.
+- The Chrome DevTools MCP is not always loaded. If its tools are unavailable,
+  ask the user to enable it and wait. Do not work around it with another
+  browser driver, a headless browser, or scripted CDP access.
 - Keep work on the agreed task and target. Reuse gathered evidence rather than
   repeating navigation, snapshots, polling, or broad audits.
 - Gather only the page state, console messages, or network requests needed for
