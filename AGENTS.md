@@ -36,6 +36,8 @@ Run before committing repository setup or skill metadata changes:
 
 ```bash
 bun install --frozen-lockfile
-bun run validate
+mise run validate
 mise exec npm:skills -- skills add . --list
 ```
+
+`mise run validate` runs the checks in parallel. For a narrow change, run only the tasks it touches, for example `mise run validate:skills` after editing a skill.

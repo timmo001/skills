@@ -9,27 +9,50 @@ uv = "0.12.23"
 # The lockfile carries an embedded aube graph for npm tools.
 npm.package_manager = "aube"
 
+[env]
+_.path = ["{{config_root}}/node_modules/.bin"]
+
 [tasks.build]
+description = "Compile the skill-maintenance CLI"
 run = "bun build src/index.ts --compile --outfile dist/skill-maintenance"
+sources = ["src/**/*.ts", "package.json", "bun.lock", "tsconfig.json"]
+outputs = ["dist/skill-maintenance"]
 
 [tasks.lint]
+description = "Lint TypeScript with Oxlint"
 run = "oxlint"
 
+[tasks."lint:yaml"]
+description = "Lint YAML with yamllint"
+run = "yamllint ."
+
 [tasks.typecheck]
+description = "Type-check the CLI source"
 run = "tsc --noEmit"
 
 [tasks.test]
-run = "bun run test"
+description = "Run the CLI tests against the built binary"
+depends = ["build"]
+run = "vitest run"
 
 [tasks.format]
+description = "Format the CLI source with Prettier"
 run = "bun run format"
 
 [tasks."format:check"]
+description = "Check formatting without writing"
 run = "bun run format:check"
 
 [tasks.catalogue]
-run = "bun run catalogue"
 description = "Regenerate SKILLS.md from skill frontmatter"
+depends = ["build"]
+run = "./dist/skill-maintenance catalogue"
+
+[tasks."validate:skills"]
+description = "Validate skills, imports and repository metadata"
+depends = ["build"]
+run = "./dist/skill-maintenance validate"
 
 [tasks.validate]
-run = "bun run validate"
+description = "Run every check in parallel"
+depends = ["lint", "lint:yaml", "typecheck", "test", "format:check", "validate:skills"]

@@ -77,10 +77,11 @@ The installer copies each external skill at its pinned SHA, records what it owns
 ## Validate
 
 ```bash
-bun run validate
-./dist/skill-maintenance validate
+mise run validate
 mise exec npm:skills -- skills add . --list
 ```
+
+`mise run validate` runs every check in parallel and builds the CLI once.
 
 The local validator checks the portable metadata contract, directory names, relative links, `skills.sh.json` / `PORTABILITY.md` coverage, and drift of the generated [`SKILLS.md`](./SKILLS.md#skills-catalogue) catalogue. TypeScript checks use Effect-aware Oxlint rules from `@timmo001/oxlint-rules/configs/recommended-effect`. CI also verifies the independent installer discovery result.
 
