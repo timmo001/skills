@@ -101,10 +101,10 @@ checksum = "sha256:9fef7eca6743a6b910989cd8e78712376b394fcb9b6e1e9c44a0799a287f9
 url = "https://nodejs.org/dist/v26.10.0/node-v26.10.0-win-x64.zip"
 
 [[tools."npm:skills"]]
-version = "1.7.0"
-aube = { path = ".mise/locks/npm-skills/1.7.0", digest = "sha256:5e1165c56e5de749970266d1a30e7fc0c22a36480eab6c505c7d6748076654bc" }
+version = "1.7.1"
+aube = { path = ".mise/locks/npm-skills/1.7.1", digest = "sha256:a8d50909b980650eb66ef5df20bb282de3e3267a1466db66bb4aab323cf81e39" }
 backend = "npm:skills"
-specifiers = ["1.7.0"]
+specifiers = ["1.7.1"]
 
 [[tools."pipx:yamllint"]]
 version = "1.38.0"
