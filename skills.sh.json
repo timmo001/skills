@@ -44,7 +44,6 @@
         "github-repository-setup",
         "herdr-workflows",
         "home-assistant-frontend",
-        "home-assistant-lazy-context",
         "home-assistant-lit-rendering",
         "release-oxlint-rules",
         "opencode-effect",

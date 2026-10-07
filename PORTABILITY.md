@@ -49,7 +49,6 @@ These are agent-agnostic in format, but their workflows or specific branches dep
 | `github-repository-setup` | Authenticated GitHub CLI, Git, jq, and repository creation/settings write access. Encodes preferred personal repository defaults, discovers workflow examples from the authenticated account, and uses the owner-selected shared source, including `timmo001/workflows` for the personal Renovate caller. Delegates reusable workflows and post-push rulesets to `shared-workflows` and `github-development-rulesets`. |
 | `herdr-workflows` | Herdr, its CLI environment, and the external `herdr` skill. |
 | `home-assistant-frontend` | Home Assistant frontend checkout and its local guidance. |
-| `home-assistant-lazy-context` | Home Assistant frontend source and conventions. |
 | `home-assistant-lit-rendering` | Home Assistant frontend and Lit. |
 | `opencode-effect` | OpenCode V2 plus mutually compatible plugin, client, SDK, and Effect package contracts. |
 | `pitchfork-dev-servers` | Project-declared dev-server runtime and tasks; Pitchfork and daemon configuration only for the fallback tier. |
