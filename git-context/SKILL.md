@@ -44,7 +44,7 @@ For any requested commit amendment, load `dot-git-commit` and use its `dot git-c
 
 1. Read each conflicted file and understand both sides.
 2. When both sides are additive (independent features touching the same location), keep both.
-3. After replacing conflict markers, verify full method/function bodies are intact — shared code between conflict markers is easily lost if not carefully included in the resolution.
+3. After replacing conflict markers, verify full method/function bodies are intact. Shared code between conflict markers is easily lost if not carefully included in the resolution.
 4. Stage resolved files with `git add`.
 5. Continue with `GIT_EDITOR=true git rebase --continue`.
 

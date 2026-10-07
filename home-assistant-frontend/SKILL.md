@@ -87,5 +87,5 @@ The Home Assistant core, documentation, custom cards, custom dashboards, and cor
 - Developer documentation for custom cards, custom dashboards, frontend architecture, and core packages lives here (developers.home-assistant.io).
 - When creating or updating documentation for custom card APIs, dashboard strategies, Lovelace extensibility, or frontend development guides, work in this repo.
 - Reference `docs/frontend/` and `docs/frontend.md` for existing frontend developer documentation.
-- Core packages are cloned here — use them as reference for documenting Python package APIs and integration development patterns.
+- Core packages are cloned here; use them as reference for documenting Python package APIs and integration development patterns.
 - Discover and follow that repository's `AGENTS.md` and repo-local skills before making changes.

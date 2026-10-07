@@ -59,10 +59,10 @@ Do not use. Each has a `@deprecated` comment naming the replacement:
 
 ## Entity Decorators (`src/common/decorators/consume-context-entry.ts`)
 
-- `@consumeEntityState({ entityIdPath })` — resolves entity ID from host config path, subscribes to `statesContext`, returns `HassEntity`
-- `@consumeEntityStates({ entityIdPath })` — same for array of entity IDs → `HassEntity[]`
-- `@consumeEntityRegistryEntry({ entityIdPath })` — subscribes to `entitiesContext`, returns `EntityRegistryDisplayEntry`
-- `@consumeLocalize()` — subscribes to `internationalizationContext` and narrows it to `LocalizeFunc`
+- `@consumeEntityState({ entityIdPath })`: resolves entity ID from host config path, subscribes to `statesContext`, returns `HassEntity`
+- `@consumeEntityStates({ entityIdPath })`: same for array of entity IDs → `HassEntity[]`
+- `@consumeEntityRegistryEntry({ entityIdPath })`: subscribes to `entitiesContext`, returns `EntityRegistryDisplayEntry`
+- `@consumeLocalize()`: subscribes to `internationalizationContext` and narrows it to `LocalizeFunc`
 
 Use `@consumeLocalize()` when a component only needs `localize`. Use `internationalizationContext` directly when it also needs `locale`, `language`, `translationMetadata`, `loadBackendTranslation`, or `loadFragmentTranslation`.
 
@@ -84,7 +84,7 @@ When a component adopts context, the `hass` property is removed. This requires r
 3. **Helper/utility functions** (pure data functions):
    - Narrow the parameter from `HomeAssistant` to `Pick<HomeAssistant, "callWS">` (or the single value needed).
    - This lets the consuming component pass its context slice directly (e.g. `this._api`) without reconstructing `hass`.
-   - Prefer narrowing the helper over changing every caller — keeps the scope of the change small.
+   - Prefer narrowing the helper over changing every caller; it keeps the scope of the change small.
 
 ### Narrowing Helpers to Avoid Scope Explosion
 
@@ -110,7 +110,7 @@ The component then passes its context slice directly:
 @consume({ context: apiContext, subscribe: true })
 private _api!: ContextType<typeof apiContext>;
 
-// Passes directly — no reconstruction needed
+// Passes directly, no reconstruction needed
 const triggers = await fetchDeviceTriggers(this._api, deviceId);
 ```
 
@@ -118,9 +118,9 @@ This keeps the change focused: the dialog/panel adopts context, the helpers get 
 
 ### When to Use `Pick` vs Individual Values
 
-- **`Pick<HomeAssistant, "callWS">`** — when the helper uses methods from a single context group and the existing param name `hass` stays readable. Keeps changes minimal.
-- **Individual value** (e.g. `states: HassEntities`) — when passing a plain data map that the helper iterates/reads. More explicit, avoids the `hass.` prefix.
-- **`Pick` with multiple keys** — avoid unless strictly necessary. If a helper needs `"callWS" | "localize"`, consider splitting it or accepting the grouped context type directly.
+- **`Pick<HomeAssistant, "callWS">`**: when the helper uses methods from a single context group and the existing param name `hass` stays readable. Keeps changes minimal.
+- **Individual value** (e.g. `states: HassEntities`): when passing a plain data map that the helper iterates/reads. More explicit, avoids the `hass.` prefix.
+- **`Pick` with multiple keys**: avoid unless strictly necessary. If a helper needs `"callWS" | "localize"`, consider splitting it or accepting the grouped context type directly.
 
 ### Consumption Pattern
 
