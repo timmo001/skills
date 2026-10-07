@@ -46,7 +46,6 @@
         "herdr-workflows",
         "home-assistant-frontend",
         "home-assistant-lazy-context",
-        "home-assistant-list-components",
         "home-assistant-lit-rendering",
         "release-oxlint-rules",
         "opencode-effect",
