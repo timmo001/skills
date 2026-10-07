@@ -84,6 +84,12 @@ const isNetworkFailure = (error: GitHubError) =>
     error.stderr,
   );
 
+// Git transport drops that effect-gh's network pattern does not cover.
+const isGitTransportDrop = (stderr: string) =>
+  /closed by remote host|kex_exchange_identification|remote end hung up unexpectedly|early EOF/i.test(
+    stderr,
+  );
+
 const fromGhError = (command: string, error: GhError, stderr?: string) =>
   Match.value(error).pipe(
     Match.tags({
@@ -103,7 +109,7 @@ const fromGhError = (command: string, error: GhError, stderr?: string) =>
           exitCode: full.exitCode,
           stderr: full.stderr,
           status: Option.getOrNull(httpStatus(full)),
-          retryable: isTransient(full),
+          retryable: isTransient(full) || isGitTransportDrop(full.stderr),
         });
       },
       GhTimeoutError: (error) =>

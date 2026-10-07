@@ -422,15 +422,11 @@ const syncRepository = Effect.fn("Consumers.syncRepository")(function* (
 
   const skills = (...args: string[]) => skillsCli.run(args, { cwd: checkout });
 
-  yield* github.run([
-    "repo",
-    "clone",
-    repository,
-    checkout,
-    "--",
-    "--depth",
-    "1",
-  ]);
+  // A failed clone removes the directory it created, so retrying is safe.
+  yield* github.run(
+    ["repo", "clone", repository, checkout, "--", "--depth", "1"],
+    { readOnly: true },
+  );
 
   const branch = (yield* git("rev-parse", "--abbrev-ref", "HEAD")).trim();
   const locked = yield* readLock(checkout);
