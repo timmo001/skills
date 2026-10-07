@@ -50,6 +50,7 @@ These are agent-agnostic in format, but their workflows or specific branches dep
 | `herdr-workflows` | Herdr, its CLI environment, and the external `herdr` skill. |
 | `home-assistant-frontend` | Home Assistant frontend checkout, or a custom card or dashboard repository with the frontend's `ha-frontend-*` skills linked from a submodule. |
 | `home-assistant-lit-rendering` | Home Assistant frontend checkout, or a custom card or dashboard repository, with Lit. |
+| `npm-jsr-first-publish` | npm 11.15 or later, jq, curl, Git, npm and JSR accounts, and a GitHub Actions release workflow that publishes with OIDC. The bundled script needs an interactive terminal for npm and JSR sign-in. |
 | `opencode-effect` | OpenCode V2 plus mutually compatible plugin, client, SDK, and Effect package contracts. |
 | `pitchfork-dev-servers` | Project-declared dev-server runtime and tasks; Pitchfork and daemon configuration only for the fallback tier. |
 | `pkexec-root` | Linux with polkit/pkexec; pacman or yay for Arch package operations, sudo as fallback. |

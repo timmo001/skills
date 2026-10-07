@@ -46,6 +46,7 @@
         "home-assistant-frontend",
         "home-assistant-lit-rendering",
         "release-oxlint-rules",
+        "npm-jsr-first-publish",
         "opencode-effect",
         "pitchfork-dev-servers",
         "pkexec-root",
