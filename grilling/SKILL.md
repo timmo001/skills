@@ -5,7 +5,7 @@ license: MIT
 # origin: https://github.com/mattpocock/skills/tree/main/skills/productivity/grilling
 # upstream-sha: 85f83d3fde1d3a90d5c9a657f6998c79a6c37308
 # local-edits:
-#   - preserve Light/Full intensity and materiality rules
+#   - preserve Light/Full intensity and materiality rules, defaulting to Light
 #   - use direct read-only investigation for fact-finding
 #   - cap question-tool rounds at five questions
 #   - present each round in chat first and keep questions concise via asking-questions
@@ -38,7 +38,7 @@ The user's answers reshape the tree. Recompute the frontier after each round rat
 
 ## Intensity
 
-Infer intensity from the user's wording and current context. Ask once when neither implies a level.
+Infer intensity from the user's wording and current context. Default to Light when neither implies a level; do not ask.
 
 - **Light:** phrases such as "lightly grill me", "a quick pass", "ask me a couple", or "only ask the important questions". Ask one highest-leverage material round, honouring any lower explicit question limit, then summarise.
 - **Full:** phrases such as "grill me thoroughly", "go deep", or "full grill". Continue until the material frontier is empty.
