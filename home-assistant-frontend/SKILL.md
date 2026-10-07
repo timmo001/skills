@@ -9,6 +9,8 @@ description: Home Assistant frontend skill routing and personal engineering over
 
 Use this skill when working in the Home Assistant frontend repository or on code that follows its conventions. It routes to the project's own guidance and adds only cross-project engineering preferences.
 
+This guidance belongs in the frontend repository's own `.agents/skills/ha-frontend-*` skills. When working in the frontend, offer to move rules from here into the matching repo-local skill, then remove them from this skill once they land.
+
 ## Primary Source of Truth
 
 The frontend repository owns Home Assistant implementation conventions through its `AGENTS.md` and `.agents/skills/ha-frontend-*` skills:

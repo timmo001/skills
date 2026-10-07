@@ -9,6 +9,8 @@ description: Home Assistant Lit rendering extensions for HA components and conte
 
 Use this skill together with `lit-rendering` when editing Home Assistant frontend Lit code.
 
+This guidance belongs in the frontend repository's own `.agents/skills/ha-frontend-*` skills, most likely `ha-frontend-lit` or `ha-frontend-components`. When working in the frontend, offer to move it there, then remove it from this skill once it lands.
+
 - Keep Home Assistant-specific rendering aligned with existing `ha-*` component patterns.
 - When adding editor tabs or controls, gate them by the same HA mode/capability checks used by the existing action path; do not expose UI for YAML, generated, read-only, or unsupported modes just because optional callbacks are present.
 - For `ha-generic-picker`, match repository callback shape:
