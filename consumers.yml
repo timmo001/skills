@@ -311,6 +311,7 @@ repositories:
     skills:
       - changeset-scope
       - code-review
+      - docs-kit
       - effect
       - effect-service-design
       - skill-prefixes
