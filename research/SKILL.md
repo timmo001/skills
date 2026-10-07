@@ -26,7 +26,7 @@ Answer a question by reading the sources that own the answer, then hand back fin
 
 ## Workflow
 
-1. **Frame claims before names.** State what you are trying to establish. If the topic is too vague to research and you are running interactively, ask one clarifying question. When delegated as a subagent, proceed and return findings.
+1. **Frame claims before names.** State what you are trying to establish. If the topic is vague, research the most likely reading, say which reading you took, and offer the alternative after the findings. Do not ask before researching.
 2. **Choose the evidence shape.** For a direct API, specification, version, or implementation fact, read the owning source and stop when it establishes the answer. For a recommendation, disputed claim, design question, or request for sentiment, build a proportionate source portfolio from the owning project, directly relevant maintainers or contributors, independent or downstream experience, empirical evidence when measurable, and the strongest credible disagreement. These are useful roles, not quotas.
 3. **Pick the capability that reads the source.** Prefer indexed library documentation for frameworks, repository code search for GitHub-hosted source, first-party GitHub issue and pull-request readers for project records, and a web fetcher for official material elsewhere. Use community archives only when primary sources fall short.
 4. **Inspect large output deliberately.** Do not truncate normal command output merely to save context. For genuinely huge output, search it or read targeted ranges.
