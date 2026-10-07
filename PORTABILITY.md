@@ -53,7 +53,7 @@ These are agent-agnostic in format, but their workflows or specific branches dep
 | `home-assistant-lit-rendering` | Home Assistant frontend checkout, or a custom card or dashboard repository, with Lit. |
 | `npm-jsr-first-publish` | npm 11.15 or later, jq, curl, Git, npm and JSR accounts, and a GitHub Actions release workflow that publishes with OIDC. The bundled script needs an interactive terminal for npm and JSR sign-in. |
 | `opencode-effect` | OpenCode V2 plus mutually compatible plugin, client, SDK, and Effect package contracts. |
-| `pitchfork-dev-servers` | Project-declared dev-server runtime and tasks; Pitchfork and daemon configuration only for the fallback tier. |
+| `pitchfork-dev-servers` | Project-declared dev-server runtime and tasks; Pitchfork and daemon configuration only for the fallback tier. The hosting standard assumes Pitchfork's HTTPS proxy is set up on the machine (`pitchfork proxy setup`). |
 | `pkexec-root` | Linux with polkit/pkexec; pacman or yay for Arch package operations, sudo as fallback. |
 | `release-oxlint-rules` | Writable central Oxlint rules checkout, mise, Bun, npm, and registry access; authenticated GitHub CLI and release access for publication. |
 | `safe-process-signals` | Linux shell process tools, including pgrep, pkill, killall, and timeout. |

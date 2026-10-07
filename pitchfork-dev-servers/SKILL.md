@@ -2,12 +2,12 @@
 name: pitchfork-dev-servers
 license: Apache-2.0
 compatibility: The Pitchfork fallback requires Pitchfork CLI or MCP access and repository daemon configuration. Framework-native background workflows use the project's own runtime.
-description: Manage long-running local dev servers by precedence - the project's own AGENTS.md workflow first, framework-native background mode next, then pitchfork as the fallback. Use when starting, stopping, restarting, checking, or tailing development servers, background servers, `pitchfork.toml`, pitchfork MCP tools, or local AGENTS/mise tasks that mention pitchfork.
+description: Manage long-running local dev servers by precedence - the project's own AGENTS.md workflow first, framework-native background mode next, then pitchfork as the fallback - and set them up to a standard with stable https://<daemon>.<project>.localhost addresses. Use when starting, stopping, restarting, checking, or tailing development servers, background servers, pitchfork MCP tools, or local AGENTS/mise tasks that mention pitchfork; when adding or changing a `pitchfork.toml`; or when a dev server's port clashes or its proxy URL doesn't resolve.
 ---
 
 # Pitchfork Dev Servers
 
-Use this skill when a task involves starting or managing a long-running local server and the repo provides `pitchfork.toml`, local tasks, MCP tooling, or AGENTS guidance mentioning pitchfork.
+Use this skill when a task involves starting or managing a long-running local server and the repo provides `pitchfork.toml`, local tasks, MCP tooling, or AGENTS guidance mentioning pitchfork. When adding or changing a repo's `pitchfork.toml`, its `serve:*` tasks, or its AGENTS dev-server section, read [references/hosting-standard.md](references/hosting-standard.md) first.
 
 Pitchfork is the fallback tier, not the default. Follow the project's own declared workflow first, then framework-native background mode, then pitchfork, then foreground for explicit debugging.
 
@@ -38,6 +38,7 @@ Pitchfork is the fallback tier, not the default. Follow the project's own declar
 4. Typical operations are `pitchfork start <daemon>`, `pitchfork status`, `pitchfork logs -t <daemon>`, `pitchfork restart <daemon>`, and `pitchfork stop <daemon>`.
 5. Start every server a task needs in one call (`pitchfork start api worker`, or `--group <name>`) rather than one at a time. Each returns once ready; prefer the daemon's `--port`, `--http` or `--output` readiness check over a fixed `--delay`.
 6. Treat `serve:*` as a common local convention, not a requirement.
+7. Find a running server's address with `pitchfork proxy status` rather than guessing a port. When the proxy is enabled, use the `https://<daemon>.<project>.localhost` address without a port. If it only works with the proxy's own port, run `pitchfork proxy doctor` and report the result rather than switching to the raw port.
 
 ## Notes
 
