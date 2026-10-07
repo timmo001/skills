@@ -1,26 +1,26 @@
 ---
 name: home-assistant-frontend
 license: Apache-2.0
-compatibility: Designed for Home Assistant frontend source with its repository-local ha-frontend-* skills and guidance.
-description: Home Assistant frontend skill routing and personal engineering overlays. Use only when editing or reviewing code inside a Home Assistant frontend (home-assistant/frontend) checkout, so repository-local `ha-frontend-*` skills stay authoritative and applicable Lit, TypeScript, cleanup, and HA companion skills are also loaded.
+compatibility: Designed for Home Assistant frontend source, and custom cards and dashboards, with the frontend's ha-frontend-* skills available.
+description: Home Assistant frontend skill routing and personal engineering overlays. Use only when editing or reviewing code inside a Home Assistant frontend (home-assistant/frontend) checkout or a Home Assistant custom card or dashboard repository, so the frontend's `ha-frontend-*` skills stay authoritative and applicable Lit, TypeScript, cleanup, and HA companion skills are also loaded.
 ---
 
 # Home Assistant Frontend
 
-Use this skill only inside a Home Assistant frontend (`home-assistant/frontend`) checkout. Do not apply it to other repositories, including custom cards, dashboards, or other projects that follow similar conventions. It routes to the project's own guidance and adds only cross-project engineering preferences.
+Use this skill only inside a Home Assistant frontend (`home-assistant/frontend`) checkout or a Home Assistant custom card or dashboard repository. Do not apply it to other projects. It routes to the frontend's own guidance and adds only cross-project engineering preferences.
 
 ## Primary Source of Truth
 
-The frontend repository owns Home Assistant implementation conventions through its `AGENTS.md` and `.agents/skills/ha-frontend-*` skills:
+The frontend repository owns Home Assistant implementation conventions through its `AGENTS.md` and `.agents/skills/ha-frontend-*` skills. Custom card and dashboard repositories link the applicable `ha-frontend-*` skills from a `vendor/home-assistant-frontend` submodule:
 
 1. Read the repository's applicable instructions before editing or reviewing.
-2. Discover and load every applicable repo-local `ha-frontend-*` skill based on its description.
-3. Treat those repo-local skills as authoritative for components, contexts, styling, testing, user-facing text, and review conventions.
+2. Discover and load every applicable `ha-frontend-*` skill based on its description.
+3. Treat those skills as authoritative for components, contexts, styling, testing, user-facing text, and review conventions. In custom cards and dashboards, the repository's own instructions win where they differ, for example on build tooling or public custom element APIs.
 4. Do not replace repository guidance with a global pattern or copy repository conventions into this skill.
 
 ## When to Apply
 
-Inside a Home Assistant frontend checkout, when:
+Inside a Home Assistant frontend checkout or a custom card or dashboard repository, when:
 
 - Editing or reviewing its files
 - Reviewing or writing `ha-*` prefixed Web Components
