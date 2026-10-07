@@ -2,14 +2,12 @@
 name: home-assistant-frontend
 license: Apache-2.0
 compatibility: Designed for Home Assistant frontend source with its repository-local ha-frontend-* skills and guidance.
-description: Home Assistant frontend skill routing and personal engineering overlays. Use when editing or reviewing the Home Assistant frontend so repository-local `ha-frontend-*` skills stay authoritative and applicable Lit, TypeScript, cleanup, and HA companion skills are also loaded.
+description: Home Assistant frontend skill routing and personal engineering overlays. Use only when editing or reviewing code inside a Home Assistant frontend (home-assistant/frontend) checkout, so repository-local `ha-frontend-*` skills stay authoritative and applicable Lit, TypeScript, cleanup, and HA companion skills are also loaded.
 ---
 
 # Home Assistant Frontend
 
-Use this skill when working in the Home Assistant frontend repository or on code that follows its conventions. It routes to the project's own guidance and adds only cross-project engineering preferences.
-
-This guidance belongs in the frontend repository's own `.agents/skills/ha-frontend-*` skills. When working in the frontend, offer to move rules from here into the matching repo-local skill, then remove them from this skill once they land.
+Use this skill only inside a Home Assistant frontend (`home-assistant/frontend`) checkout. Do not apply it to other repositories, including custom cards, dashboards, or other projects that follow similar conventions. It routes to the project's own guidance and adds only cross-project engineering preferences.
 
 ## Primary Source of Truth
 
@@ -22,7 +20,9 @@ The frontend repository owns Home Assistant implementation conventions through i
 
 ## When to Apply
 
-- Editing files in a Home Assistant frontend checkout
+Inside a Home Assistant frontend checkout, when:
+
+- Editing or reviewing its files
 - Reviewing or writing `ha-*` prefixed Web Components
 - Working with HA dialogs, panels, Lovelace cards, or selectors
 - Applying HA localization, theming, or design token patterns

@@ -2,14 +2,12 @@
 name: home-assistant-lit-rendering
 license: Apache-2.0
 compatibility: Designed for Home Assistant frontend Lit components and context-aware pickers; used with the lit-rendering skill.
-description: Home Assistant Lit rendering extensions for HA components and context-aware picker callback shape. Use with lit-rendering when editing or reviewing Lit render logic in the Home Assistant frontend.
+description: Home Assistant Lit rendering extensions for HA components and context-aware picker callback shape. Use with lit-rendering only when editing or reviewing Lit render logic inside a Home Assistant frontend (home-assistant/frontend) checkout.
 ---
 
 # Home Assistant Lit Rendering
 
-Use this skill together with `lit-rendering` when editing Home Assistant frontend Lit code.
-
-This guidance belongs in the frontend repository's own `.agents/skills/ha-frontend-*` skills, most likely `ha-frontend-lit` or `ha-frontend-components`. When working in the frontend, offer to move it there, then remove it from this skill once it lands.
+Use this skill together with `lit-rendering` when editing Lit code inside a Home Assistant frontend (`home-assistant/frontend`) checkout. Do not apply it to other repositories, including custom cards or dashboards that use `ha-*` components.
 
 - Keep Home Assistant-specific rendering aligned with existing `ha-*` component patterns.
 - When adding editor tabs or controls, gate them by the same HA mode/capability checks used by the existing action path; do not expose UI for YAML, generated, read-only, or unsupported modes just because optional callbacks are present.
