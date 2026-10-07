@@ -104,6 +104,8 @@ repositories:
       - changeset-scope
       - code-review
       - effect-principles
+      - home-assistant-frontend
+      - home-assistant-lit-rendering
       - lit-rendering
       - skill-prefixes
       - testing
