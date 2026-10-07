@@ -10,6 +10,7 @@ license: MIT
 #   - SKILL.md: removed subagent preference for codebase discovery
 #   - SKILL.md: allow source-led diagnosis and proportionate verification without a mandatory reproducer or hypothesis quota
 #   - SKILL.md: route test additions through the shared value-based testing policy
+#   - SKILL.md: route browser tools through browser-access
 ---
 
 # Diagnose
@@ -69,7 +70,7 @@ Use this skill for debugging work where ad-hoc inspection is likely to miss the 
 ## Tool Guidance
 
 - Start with narrow local reads and searches before broad exploration.
-- Use Chrome DevTools tools only for browser-specific bugs.
+- For browser-specific bugs, apply `browser-access` before using Chrome DevTools or any other browser tool.
 - Use tests, CLI commands, curl, small repro scripts, or harnesses to create deterministic loops.
 - Do not trim normal command output with `head` or `tail`. If a repro command is genuinely huge, capture output to a file and inspect targeted sections with `Grep` or `Read` offsets instead of re-running.
 - If project glossary, ADRs, or local architecture docs exist, use them to avoid misreading terms or constraints.
