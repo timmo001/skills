@@ -326,3 +326,12 @@ repositories:
       - testing
       - types-enforce-ts
       - writing-style
+  timmo001/docs-kit:
+    skills:
+      - changeset-scope
+      - code-review
+      - effect-principles
+      - skill-prefixes
+      - testing
+      - types-enforce-ts
+      - writing-style
