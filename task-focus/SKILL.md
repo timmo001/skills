@@ -11,42 +11,30 @@ Stay on the original task unless the user explicitly redirects it. Corrections
 and refinements steer that task; side thoughts and questions do not replace it
 or expand its implementation scope.
 
-## 1. Establish Intent
+## 1. Side Thoughts And Questions
 
+- Answer a side question directly and briefly, then carry on with the active
+  task. Do not ask how to handle it.
 - Treat tentative wording such as "I'm thinking a new branch on dev" as
   discussion, not permission to start work. A named branch or base alone is not
-  authorisation.
-- Ask whether to discuss, defer, or start separately. Use the question tool when
-  available. Wait before editing, creating a branch/worktree/workspace, launching
-  a session, or switching the current checkout for the side thought.
-- Keep the active task and checkout in place. Ask before switching that checkout
-  unless the user explicitly requested the switch; a clean tree or completed
-  task does not imply permission.
-
-Proceed only when the intended scope is clear. Do not ask the user to repeat an
-already agreed choice.
+  authorisation. Discuss it, and wait for a clear request before editing,
+  creating a branch/worktree/workspace, launching a session, or switching the
+  current checkout for it.
+- Keep the active task and checkout in place unless the user explicitly asks to
+  switch; a clean tree or completed task does not imply permission.
 
 ## 2. Choose The Session
 
-- Route side thoughts and questions into a BTW ("by the way") session when
-  supported, or a clean session with an explicit context brief. Keep the main
-  session on its active task.
-- Even after an explicit redirect, ask whether to continue here or start fresh
-  unless the user already chose. Continuing here can be reasonable with a small
-  context window and little unrelated history.
-- At around 200k tokens of accumulated context or more, strongly recommend a
-  fresh session with a concise handoff before taking on a different task. Read
-  context usage with `dot-session-status`, never an invented count. If usage is
-  unknown but the conversation is long or heavily compacted, recommend starting
-  fresh.
-- For separate implementation, prefer a dedicated Herdr workspace with a
-  Herdr-managed worktree and a fresh agent session. Include that arrangement in
-  the question so agreement authorises it. Apply `herdr` for creation and launch,
-  following local runtime guidance and preserving the current workspace and focus.
-- If Herdr is unavailable, ask how to proceed rather than switching the current
-  checkout or silently substituting a raw Git worktree.
-
-Agree the session choice before launching. Respect an explicit choice to stay.
+- Follow an explicit redirect in the current session unless the user chose
+  otherwise. At around 200k tokens of accumulated context or more, recommend a
+  fresh session with a concise handoff in a sentence, without blocking on it.
+  Read context usage with `dot-session-status`, never an invented count.
+- When the user wants separate work, prefer a BTW ("by the way") session for
+  side questions, or a dedicated Herdr workspace with a Herdr-managed worktree
+  and a fresh agent session for separate implementation. Apply `herdr` for
+  creation and launch, preserving the current workspace and focus.
+- If Herdr is unavailable, say so rather than switching the current checkout or
+  silently substituting a raw Git worktree.
 
 ## 3. Hand Over Bounded Context
 
