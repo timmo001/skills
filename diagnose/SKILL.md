@@ -3,7 +3,7 @@ name: diagnose
 description: Investigate bugs using source, observed failures, and proportionate verification. Use for regressions, intermittent failures, incorrect behaviour, or performance problems whose cause needs investigation.
 license: MIT
 # origin: https://github.com/mattpocock/skills/tree/main/skills/engineering/diagnosing-bugs
-# upstream-sha: d80fa0f4ebe0c5714af0adf8670336065233ecc6
+# upstream-sha: f3fc5632f401156837ee3872f14fe33ccf1024ea
 # local-edits:
 #   - SKILL.md: local name retained after upstream rename, condensed body, rewritten description, OpenCode tool guidance, no test-first workflow
 #   - hitl-loop.template.sh: capture non-sensitive observations; leave sign-in and other secret-bearing actions as user steps
@@ -11,6 +11,7 @@ license: MIT
 #   - SKILL.md: allow source-led diagnosis and proportionate verification without a mandatory reproducer or hypothesis quota
 #   - SKILL.md: route test additions through the shared value-based testing policy
 #   - SKILL.md: route browser tools through browser-access
+#   - SKILL.md: adapted the forced-failure safeguard to proportionate verification without test-first requirements
 ---
 
 # Diagnose
@@ -60,6 +61,7 @@ Use this skill for debugging work where ad-hoc inspection is likely to miss the 
     - Tag temporary debug logs with a unique prefix so they are easy to remove.
 5. Fix with lightweight verification.
     - Prefer the smallest verification that proves the real failure path is fixed.
+    - If you deliberately mutate code or a fixture to check that verification detects the failure, compare it with a pristine copy before trusting the failing result.
     - Apply `testing`: add regression coverage when it catches a meaningful failure that existing checks miss. Explain the benefit; an ordinary case can qualify without being a rare edge case.
     - If no good test seam exists, use another practical verification rather than forcing one or proposing architecture changes for an optional test.
 6. Verify the fix and clean up.
