@@ -166,6 +166,7 @@ repositories:
     skills:
       - changeset-scope
       - code-review
+      - docs-kit
       - effect
       - effect-gh
       - effect-service-design
