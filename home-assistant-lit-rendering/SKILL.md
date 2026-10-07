@@ -2,7 +2,7 @@
 name: home-assistant-lit-rendering
 license: Apache-2.0
 compatibility: Designed for Home Assistant frontend Lit components and context-aware pickers; used with the lit-rendering skill.
-description: Home Assistant Lit rendering extensions for HA components and context-aware picker callback shape.
+description: Home Assistant Lit rendering extensions for HA components and context-aware picker callback shape. Use with lit-rendering when editing or reviewing Lit render logic in the Home Assistant frontend.
 ---
 
 # Home Assistant Lit Rendering

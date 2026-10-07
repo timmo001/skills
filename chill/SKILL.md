@@ -1,7 +1,7 @@
 ---
 name: chill
 license: Apache-2.0
-description: Stop overengineering and reinventing the wheel. When a change has become overly complicated and out of scope.
+description: Stop overengineering and reinventing the wheel. Use when the user says a change has become overly complicated, out of scope, or is rebuilding something an existing tool or library already does.
 ---
 
 # Chill
