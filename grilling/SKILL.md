@@ -3,12 +3,13 @@ name: grilling
 description: Grill the user about a plan, decision, or idea in dependency-ready rounds. Use when the user wants to stress-test their thinking or uses a grill trigger phrase.
 license: MIT
 # origin: https://github.com/mattpocock/skills/tree/main/skills/productivity/grilling
-# upstream-sha: 85f83d3fde1d3a90d5c9a657f6998c79a6c37308
+# upstream-sha: 95249b0b49782349740fd9b8c6ce32b4e59e497a
 # local-edits:
 #   - preserve Light/Full intensity and materiality rules, defaulting to Light
 #   - use direct read-only investigation for fact-finding
 #   - cap question-tool rounds at five questions
 #   - present each round in chat first and keep questions concise via asking-questions
+#   - limit the upstream yes-accepts-recommendation rule to yes/no questions
 ---
 
 # Grilling
@@ -25,6 +26,7 @@ Interview the user until you reach a shared understanding. Map the subject as a 
 6. Include a question only when plausible answers materially change the plan or implementation. Skip nice-to-know, speculative, low-level, and safely reversible choices.
 7. Stay planning-only. Do not edit files, write specs, create issues, post comments, or implement code during grilling.
 8. Before each round, follow `asking-questions` Present Before Asking: summarise in chat what the last answers settled and what the frontier depends on, so every question makes sense from the chat above it. Keep each question and recommendation to its Wording rules.
+9. For yes/no questions, word the question so "yes" accepts the recommended answer.
 
 Format every question like this:
 
