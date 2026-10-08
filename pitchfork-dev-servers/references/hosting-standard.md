@@ -52,6 +52,7 @@ With the proxy enabled, these are `https://server.myapp.localhost` and `https://
 - **Keep dev state separate.** Use its own database, socket or data directory under `$XDG_STATE_HOME` or `$XDG_RUNTIME_DIR`, and unset environment that points at a real instance.
 - **`retry = true`** for servers that should come back after a crash.
 - **mise tasks** `serve:<daemon>` and `:status`, `:logs`, `:restart` and `:stop` for each daemon. Don't add a second name for the same thing.
+- **Servers that detach themselves.** Run the server in the foreground so pitchfork tracks it. Astro 7+ detaches `astro dev` when it detects an agent, and the supervisor can inherit that environment, so pass `--ignore-lock` (`exec bunx astro dev --ignore-lock --host 127.0.0.1 --port "$PORT"`). Check `pitchfork status` shows it running after start; a daemon that stops straight away while the site still answers has detached.
 
 ## AGENTS.md
 
@@ -65,7 +66,7 @@ Add a `## Background Dev Servers` section that says:
 
 Use these only when the standard can't fit, and say why in a comment.
 
-- **A fixed port or socket is required**, for example a dev server that stands in for an installed service. Keep the wrapper that stops and restores the real service. It can still have a `port` entry for an address.
+- **A fixed port or socket is required**, for example a dev server that stands in for an installed service. Give it `port = <N>` with no bump, for an address. Pitchfork refuses to start a daemon whose port is taken, so stop the real service in a `oneshot` daemon listed in `depends`, and bring it back from an `on_exit` hook. Hooks run after the daemon exits and outside its process group; on a restart the hook fires after the next start has begun, so skip the restore when `pitchfork status "$PITCHFORK_DAEMON_ID"` shows it running.
 - **A repository you can't commit to.** Register it in the global config (`~/.config/pitchfork/config.toml`) as `[namespaces.<name>]` with `dir` and a `config` file kept outside the repository. The project label becomes the namespace name.
 - **An HTTPS page that has to reach a plain HTTP server**, or a server that rejects the proxy's `Host` and `X-Forwarded-*` headers. Run a forwarder that drops those headers (`dot http-forward` where it's installed) as a daemon with a `port`, and point the page at its address.
 - **Per-run arguments.** Pitchfork doesn't pass the caller's environment to a daemon, so write the arguments to a state file and have `run` read them.
