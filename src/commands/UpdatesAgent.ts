@@ -49,7 +49,10 @@ import {
 
 const SUCCESS_PREFIX = "STATUS: success";
 
-const FAILURE_PREFIX = "STATUS: failure";
+const failureStatusLine = /^STATUS: failure\b/;
+
+const SKILL_UPDATES_STATUS_REMINDER =
+  "Your last message had no status line. Reply with one line containing only `STATUS: success` or `STATUS: failure` for this run, then a concise summary. Do not do any more work.";
 
 export const SkillUpdatesAgentModel = Schema.Struct({
   providerID: Schema.NonEmptyString,
@@ -271,6 +274,7 @@ export const skillUpdatesNeedingWork = (
 export const skillUpdatesAgentPrompt = (
   config: SkillUpdatesAgentConfig,
   run: SuccessfulWorkflowRun,
+  pending: readonly string[],
 ) =>
   [
     config.prompt.trim(),
@@ -278,8 +282,9 @@ export const skillUpdatesAgentPrompt = (
     "Trusted automation context:",
     `- Dashboard issue: ${config.dashboardIssue}`,
     `- Completed workflow run: ${run.url}`,
+    `- Updates needing work, checked against upstream by this runner: ${pending.join(", ")}. Use this list when the dashboard is incomplete or could not check upstream.`,
     "",
-    "Return exactly one status line followed by a concise summary. Use `STATUS: success` only after all requested work and cleanup completed. Use `STATUS: failure` followed by the blocker otherwise.",
+    "Start your final message with one line containing only `STATUS: success` or `STATUS: failure`, followed by a concise summary. Use `STATUS: success` only after all requested work and cleanup completed. Otherwise use `STATUS: failure` and describe the blocker in the summary.",
   ].join("\n");
 
 export const skillUpdatesWorkflowEndpoint = (value: string): string | null => {
@@ -300,7 +305,7 @@ export const skillUpdatesAgentResultStatus = (
   const statuses = output
     .split("\n")
     .map((line) => line.trim())
-    .filter((line) => line === SUCCESS_PREFIX || line === FAILURE_PREFIX);
+    .filter((line) => line === SUCCESS_PREFIX || failureStatusLine.test(line));
 
   return statuses.length === 1
     ? statuses[0] === SUCCESS_PREFIX
@@ -1496,39 +1501,53 @@ const processWithFallback = Effect.fn("UpdatesAgent.processWithFallback")(
 
       const result = yield* Effect.exit(
         Effect.gen(function* () {
-          session = yield* createSkillUpdatesSession(config);
-          yield* executor
-            .stream(
-              config.opencodeCommand,
-              [
-                ...(config.opencodeArgs ?? []),
-                "run",
-                "--server",
-                session.server,
-                "--session",
-                session.id,
-                "--auto",
-                "--agent",
-                config.opencodeAgent,
-                "--model",
-                name,
-                "--title",
-                "Scheduled skill updates",
-                prompt,
-              ],
-              {
-                cwd: config.repositories[0],
-                env: { OPENCODE_PASSWORD: Redacted.value(session.password) },
-              },
-            )
-            .pipe(
-              Stream.runForEach((line) =>
-                Effect.gen(function* () {
-                  yield* Console.log(line);
-                  output.push(line);
-                }),
-              ),
+          const current = yield* createSkillUpdatesSession(config);
+          session = current;
+
+          const send = (text: string) =>
+            executor
+              .stream(
+                config.opencodeCommand,
+                [
+                  ...(config.opencodeArgs ?? []),
+                  "run",
+                  "--server",
+                  current.server,
+                  "--session",
+                  current.id,
+                  "--auto",
+                  "--agent",
+                  config.opencodeAgent,
+                  "--model",
+                  name,
+                  "--title",
+                  "Scheduled skill updates",
+                  text,
+                ],
+                {
+                  cwd: config.repositories[0],
+                  env: { OPENCODE_PASSWORD: Redacted.value(current.password) },
+                },
+              )
+              .pipe(
+                Stream.runForEach((line) =>
+                  Effect.gen(function* () {
+                    yield* Console.log(line);
+                    output.push(line);
+                  }),
+                ),
+              );
+
+          yield* send(prompt);
+
+          // Models sometimes finish the work but drop the status line, so ask
+          // the same session once rather than redoing the work on a fallback.
+          if (skillUpdatesAgentResultStatus(output.join("\n")) === null) {
+            yield* Console.error(
+              `Model ${name} returned no status line; asking it for one`,
             );
+            yield* send(SKILL_UPDATES_STATUS_REMINDER);
+          }
         }),
       );
 
@@ -1803,7 +1822,7 @@ const runDevice = Effect.fn("UpdatesAgent.runDevice")(function* (
         yield* Console.log(`Updates needing work: ${pending.join(", ")}`);
         attempts = yield* processWithFallback(
           config,
-          skillUpdatesAgentPrompt(config, run),
+          skillUpdatesAgentPrompt(config, run, pending),
           states,
           initialPr,
         );

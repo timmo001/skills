@@ -474,6 +474,14 @@ describe("updates agent policies", () => {
         skillUpdatesAgentResultStatus("STATUS: failure\nSTATUS: success"),
       ).toBeNull();
       expect(skillUpdatesAgentResultStatus("Work complete")).toBeNull();
+      expect(
+        skillUpdatesAgentResultStatus(
+          "STATUS: failure - upstream returned 403",
+        ),
+      ).toBe("failure");
+      expect(
+        skillUpdatesAgentResultStatus("STATUS: success - done"),
+      ).toBeNull();
     }),
   );
 
