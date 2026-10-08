@@ -62,10 +62,10 @@ compiled to GitHub Actions lock files.
    - permissions and output controls: `safe-outputs.md` and
      `workflow-constraints.md`
 
-When creating, updating, diagnosing or upgrading a workflow that uses
-`tools.work-queue`, also load the official `work-queue.md` guidance after the
-primary prompt. Load deployment guidance, operator references or specifications
-only when the task needs them.
+   When creating, updating, diagnosing or upgrading a workflow that uses
+   `tools.work-queue`, also load the official `work-queue.md` guidance after the
+   primary prompt. Load deployment guidance, operator references or
+   specifications only when the task needs them.
 
 4. Edit the Markdown source, not the generated lock file. Compile with the
    repository's documented command and review the generated diff.
