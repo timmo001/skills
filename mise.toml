@@ -1,6 +1,6 @@
 [tools]
 bun = "1.4.2"
-node = "26.10.0"
+node = "26.11.1"
 "npm:skills" = "1.7.1"
 uv = "0.12.23"
 "pipx:yamllint" = "1.38.0"
