@@ -325,15 +325,6 @@ repositories:
       - testing
       - types-enforce-ts
       - writing-style
-  timmo001/system-bridge-connector:
-    skills:
-      - changeset-scope
-      - code-review
-      - effect-principles
-      - skill-prefixes
-      - task-runners
-      - testing
-      - writing-style
   timmo001/renovate-config:
     skills:
       - changeset-scope
