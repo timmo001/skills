@@ -1,7 +1,7 @@
 [tools]
 bun = "1.4.2"
 node = "26.11.1"
-"npm:skills" = "1.7.1"
+"npm:skills" = "1.7.2"
 uv = "0.12.24"
 "pipx:yamllint" = "1.38.0"
 
