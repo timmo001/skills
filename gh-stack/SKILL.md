@@ -1,6 +1,6 @@
 ---
 name: gh-stack
-compatibility: Requires Git, authenticated GitHub CLI with the gh stack extension, and GitHub access. Commits use the dot git-commit gateway.
+compatibility: Requires Git, authenticated GitHub CLI with the gh stack extension, and GitHub access. Commits use the dot git commit gateway.
 description: Manage stacked branches and pull requests with GitHub's `gh stack` extension. Use when work involves stacked PRs, dependent branches, stack creation, navigation, submission, synchronisation, rebasing, restructuring, linking, or merging.
 license: MIT
 # origin: https://github.com/github/gh-stack/tree/main/skills/gh-stack
@@ -24,7 +24,7 @@ after the user explicitly requests a commit or push.
 - Inspect with `gh stack view --json` before and after every mutation.
 - Do not commit through `gh stack add -m`, `-A`, or `-u`, and never run raw
   `git commit`. Commit only after explicit authorisation through
-  `dot git-commit`, following the `dot-git-commit` skill.
+  `dot git commit`, following the `dot-git-commit` skill.
 - Treat `push`, `submit`, `sync`, and branch arguments passed to `link` as push
   operations. Run them only when the user explicitly authorises that push.
 - `submit` and `link` can create pull requests and generate or change titles,
@@ -106,7 +106,7 @@ ambiguous.
    ```
 
 3. Implement and verify one independently reviewable layer at a time.
-4. When authorised to commit, use `dot git-commit` on the exact paths.
+4. When authorised to commit, use `dot git commit` on the exact paths.
 5. Add the next branch from the current top:
 
    ```bash
@@ -135,7 +135,7 @@ Make a correction on the branch that owns it, not as an upstack workaround:
 1. Navigate to the owning branch with `down`, `bottom`, or explicit
    `checkout`.
 2. Make and verify the correction.
-3. Commit only through the authorised `dot git-commit` workflow.
+3. Commit only through the authorised `dot git commit` workflow.
 4. With approval to rewrite the upstack branches, run:
 
    ```bash

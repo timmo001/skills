@@ -769,7 +769,7 @@ const commitConsumers = Effect.fn("Consumers.commit")(function* (
 
   const code = yield* executor.inherit(
     "dot",
-    ["git-commit", "--message", message, "--path", CONSUMERS_FILE, "--push"],
+    ["git", "commit", "--message", message, "--path", CONSUMERS_FILE, "--push"],
     { cwd: root },
   );
 

@@ -1,7 +1,7 @@
 ---
 name: git-context
 license: Apache-2.0
-compatibility: Requires Git, the context-cli skill for repository snapshots, dotfiles Git helpers, and GitHub CLI for their workflows. Amendments use dot git-commit.
+compatibility: Requires Git, the context-cli skill for repository snapshots, dotfiles Git helpers, and GitHub CLI for their workflows. Amendments use dot git commit.
 description: Patterns for working with git branches, remotes, diffs against the default branch, and rebases. Use when resolving rebase conflicts, continuing interactive rebases, amending commits, or any git operation that would open an interactive editor.
 ---
 
@@ -19,7 +19,7 @@ For branch, working-tree, commit, diff and pull request context, including PR ch
 
 Prefer the installed helpers over rebuilding default-branch operations with ad-hoc shell commands:
 
-- `git-default-ref` is the guarded resolver used by all helpers. It prefers `upstream`, falls back to `origin`, verifies local `<remote>/HEAD` against the advertised default, and fetches it. A missing or mismatched ref requires human confirmation; under `dot is-agent` or without a TTY it fails instead of prompting.
+- `git-default-ref` is the guarded resolver used by all helpers. It prefers `upstream`, falls back to `origin`, verifies local `<remote>/HEAD` against the advertised default, and fetches it. A missing or mismatched ref requires human confirmation; under `dot agent detect` or without a TTY it fails instead of prompting.
 - `git-switch-default` (`gsd`) switches to the resolved default branch and fast-forwards it.
 - `git-rebase-default` (`grd`) rebases the checked-out branch onto the resolved default with `--autostash`.
 - `gra` prints a status message and runs `git rebase --abort`.
@@ -38,7 +38,7 @@ GIT_EDITOR=true git merge --continue    # After resolving merge conflicts
 GIT_EDITOR=true git revert --continue   # After resolving revert conflicts
 ```
 
-For any requested commit amendment, load `dot-git-commit` and use its `dot git-commit --amend` gateway flow instead of raw `git commit --amend`.
+For any requested commit amendment, load `dot-git-commit` and use its `dot git commit --amend` gateway flow instead of raw `git commit --amend`.
 
 ### Resolving rebase conflicts
 

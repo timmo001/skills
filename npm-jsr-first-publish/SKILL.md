@@ -30,7 +30,7 @@ The script publishes a `0.0.0` placeholder instead of the real version. The shar
    - JSR's package page has no versions until the first release, and new versions take a while to appear.
 
    Take the script's output as evidence: `+ <package>@0.0.0`, "Trust configuration created successfully" (`npm trust list` needs an npm login), and the JSR check confirming the link. Confirm the link with `curl https://api.jsr.io/scopes/<scope>/packages/<name>`, where `githubRepository` should be set. Move on to the next step and check `npm view <package> versions` in a background shell instead of blocking on it.
-5. **First release, only when asked.** Publish the GitHub release for the real version and watch its run. `dot git-releases` can't create a repository's first release (its refresh gets a 404 for the missing latest release), so use `gh release create <version> --title <version> --notes-file <file>` instead. The new versions can take minutes to appear on npm and JSR; a green run with "+ <package>@<version>" in the npm job is enough to continue.
+5. **First release, only when asked.** Publish the GitHub release for the real version and watch its run. `dot git releases` can't create a repository's first release (its refresh gets a 404 for the missing latest release), so use `gh release create <version> --title <version> --notes-file <file>` instead. The new versions can take minutes to appear on npm and JSR; a green run with "+ <package>@<version>" in the npm job is enough to continue.
 
 ## Traps
 
