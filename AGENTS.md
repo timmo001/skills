@@ -23,11 +23,11 @@
 - Use only Agent Skills frontmatter fields unless a vendor-specific extension is deliberately documented.
 - Keep supporting files within the skill and link to them relatively from `SKILL.md`.
 - Update `PORTABILITY.md` and `skills.sh.json` when a skill is added, removed, or changes runtime, tool, repository, or machine assumptions.
-- Regenerate `SKILLS.md` with `mise run catalogue` (or `./dist/skill-maintenance catalogue`) after skill or grouping changes; validate fails on drift.
+- Regenerate `SKILLS.md` and `.claude-plugin/marketplace.json` with `mise run catalogue` (or `./dist/skill-maintenance catalogue`) after skill, grouping or import changes; validate fails on drift.
 - Commit imported skills only when they contain documented local edits. Mark unchanged imports `external` in `imports.json`; never commit their content. `skill-maintenance install` installs them at the pinned SHA, and `dot update` runs it.
 - Keep adapted imports as top-level reviewed snapshots. `imports.json` owns origin, reviewed SHA, licence, local-edit metadata, and distribution mode. Materialise its provenance overlay in every committed imported skill; the installer adds it to external copies.
 - Build `dist/skill-maintenance`, then materialise metadata with `./dist/skill-maintenance import <name> --metadata-only`; compare upstream changes with the same command.
-- Do not add client-specific marketplace packaging or duplicate canonical skill content.
+- Never duplicate canonical skill content for a client. The generated Claude plugin marketplace points at the top-level skills and pins each external import to its reviewed SHA.
 - `consumers.yml` lists the repositories that receive project copies of skills from here. Only committed skills and licensed external imports that keep their upstream name can be listed. `skill-maintenance consumers add` adds skills to an entry, creating it if needed, and `consumers remove` takes them out; both push `consumers.yml` to skills `main` and sync that repository straight away, so they need explicit authorisation to push. `skill-maintenance consumers` pushes to those repositories, so run it with `--dry-run` unless the user asked for the push.
 
 ## Verification

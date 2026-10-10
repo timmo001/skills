@@ -21,7 +21,11 @@ import {
   renderUpdateMarkdown,
   type UpdateReportItem,
 } from "./Updates.js";
-import { CATALOGUE_FILE, writeSkillsCatalogue } from "./Catalogue.js";
+import {
+  CATALOGUE_FILE,
+  MARKETPLACE_FILE,
+  writeSkillsCatalogue,
+} from "./Catalogue.js";
 import { importSkill } from "./Import.js";
 import { getImport } from "../imports/metadata.js";
 import {
@@ -411,6 +415,7 @@ export function isScopedSkillPatch(patch: string, skill: string): boolean {
   const allowed = (file: string) =>
     file === "imports.json" ||
     file === CATALOGUE_FILE ||
+    file === MARKETPLACE_FILE ||
     file.startsWith(`${skill}/`);
 
   return (
@@ -635,7 +640,7 @@ const publishCleanUpdate = Effect.fn("UpdatesAgent.publishCleanUpdate")(
     yield* validateRepository(root);
     yield* runOrFail(
       "git",
-      ["add", "--", "imports.json", CATALOGUE_FILE],
+      ["add", "--", "imports.json", CATALOGUE_FILE, MARKETPLACE_FILE],
       root,
     );
 
@@ -653,7 +658,15 @@ const publishCleanUpdate = Effect.fn("UpdatesAgent.publishCleanUpdate")(
     const title = skillUpdateSubject(patch, name);
     yield* runOrFail(
       "git",
-      ["commit", "-m", title, "--", "imports.json", CATALOGUE_FILE],
+      [
+        "commit",
+        "-m",
+        title,
+        "--",
+        "imports.json",
+        CATALOGUE_FILE,
+        MARKETPLACE_FILE,
+      ],
       root,
     );
     yield* runOrFail(

@@ -1,0 +1,254 @@
+{
+  "name": "timmo001-skills",
+  "description": "Agent Skills from timmo001/skills, with external imports pinned to their reviewed commits",
+  "owner": {
+    "name": "Aidan Timson",
+    "url": "https://github.com/timmo001"
+  },
+  "plugins": [
+    {
+      "name": "timmo",
+      "description": "Skills authored or adapted in timmo001/skills",
+      "source": ".",
+      "skills": "./"
+    },
+    {
+      "name": "timmo-add-oxlint-rule",
+      "description": "External import from timmo001/oxlint-rules",
+      "license": "Apache-2.0",
+      "metadata": {
+        "skill": "add-oxlint-rule"
+      },
+      "source": {
+        "source": "git-subdir",
+        "url": "timmo001/oxlint-rules",
+        "path": "skills/add-oxlint-rule",
+        "sha": "97784452c3569e85acc1ef545c6756ee0b5f015e"
+      }
+    },
+    {
+      "name": "timmo-cloudflare",
+      "description": "External import from cloudflare/skills",
+      "license": "Apache-2.0",
+      "metadata": {
+        "skill": "cloudflare"
+      },
+      "source": {
+        "source": "git-subdir",
+        "url": "cloudflare/skills",
+        "path": "skills/cloudflare",
+        "sha": "41e0d19858946d18af9ee2c2feebbe2e11d829ff"
+      }
+    },
+    {
+      "name": "timmo-context-cli",
+      "description": "External import from timmo001/context",
+      "license": "Apache-2.0",
+      "metadata": {
+        "skill": "context-cli"
+      },
+      "source": {
+        "source": "git-subdir",
+        "url": "timmo001/context",
+        "path": ".agents/skills/context-cli",
+        "sha": "69aa410180bfc5c3001bc3b5774f51a110303b6c"
+      }
+    },
+    {
+      "name": "timmo-docs-kit",
+      "description": "External import from timmo001/docs-kit",
+      "license": "Apache-2.0",
+      "metadata": {
+        "skill": "docs-kit"
+      },
+      "source": {
+        "source": "git-subdir",
+        "url": "timmo001/docs-kit",
+        "path": "skills/docs-kit",
+        "sha": "ab99a7c73c7531c674ee8ab4b9045f44ec3f9190"
+      }
+    },
+    {
+      "name": "timmo-effect",
+      "description": "External import from kitlangton/skills",
+      "license": "MIT",
+      "metadata": {
+        "skill": "effect"
+      },
+      "source": {
+        "source": "git-subdir",
+        "url": "kitlangton/skills",
+        "path": "skills/effect",
+        "sha": "a1537921969c7cfc4d985befaba7752313da0fce"
+      }
+    },
+    {
+      "name": "timmo-effect-gh",
+      "description": "External import from timmo001/effect-gh",
+      "license": "Apache-2.0",
+      "metadata": {
+        "skill": "effect-gh"
+      },
+      "source": {
+        "source": "git-subdir",
+        "url": "timmo001/effect-gh",
+        "path": "skills/effect-gh",
+        "sha": "df8c724f83a154280a917c17d8e4d4ef5d1905a4"
+      }
+    },
+    {
+      "name": "timmo-effect-herdr",
+      "description": "External import from timmo001/effect-herdr",
+      "license": "MIT",
+      "metadata": {
+        "skill": "effect-herdr"
+      },
+      "source": {
+        "source": "git-subdir",
+        "url": "timmo001/effect-herdr",
+        "path": "skills/effect-herdr",
+        "sha": "976b656fb121958063bd50630b2efb8d297dbb4b"
+      }
+    },
+    {
+      "name": "timmo-effect-service-design",
+      "description": "External import from dmmulroy/skills",
+      "license": "MIT",
+      "metadata": {
+        "skill": "effect-service-design"
+      },
+      "source": {
+        "source": "git-subdir",
+        "url": "dmmulroy/skills",
+        "path": "effect-service-design",
+        "sha": "8603380821fee6a77c82639f364ce8fe4f5a92be"
+      }
+    },
+    {
+      "name": "timmo-herdr",
+      "description": "External import from herdrdev/herdr",
+      "license": "Apache-2.0",
+      "metadata": {
+        "skill": "herdr"
+      },
+      "source": {
+        "source": "git-subdir",
+        "url": "herdrdev/herdr",
+        "path": "skills/herdr",
+        "sha": "1ab85d31ac59c484a7347a237abfb072fe1cf166"
+      }
+    },
+    {
+      "name": "timmo-install-timmo-oxlint-rules",
+      "description": "External import from timmo001/oxlint-rules",
+      "license": "Apache-2.0",
+      "metadata": {
+        "skill": "install-timmo-oxlint-rules"
+      },
+      "source": {
+        "source": "git-subdir",
+        "url": "timmo001/oxlint-rules",
+        "path": "skills/install-timmo-oxlint-rules",
+        "sha": "21b0d5bfcfa0cc4e5f69dfee5dfa30122e463cc1"
+      }
+    },
+    {
+      "name": "timmo-notes-cli",
+      "description": "External import from timmo001/notes",
+      "license": "Apache-2.0",
+      "metadata": {
+        "skill": "notes-cli"
+      },
+      "source": {
+        "source": "git-subdir",
+        "url": "timmo001/notes",
+        "path": ".agents/skills/notes-cli",
+        "sha": "095e3b9ece988cc3b61f3846b914f55e6c4272dd"
+      }
+    },
+    {
+      "name": "timmo-opentui",
+      "description": "External import from anomalyco/opentui",
+      "license": "MIT",
+      "metadata": {
+        "skill": "opentui"
+      },
+      "source": {
+        "source": "git-subdir",
+        "url": "anomalyco/opentui",
+        "path": "packages/web/src/content",
+        "sha": "5494865060b668c9889eb1e2bf1dea481b9c54d9"
+      }
+    },
+    {
+      "name": "timmo-plannotator",
+      "description": "External import from backnotprop/plannotator",
+      "license": "Apache-2.0",
+      "metadata": {
+        "skill": "plannotator"
+      },
+      "source": {
+        "source": "git-subdir",
+        "url": "backnotprop/plannotator",
+        "path": "apps/skills/core/plannotator",
+        "sha": "dad536b21b4f4687e3f8557a82562c2e22ef052e"
+      }
+    },
+    {
+      "name": "timmo-plannotator-compound",
+      "description": "External import from backnotprop/plannotator",
+      "license": "Apache-2.0",
+      "metadata": {
+        "skill": "plannotator-compound"
+      },
+      "source": {
+        "source": "git-subdir",
+        "url": "backnotprop/plannotator",
+        "path": "apps/skills/extra/plannotator-compound",
+        "sha": "26ca4e02750062ac8245509a60755e55bc67a5cd"
+      }
+    },
+    {
+      "name": "timmo-plannotator-guide",
+      "description": "External import from plannotator/guides",
+      "license": "UNLICENSED",
+      "metadata": {
+        "skill": "plannotator-guide"
+      },
+      "source": {
+        "source": "git-subdir",
+        "url": "plannotator/guides",
+        "path": "skills/plannotator-guide",
+        "sha": "78a476a98fa4791a20eae5580f2a01c5d3303a7c"
+      }
+    },
+    {
+      "name": "timmo-terminal-control",
+      "description": "External import from anomalyco/terminal-control",
+      "license": "MIT",
+      "metadata": {
+        "skill": "terminal-control"
+      },
+      "source": {
+        "source": "git-subdir",
+        "url": "anomalyco/terminal-control",
+        "path": "skills/terminal-control",
+        "sha": "b0a4d8b43977e026dc5d5aa07760bce9e677b90d"
+      }
+    },
+    {
+      "name": "timmo-workers-best-practices",
+      "description": "External import from cloudflare/skills",
+      "license": "Apache-2.0",
+      "metadata": {
+        "skill": "workers-best-practices"
+      },
+      "source": {
+        "source": "git-subdir",
+        "url": "cloudflare/skills",
+        "path": "skills/workers-best-practices",
+        "sha": "41e0d19858946d18af9ee2c2feebbe2e11d829ff"
+      }
+    }
+  ]
+}

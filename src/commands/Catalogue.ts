@@ -1,7 +1,15 @@
 import { Console, Effect, FileSystem, Path, Result, Schema } from "effect";
+import { isExternal, readImports } from "../imports/metadata.js";
+import { parseOrigin } from "../imports/upstream.js";
 import { parseFrontmatter } from "../lib/frontmatter.js";
 
 export const CATALOGUE_FILE = "SKILLS.md";
+
+/** Claude plugin marketplace generated alongside the catalogue. */
+export const MARKETPLACE_FILE = ".claude-plugin/marketplace.json";
+
+/** Plugin that loads every committed top-level skill. */
+const MARKETPLACE_PLUGIN = "timmo";
 
 export class CatalogueError extends Schema.TaggedError<CatalogueError>()(
   "CatalogueError",
@@ -149,14 +157,96 @@ export const renderSkillsCatalogue = Effect.fn(
   ].join("\n");
 });
 
+/**
+ * Renders the Claude plugin marketplace: one plugin for the committed skills,
+ * and one per external import pinned to its reviewed upstream commit, with
+ * the skill it provides in `metadata.skill`.
+ */
+export const renderMarketplace = Effect.fn("Catalogue.renderMarketplace")(
+  function* (root: string) {
+    const path = yield* Path.Path;
+
+    const imports = yield* readImports(root).pipe(
+      Effect.mapError(
+        (error) =>
+          new CatalogueError({
+            failures: [`imports.json: ${error.message}`],
+          }),
+      ),
+    );
+
+    const external = Object.entries(imports.imports)
+      .filter(([, metadata]) => isExternal(metadata))
+      .sort(([a], [b]) => a.localeCompare(b));
+
+    const importPlugins = [];
+
+    for (const [name, metadata] of external) {
+      const origin = yield* parseOrigin(metadata.origin).pipe(
+        Effect.mapError(
+          () =>
+            new CatalogueError({
+              failures: [`${name}: unsupported origin URL`],
+            }),
+        ),
+      );
+
+      // Prefixed so imports never shadow a same-named plugin from elsewhere.
+      importPlugins.push({
+        name: `${MARKETPLACE_PLUGIN}-${name}`,
+        description: `External import from ${origin.owner}/${origin.repo}`,
+        license: metadata.license,
+        metadata: { skill: name },
+        source: {
+          source: "git-subdir",
+          url: `${origin.owner}/${origin.repo}`,
+          path:
+            origin.type === "file" ? path.dirname(origin.path) : origin.path,
+          sha: metadata.upstreamSha,
+        },
+      });
+    }
+
+    const marketplace = {
+      name: "timmo001-skills",
+      description:
+        "Agent Skills from timmo001/skills, with external imports pinned to their reviewed commits",
+      owner: { name: "Aidan Timson", url: "https://github.com/timmo001" },
+      plugins: [
+        {
+          name: MARKETPLACE_PLUGIN,
+          description: "Skills authored or adapted in timmo001/skills",
+          source: ".",
+          skills: "./",
+        },
+        ...importPlugins,
+      ],
+    };
+
+    return `${JSON.stringify(marketplace, null, 2)}\n`;
+  },
+);
+
+const generatedFiles = Effect.fn("Catalogue.generatedFiles")(function* (
+  root: string,
+) {
+  return [
+    [CATALOGUE_FILE, yield* renderSkillsCatalogue(root)],
+    [MARKETPLACE_FILE, yield* renderMarketplace(root)],
+  ] as const;
+});
+
 export const writeSkillsCatalogue = Effect.fn("Catalogue.writeSkillsCatalogue")(
   function* (root: string) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const rendered = yield* renderSkillsCatalogue(root);
-    const file = path.join(root, CATALOGUE_FILE);
-    yield* fs.writeFileString(file, rendered);
-    yield* Console.log(`Wrote ${CATALOGUE_FILE}.`);
+
+    for (const [name, rendered] of yield* generatedFiles(root)) {
+      const file = path.join(root, name);
+      yield* fs.makeDirectory(path.dirname(file), { recursive: true });
+      yield* fs.writeFileString(file, rendered);
+      yield* Console.log(`Wrote ${name}.`);
+    }
   },
 );
 
@@ -164,22 +254,19 @@ export const checkSkillsCatalogue = Effect.fn("Catalogue.checkSkillsCatalogue")(
   function* (root: string) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const file = path.join(root, CATALOGUE_FILE);
-    const rendered = yield* renderSkillsCatalogue(root);
+    const failures: string[] = [];
 
-    if (!(yield* fs.exists(file)))
-      return yield* new CatalogueError({
-        failures: [
-          `${CATALOGUE_FILE}: missing; run ./dist/skill-maintenance catalogue`,
-        ],
-      });
-    const existing = yield* fs.readFileString(file);
+    for (const [name, rendered] of yield* generatedFiles(root)) {
+      const file = path.join(root, name);
 
-    if (existing !== rendered)
-      return yield* new CatalogueError({
-        failures: [
-          `${CATALOGUE_FILE}: stale; run ./dist/skill-maintenance catalogue`,
-        ],
-      });
+      if (!(yield* fs.exists(file)))
+        failures.push(
+          `${name}: missing; run ./dist/skill-maintenance catalogue`,
+        );
+      else if ((yield* fs.readFileString(file)) !== rendered)
+        failures.push(`${name}: stale; run ./dist/skill-maintenance catalogue`);
+    }
+
+    if (failures.length > 0) return yield* new CatalogueError({ failures });
   },
 );
