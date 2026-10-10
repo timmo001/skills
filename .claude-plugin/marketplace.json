@@ -19,6 +19,7 @@
       "metadata": {
         "skill": "add-oxlint-rule"
       },
+      "skills": "./",
       "source": {
         "source": "git-subdir",
         "url": "timmo001/oxlint-rules",
@@ -33,6 +34,7 @@
       "metadata": {
         "skill": "cloudflare"
       },
+      "skills": "./",
       "source": {
         "source": "git-subdir",
         "url": "cloudflare/skills",
@@ -47,6 +49,7 @@
       "metadata": {
         "skill": "context-cli"
       },
+      "skills": "./",
       "source": {
         "source": "git-subdir",
         "url": "timmo001/context",
@@ -61,6 +64,7 @@
       "metadata": {
         "skill": "docs-kit"
       },
+      "skills": "./",
       "source": {
         "source": "git-subdir",
         "url": "timmo001/docs-kit",
@@ -75,6 +79,7 @@
       "metadata": {
         "skill": "effect"
       },
+      "skills": "./",
       "source": {
         "source": "git-subdir",
         "url": "kitlangton/skills",
@@ -89,6 +94,7 @@
       "metadata": {
         "skill": "effect-gh"
       },
+      "skills": "./",
       "source": {
         "source": "git-subdir",
         "url": "timmo001/effect-gh",
@@ -103,6 +109,7 @@
       "metadata": {
         "skill": "effect-herdr"
       },
+      "skills": "./",
       "source": {
         "source": "git-subdir",
         "url": "timmo001/effect-herdr",
@@ -117,6 +124,7 @@
       "metadata": {
         "skill": "effect-service-design"
       },
+      "skills": "./",
       "source": {
         "source": "git-subdir",
         "url": "dmmulroy/skills",
@@ -131,6 +139,7 @@
       "metadata": {
         "skill": "herdr"
       },
+      "skills": "./",
       "source": {
         "source": "git-subdir",
         "url": "herdrdev/herdr",
@@ -145,6 +154,7 @@
       "metadata": {
         "skill": "install-timmo-oxlint-rules"
       },
+      "skills": "./",
       "source": {
         "source": "git-subdir",
         "url": "timmo001/oxlint-rules",
@@ -159,6 +169,7 @@
       "metadata": {
         "skill": "notes-cli"
       },
+      "skills": "./",
       "source": {
         "source": "git-subdir",
         "url": "timmo001/notes",
@@ -173,6 +184,7 @@
       "metadata": {
         "skill": "opentui"
       },
+      "skills": "./",
       "source": {
         "source": "git-subdir",
         "url": "anomalyco/opentui",
@@ -187,6 +199,7 @@
       "metadata": {
         "skill": "plannotator"
       },
+      "skills": "./",
       "source": {
         "source": "git-subdir",
         "url": "backnotprop/plannotator",
@@ -201,6 +214,7 @@
       "metadata": {
         "skill": "plannotator-compound"
       },
+      "skills": "./",
       "source": {
         "source": "git-subdir",
         "url": "backnotprop/plannotator",
@@ -215,6 +229,7 @@
       "metadata": {
         "skill": "plannotator-guide"
       },
+      "skills": "./",
       "source": {
         "source": "git-subdir",
         "url": "plannotator/guides",
@@ -229,6 +244,7 @@
       "metadata": {
         "skill": "terminal-control"
       },
+      "skills": "./",
       "source": {
         "source": "git-subdir",
         "url": "anomalyco/terminal-control",
@@ -243,6 +259,7 @@
       "metadata": {
         "skill": "workers-best-practices"
       },
+      "skills": "./",
       "source": {
         "source": "git-subdir",
         "url": "cloudflare/skills",

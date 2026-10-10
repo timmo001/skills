@@ -197,6 +197,8 @@ export const renderMarketplace = Effect.fn("Catalogue.renderMarketplace")(
         description: `External import from ${origin.owner}/${origin.repo}`,
         license: metadata.license,
         metadata: { skill: name },
+        // claude.ai only loads skills from a declared path, not a root SKILL.md.
+        skills: "./",
         source: {
           source: "git-subdir",
           url: `${origin.owner}/${origin.repo}`,
