@@ -1,5 +1,14 @@
 import { describe, expect, it } from "@effect/vitest";
-import { GhChunk, layer as ghLayer, type GhOptions } from "@timmo001/effect-gh";
+import {
+  Api,
+  Cli,
+  GhChunk,
+  Issue,
+  PullRequest,
+  Workflow,
+  layer as ghLayer,
+  type GhOptions,
+} from "@timmo001/effect-gh";
 import {
   Cause,
   Clock,
@@ -13,6 +22,7 @@ import {
   PlatformError,
   Predicate,
   Queue,
+  Schema,
   Sink,
   Stream,
 } from "effect";
@@ -24,6 +34,11 @@ const text = (value: string) => Stream.succeed(new TextEncoder().encode(value));
 
 const exit = (code: number) =>
   Effect.succeed(ChildProcessSpawner.ExitCode(code));
+
+const version = (value: string) => text(`gh version ${value} (2026-10-01)\n`);
+
+const watch = (options?: GhOptions) =>
+  Workflow.watch({ repo: "org/repo", runId: 42 }, options);
 
 const retryClock = Effect.fn("Test.retryClock")(function* () {
   const clock = yield* Clock.Clock;
@@ -116,8 +131,17 @@ describe("GitHub SDK boundary", () => {
     "waits briefly for connectivity without replaying nonnetwork failures",
     () =>
       Effect.gen(function* () {
+        const quota = { limit: 5000, used: 0, remaining: 5000, reset: 0 };
+
         const fake = yield* fixture((_command, attempt) =>
           Effect.succeed({
+            stdout: text(
+              attempt === 1
+                ? ""
+                : JSON.stringify({
+                    resources: { core: quota, graphql: quota, search: quota },
+                  }),
+            ),
             stderr: text(attempt === 1 ? "network is unreachable" : ""),
             exitCode: exit(attempt === 1 ? 1 : 0),
           }),
@@ -139,9 +163,10 @@ describe("GitHub SDK boundary", () => {
         expect(fake.commands).toHaveLength(2);
         expect(fake.commands[0]?.args).toEqual([
           "api",
-          "rate_limit",
           "--method",
           "GET",
+          "--",
+          "rate_limit",
         ]);
       }),
   );
@@ -213,12 +238,18 @@ describe("GitHub SDK boundary", () => {
         { GH_TOKEN: "test-token" },
       );
 
+      const endpoint = "repos/org/repo/git/refs/heads/state";
+
       expect(
         yield* Effect.flip(
-          fake.github.api("repos/org/repo/git/refs/heads/state", {
-            method: "PATCH",
-            body: { sha: "abc", force: false },
-          }),
+          fake.github.write(
+            endpoint,
+            Api.empty({
+              endpoint,
+              method: "PATCH",
+              body: { sha: "abc", force: false },
+            }),
+          ),
         ),
       ).toMatchObject({ status: 503, retryable: true });
       expect(fake.commands).toHaveLength(1);
@@ -229,67 +260,61 @@ describe("GitHub SDK boundary", () => {
         "--input",
         "-",
         "--",
-        "repos/org/repo/git/refs/heads/state",
+        endpoint,
       ]);
       expect(fake.commands[0]?.options.env?.GH_TOKEN).toBe("test-token");
       expect(JSON.parse(input)).toEqual({ sha: "abc", force: false });
     }),
   );
 
-  it.effect(
-    "preserves literal API queries, jq, pagination and JSON decoding",
-    () =>
-      Effect.gen(function* () {
-        const fake = yield* fixture((command) =>
-          Effect.succeed({
-            stdout: text(
-              command.args.includes("malformed")
-                ? "not json"
-                : ' \n[{"sha":"abc"}]\n',
-            ),
-          }),
-        );
+  it.effect("decodes typed responses and reports schema mismatches", () =>
+    Effect.gen(function* () {
+      const fake = yield* fixture((command) =>
+        Effect.succeed({
+          stdout: text(
+            command.args.includes("malformed")
+              ? "not json"
+              : ' \n[{"sha":"abc"}]\n',
+          ),
+        }),
+      );
 
-        const endpoint =
-          "repos/org/repo/commits?path=skill%20name&per_page=1&sha=main";
+      const Commits = Schema.Array(Schema.Struct({ sha: Schema.String }));
 
-        expect(yield* fake.github.apiJson(endpoint)).toEqual([{ sha: "abc" }]);
-        expect(fake.commands[0]?.args).toEqual([
-          "api",
+      const endpoint =
+        "repos/org/repo/commits?path=skill%20name&per_page=1&sha=main";
+
+      expect(
+        yield* fake.github.read(
           endpoint,
-          "--method",
-          "GET",
-        ]);
-        expect(
-          yield* fake.github.api(endpoint, { jq: ".[0].sha // empty" }),
-        ).toBe('[{"sha":"abc"}]');
-        expect(fake.commands[1]?.args).toEqual([
-          "api",
-          endpoint,
-          "--method",
-          "GET",
-          "--jq",
-          ".[0].sha // empty",
-        ]);
-        const args = ["api", "repos/org/repo/issues", "--paginate", "--slurp"];
-        expect(yield* fake.github.json(args, { readOnly: true })).toEqual([
-          { sha: "abc" },
-        ]);
-        expect(fake.commands[2]?.args).toEqual(args);
+          Api.json({ endpoint, method: "GET" }, Commits),
+        ),
+      ).toEqual([{ sha: "abc" }]);
+      expect(fake.commands[0]?.args).toEqual([
+        "api",
+        "--method",
+        "GET",
+        "--",
+        endpoint,
+      ]);
 
-        const malformed = yield* Effect.flip(
-          fake.github.json(["api", "malformed"], { readOnly: true }),
-        );
+      const malformed = yield* Effect.flip(
+        fake.github.read(
+          "malformed",
+          Api.json({ endpoint: "malformed", method: "GET" }, Commits),
+        ),
+      );
 
-        expect(malformed).toMatchObject({
-          command: "gh api malformed",
-          exitCode: 0,
-          status: null,
-          retryable: false,
-        });
-        expect(fake.commands).toHaveLength(4);
-        expect(fake.releases()).toBe(4);
-      }),
+      expect(malformed).toMatchObject({
+        command: "malformed",
+        exitCode: 0,
+        status: null,
+        retryable: false,
+        decode: true,
+      });
+      expect(fake.commands).toHaveLength(2);
+      expect(fake.releases()).toBe(2);
+    }),
   );
 
   for (const config of [
@@ -302,16 +327,18 @@ describe("GitHub SDK boundary", () => {
       () =>
         Effect.gen(function* () {
           const fake = yield* fixture(
-            () => Effect.succeed({ stdout: text("ok") }),
+            () => Effect.succeed({ stdout: version("2.81.0") }),
             config,
           );
 
-          expect(yield* fake.github.run(["api", "user"])).toBe("ok");
+          expect(yield* fake.github.read("gh --version", Cli.version())).toBe(
+            "2.81.0",
+          );
           yield* Stream.runDrain(
-            fake.github.stream(["run", "watch", "42"], {
-              cwd: "/repo",
-              timeout: null,
-            }),
+            fake.github.stream(
+              "gh run watch 42",
+              watch({ cwd: "/repo", timeout: null }),
+            ),
           );
 
           for (const command of fake.commands) {
@@ -337,58 +364,55 @@ describe("GitHub SDK boundary", () => {
     );
   }
 
-  it.effect(
-    "retries transient reads at one and two seconds, retaining stderr before the SDK tail",
-    () =>
-      Effect.gen(function* () {
-        const stderr =
-          "HTTP 503: temporarily unavailable\n" + "x".repeat(70_000);
+  it.effect("retries transient reads at one and two seconds", () =>
+    Effect.gen(function* () {
+      const stderr = "HTTP 503: temporarily unavailable";
 
-        const fake = yield* fixture(() =>
-          Effect.succeed({
-            stdout: text("partial"),
-            stderr: text(stderr),
-            exitCode: exit(1),
-          }),
+      const fake = yield* fixture(() =>
+        Effect.succeed({
+          stdout: text("partial"),
+          stderr: text(stderr),
+          exitCode: exit(1),
+        }),
+      );
+
+      const clock = yield* retryClock();
+
+      const fiber = yield* fake.github
+        .read("gh --version", Cli.version())
+        .pipe(
+          Effect.provideService(Clock.Clock, clock.clock),
+          Effect.flip,
+          Effect.forkScoped,
         );
 
-        const clock = yield* retryClock();
-
-        const fiber = yield* fake.github
-          .api("example")
-          .pipe(
-            Effect.provideService(Clock.Clock, clock.clock),
-            Effect.flip,
-            Effect.forkScoped,
-          );
-
-        expect(Duration.toMillis(yield* Queue.take(clock.sleeps))).toBe(1000);
-        yield* TestClock.adjust("999 millis");
-        expect(fake.commands).toHaveLength(1);
-        yield* TestClock.adjust("1 milli");
-        expect(Duration.toMillis(yield* Queue.take(clock.sleeps))).toBe(2000);
-        expect(fake.commands).toHaveLength(2);
-        yield* TestClock.adjust("1999 millis");
-        expect(fake.commands).toHaveLength(2);
-        yield* TestClock.adjust("1 milli");
-        expect(yield* Fiber.join(fiber)).toMatchObject({
-          exitCode: 1,
-          status: 503,
-          retryable: true,
-          stderr,
-        });
-        expect(fake.commands).toHaveLength(3);
-        expect(fake.releases()).toBe(3);
-      }),
+      expect(Duration.toMillis(yield* Queue.take(clock.sleeps))).toBe(1000);
+      yield* TestClock.adjust("999 millis");
+      expect(fake.commands).toHaveLength(1);
+      yield* TestClock.adjust("1 milli");
+      expect(Duration.toMillis(yield* Queue.take(clock.sleeps))).toBe(2000);
+      expect(fake.commands).toHaveLength(2);
+      yield* TestClock.adjust("1999 millis");
+      expect(fake.commands).toHaveLength(2);
+      yield* TestClock.adjust("1 milli");
+      expect(yield* Fiber.join(fiber)).toMatchObject({
+        exitCode: 1,
+        status: 503,
+        retryable: true,
+        stderr,
+      });
+      expect(fake.commands).toHaveLength(3);
+      expect(fake.releases()).toBe(3);
+    }),
   );
 
   it.effect(
-    "discards failed-attempt stdout and returns only the successful read",
+    "discards failed-attempt output and returns only the successful read",
     () =>
       Effect.gen(function* () {
         const fake = yield* fixture((_command, attempt) =>
           Effect.succeed({
-            stdout: text(attempt === 1 ? "partial" : "complete"),
+            stdout: attempt === 1 ? text("partial") : version("complete"),
             stderr: text(attempt === 1 ? "connection reset" : ""),
             exitCode: exit(attempt === 1 ? 1 : 0),
           }),
@@ -397,7 +421,7 @@ describe("GitHub SDK boundary", () => {
         const clock = yield* retryClock();
 
         const fiber = yield* fake.github
-          .run(["pr", "list"], { readOnly: true })
+          .read("gh --version", Cli.version())
           .pipe(
             Effect.provideService(Clock.Clock, clock.clock),
             Effect.forkScoped,
@@ -410,24 +434,31 @@ describe("GitHub SDK boundary", () => {
       }),
   );
 
-  it.effect("never replays mutations or unclassified raw commands", () =>
+  it.effect("never replays mutations", () =>
     Effect.gen(function* () {
       const fake = yield* fixture(() =>
         Effect.succeed({ stderr: text("HTTP 503"), exitCode: exit(1) }),
       );
 
-      for (const args of [
-        ["pr", "create"],
-        ["pr", "edit"],
-        ["pr", "merge"],
-        ["issue", "create"],
-        ["workflow", "run"],
-        ["api", "example", "--method", "POST"],
+      const repository = "org/repo";
+
+      for (const mutation of [
+        PullRequest.create({
+          repository,
+          base: "main",
+          head: "update",
+          title: "Title",
+          body: "Body",
+        }),
+        PullRequest.edit(1, { repository, body: "Body" }),
+        PullRequest.merge(1, { repository, method: "squash", auto: true }),
+        Issue.create({ repo: repository, title: "Title", body: "Body" }),
+        Workflow.dispatch({ repo: repository, workflow: "validate.yml" }),
+        Api.empty({ endpoint: "example", method: "POST" }),
       ]) {
-        expect(yield* Effect.flip(fake.github.run(args))).toMatchObject({
-          status: 503,
-          retryable: true,
-        });
+        expect(
+          yield* Effect.flip(fake.github.write("mutation", mutation)),
+        ).toMatchObject({ status: 503, retryable: true });
       }
 
       expect(fake.commands).toHaveLength(6);
@@ -444,7 +475,9 @@ describe("GitHub SDK boundary", () => {
           Effect.succeed({ stderr: text(stderr), exitCode: exit(1) }),
         );
 
-        expect(yield* Effect.flip(fake.github.api("example"))).toMatchObject({
+        expect(
+          yield* Effect.flip(fake.github.read("gh --version", Cli.version())),
+        ).toMatchObject({
           exitCode: 1,
           retryable: false,
           stderr,
@@ -463,7 +496,7 @@ describe("GitHub SDK boundary", () => {
           { SKILL_MAINTENANCE_GITHUB_RETRIES: retries },
         );
 
-        yield* Effect.flip(fake.github.api("example"));
+        yield* Effect.flip(fake.github.read("gh --version", Cli.version()));
         expect(fake.commands).toHaveLength(1);
       }),
     );
@@ -518,14 +551,16 @@ describe("GitHub SDK boundary", () => {
 
         const chunks: Array<{ _tag: string; text: string }> = [];
 
-        const failure = yield* fake.github.stream(["run", "watch", "42"]).pipe(
-          Stream.runForEach((chunk) =>
-            Effect.sync(() => {
-              chunks.push(chunk);
-            }),
-          ),
-          Effect.flip,
-        );
+        const failure = yield* fake.github
+          .stream("gh run watch 42", watch())
+          .pipe(
+            Stream.runForEach((chunk) =>
+              Effect.sync(() => {
+                chunks.push(chunk);
+              }),
+            ),
+            Effect.flip,
+          );
 
         expect(chunks).toContainEqual(
           GhChunk.cases.Stdout.make({ text: "progress\r\n" }),
@@ -539,6 +574,17 @@ describe("GitHub SDK boundary", () => {
           stderr: "HTTP 503",
           status: 503,
         });
+        expect(fake.commands[0]?.args).toEqual([
+          "run",
+          "watch",
+          "42",
+          "--repo",
+          "org/repo",
+          "--compact",
+          "--exit-status",
+          "--interval",
+          "3",
+        ]);
         expect(fake.commands).toHaveLength(1);
         expect(fake.releases()).toBe(1);
       }),
@@ -552,9 +598,10 @@ describe("GitHub SDK boundary", () => {
           Effect.succeed({ stdout: Stream.never }),
         );
 
+        // Timeouts are transient, so use the non-retrying path to see one attempt.
         const fiber = yield* fake.github
-          .stream(["run", "watch", "42"], { timeout: "5 seconds" })
-          .pipe(Stream.runDrain, Effect.flip, Effect.forkScoped);
+          .write("gh --version", Cli.version({ timeout: "5 seconds" }))
+          .pipe(Effect.flip, Effect.forkScoped);
 
         yield* Deferred.await(fake.spawned);
         yield* TestClock.adjust("5 seconds");
@@ -578,7 +625,7 @@ describe("GitHub SDK boundary", () => {
         );
 
         const fiber = yield* fake.github
-          .stream(["run", "watch", "42"], { timeout: null })
+          .stream("gh run watch 42", watch({ timeout: null }))
           .pipe(Stream.runDrain, Effect.forkScoped);
 
         yield* Deferred.await(fake.spawned);
@@ -605,7 +652,7 @@ describe("GitHub SDK boundary", () => {
       );
 
       const output = yield* fake.github
-        .stream(["run", "watch", "42"])
+        .stream("gh run watch 42", watch())
         .pipe(Stream.take(1), Stream.runCollect);
 
       expect(output).toEqual([GhChunk.cases.Stdout.make({ text: "ready" })]);

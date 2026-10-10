@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { Api } from "@timmo001/effect-gh";
 import { Clock, Console, Duration, Effect, Result, Schema } from "effect";
 import { GitHub } from "../services/GitHub.js";
 
@@ -65,16 +66,17 @@ const decode = <S extends Schema.Top>(schema: S, raw: string) =>
 
 const readRef = Effect.fn("UpdatesAgentCoordination.readRef")(function* () {
   const github = yield* GitHub;
+  const endpoint = `${repository}/git/ref/${skillUpdatesStateRef}`;
 
-  const raw = yield* github
-    .api(`${repository}/git/ref/${skillUpdatesStateRef}`)
+  const reference = yield* github
+    .read(endpoint, Api.json({ endpoint, method: "GET" }, Reference))
     .pipe(
       Effect.catchTag("GitHubError", (error) =>
         error.status === 404 ? Effect.succeed(null) : Effect.fail(error),
       ),
     );
 
-  return raw === null ? null : (yield* decode(Reference, raw)).object.sha;
+  return reference === null ? null : reference.object.sha;
 });
 
 const readState = Effect.fn("UpdatesAgentCoordination.readState")(function* () {
@@ -82,10 +84,11 @@ const readState = Effect.fn("UpdatesAgentCoordination.readState")(function* () {
   const sha = yield* readRef();
 
   if (sha === null) return null;
+  const endpoint = `${repository}/git/commits/${sha}`;
 
-  const commit = yield* decode(
-    Commit,
-    yield* github.api(`${repository}/git/commits/${sha}`),
+  const commit = yield* github.read(
+    endpoint,
+    Api.json({ endpoint, method: "GET" }, Commit),
   );
 
   return {
@@ -105,44 +108,58 @@ const transition = Effect.fn("UpdatesAgentCoordination.transition")(function* (
 
   const tree =
     current?.tree ??
-    (yield* decode(
-      GitObject,
-      yield* github.api(`${repository}/git/trees`, {
-        method: "POST",
-        body: {
-          tree: [
-            {
-              path: "README.md",
-              mode: "100644",
-              type: "blob",
-              content:
-                "Skill update coordination state is stored as JSON in each commit message. Do not delete or force-update this branch.\n",
-            },
-          ],
+    (yield* github.write(
+      `${repository}/git/trees`,
+      Api.json(
+        {
+          endpoint: `${repository}/git/trees`,
+          method: "POST",
+          body: {
+            tree: [
+              {
+                path: "README.md",
+                mode: "100644",
+                type: "blob",
+                content:
+                  "Skill update coordination state is stored as JSON in each commit message. Do not delete or force-update this branch.\n",
+              },
+            ],
+          },
         },
-      }),
+        GitObject,
+      ),
     )).sha;
 
-  const candidate = yield* decode(
-    GitObject,
-    yield* github.api(`${repository}/git/commits`, {
-      method: "POST",
-      body: {
-        message: JSON.stringify({ ...state, revision: randomUUID() }),
-        tree,
-        parents: current ? [current.sha] : [],
+  const candidate = yield* github.write(
+    `${repository}/git/commits`,
+    Api.json(
+      {
+        endpoint: `${repository}/git/commits`,
+        method: "POST",
+        body: {
+          message: JSON.stringify({ ...state, revision: randomUUID() }),
+          tree,
+          parents: current ? [current.sha] : [],
+        },
       },
-    }),
+      GitObject,
+    ),
   );
+
+  const refTarget = current ? refEndpoint : `${repository}/git/refs`;
 
   for (let attempt = 0; ; attempt++) {
     const result = yield* github
-      .api(current ? refEndpoint : `${repository}/git/refs`, {
-        method: current ? "PATCH" : "POST",
-        body: current
-          ? { sha: candidate.sha, force: false }
-          : { ref: `refs/${skillUpdatesStateRef}`, sha: candidate.sha },
-      })
+      .write(
+        refTarget,
+        Api.empty({
+          endpoint: refTarget,
+          method: current ? "PATCH" : "POST",
+          body: current
+            ? { sha: candidate.sha, force: false }
+            : { ref: `refs/${skillUpdatesStateRef}`, sha: candidate.sha },
+        }),
+      )
       .pipe(Effect.result);
 
     if (Result.isSuccess(result)) return true;

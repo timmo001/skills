@@ -1,3 +1,4 @@
+import { Api } from "@timmo001/effect-gh";
 import { Effect, FileSystem, Match, Path, Schema } from "effect";
 import { CommandExecutor } from "../services/CommandExecutor.js";
 import { GitHub, type GitHubError } from "../services/GitHub.js";
@@ -83,21 +84,24 @@ export const latestPathSha = Effect.fn("Upstream.latestPathSha")(function* (
   const github = yield* GitHub;
   const endpoint = `repos/${origin.owner}/${origin.repo}/commits?path=${encodeURIComponent(origin.path)}&per_page=1&sha=${encodeURIComponent(origin.branch)}`;
 
-  const json = yield* github
-    .apiJson(endpoint)
-    .pipe(Effect.mapError((error) => upstreamFailure("latest-sha", error)));
-
-  const CommitList = Schema.Array(Schema.Struct({ sha: Schema.String }));
-
-  const commits = yield* Schema.decodeUnknownEffect(CommitList)(json).pipe(
-    Effect.mapError(
-      (cause) =>
-        new UpstreamDecodeError({
-          operation: "latest-sha",
-          message: String(cause),
-        }),
-    ),
-  );
+  const commits = yield* github
+    .read(
+      endpoint,
+      Api.json(
+        { endpoint, method: "GET" },
+        Schema.Array(Schema.Struct({ sha: Schema.String })),
+      ),
+    )
+    .pipe(
+      Effect.mapError((error) =>
+        error.decode
+          ? new UpstreamDecodeError({
+              operation: "latest-sha",
+              message: error.stderr,
+            })
+          : upstreamFailure("latest-sha", error),
+      ),
+    );
 
   const sha = commits[0]?.sha;
 
@@ -203,22 +207,24 @@ export const originExists = Effect.fn("Upstream.originExists")(function* (
   const github = yield* GitHub;
   const endpoint = `repos/${origin.owner}/${origin.repo}/contents/${origin.path}?ref=${encodeURIComponent(origin.branch)}`;
 
-  return yield* github.api(endpoint).pipe(
-    Effect.as(true),
-    Effect.catch(
-      (
-        error,
-      ): Effect.Effect<
-        never,
-        DeletedOriginError | UpstreamStatusError | UpstreamTransportError
-      > =>
-        error.status === 404
-          ? Effect.fail(
-              new DeletedOriginError({
-                origin: originUrl(origin),
-              }),
-            )
-          : Effect.fail(upstreamFailure("origin.exists", error)),
-    ),
-  );
+  return yield* github
+    .read(endpoint, Api.empty({ endpoint, method: "GET" }))
+    .pipe(
+      Effect.as(true),
+      Effect.catch(
+        (
+          error,
+        ): Effect.Effect<
+          never,
+          DeletedOriginError | UpstreamStatusError | UpstreamTransportError
+        > =>
+          error.status === 404
+            ? Effect.fail(
+                new DeletedOriginError({
+                  origin: originUrl(origin),
+                }),
+              )
+            : Effect.fail(upstreamFailure("origin.exists", error)),
+      ),
+    );
 });

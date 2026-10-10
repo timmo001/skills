@@ -1,4 +1,10 @@
-import { GhChunk } from "@timmo001/effect-gh";
+import {
+  Api,
+  GhChunk,
+  Issue,
+  PullRequest,
+  Workflow,
+} from "@timmo001/effect-gh";
 import { createHash } from "node:crypto";
 import {
   Cause,
@@ -101,26 +107,35 @@ const WorkflowRuns = Schema.Struct({
   workflow_runs: Schema.Array(WorkflowRun),
 });
 
-const PullRequestNumbers = Schema.Array(
-  Schema.Struct({ number: Schema.Int.check(Schema.isGreaterThan(0)) }),
+const SKILLS_REPOSITORY = "timmo001/skills";
+
+/** The 100 most recent pull requests in any state, newest first. */
+const recentPullRequests = Effect.fn("UpdatesAgent.recentPullRequests")(
+  function* () {
+    const github = yield* GitHub;
+
+    return yield* github.read(
+      "gh pr list",
+      PullRequest.query({
+        repository: SKILLS_REPOSITORY,
+        state: "all",
+        limit: 100,
+        fields: ["number"],
+      }),
+    );
+  },
 );
 
-const PullRequestTitles = Schema.Array(
-  Schema.Struct({
-    number: Schema.Int.check(Schema.isGreaterThan(0)),
-    title: Schema.String,
-  }),
-);
+/** A pull request's unified diff. */
+const pullRequestDiff = Effect.fn("UpdatesAgent.pullRequestDiff")(function* (
+  number: number,
+) {
+  const github = yield* GitHub;
 
-const PullRequestPolicy = Schema.Struct({
-  title: Schema.String,
-  state: Schema.String,
-  mergedAt: Schema.NullOr(Schema.String),
-  assignees: Schema.Array(Schema.Struct({ login: Schema.String })),
-  autoMergeRequest: Schema.NullOr(
-    Schema.Struct({ mergeMethod: Schema.String }),
-  ),
-  commits: Schema.Array(Schema.Struct({ messageHeadline: Schema.String })),
+  return yield* github.read(
+    "gh pr diff",
+    PullRequest.diff(number, { repository: SKILLS_REPOSITORY }),
+  );
 });
 
 export class SkillUpdatesAgentError extends Schema.TaggedError<SkillUpdatesAgentError>()(
@@ -549,52 +564,21 @@ export const applySkillUpdateAutoMergePolicy = Effect.fn(
   const github = yield* GitHub;
 
   if (shaOnly) {
-    yield* github.run([
-      "pr",
-      "merge",
-      "--auto",
-      "--squash",
-      url,
-      "--repo",
-      "timmo001/skills",
-    ]);
+    yield* github.write(
+      "gh pr merge --auto",
+      PullRequest.merge(url, {
+        repository: SKILLS_REPOSITORY,
+        method: "squash",
+        auto: true,
+      }),
+    );
   } else if (existing) {
-    yield* github.run([
-      "pr",
-      "merge",
-      "--disable-auto",
-      url,
-      "--repo",
-      "timmo001/skills",
-    ]);
+    yield* github.write(
+      "gh pr merge --disable-auto",
+      PullRequest.disableAutoMerge(url, { repository: SKILLS_REPOSITORY }),
+    );
   }
 });
-
-const decodeJson = <S extends Schema.Top>(
-  operation: string,
-  schema: S,
-  raw: string,
-): Effect.Effect<S["Type"], SkillUpdatesAgentError, S["DecodingServices"]> =>
-  Effect.gen(function* () {
-    const value = yield* Effect.try({
-      try: () => JSON.parse(raw),
-      catch: (cause) =>
-        new SkillUpdatesAgentError({
-          operation: `${operation}.json`,
-          message: String(cause),
-        }),
-    });
-
-    return yield* Schema.decodeUnknownEffect(schema)(value).pipe(
-      Effect.mapError(
-        (cause) =>
-          new SkillUpdatesAgentError({
-            operation: `${operation}.decode`,
-            message: String(cause),
-          }),
-      ),
-    );
-  });
 
 const runOrFail = Effect.fn("UpdatesAgent.runOrFail")(function* (
   command: string,
@@ -675,23 +659,16 @@ const publishCleanUpdate = Effect.fn("UpdatesAgent.publishCleanUpdate")(
       root,
     );
 
-    let url = (yield* github.run(
-      [
-        "pr",
-        "list",
-        "--head",
-        branch,
-        "--state",
-        "open",
-        "--json",
-        "url",
-        "--jq",
-        ".[0].url // empty",
-        "--repo",
-        "timmo001/skills",
-      ],
-      { readOnly: true },
-    )).trim();
+    let url =
+      (yield* github.read(
+        "gh pr list",
+        PullRequest.query({
+          repository: SKILLS_REPOSITORY,
+          head: branch,
+          state: "open",
+          fields: ["url"],
+        }),
+      ))[0]?.url ?? "";
 
     const existing = url.length > 0;
 
@@ -706,66 +683,57 @@ const publishCleanUpdate = Effect.fn("UpdatesAgent.publishCleanUpdate")(
     );
 
     if (existing) {
-      const { body: previous } = yield* decodeJson(
-        "pull-request",
-        PullRequestBody,
-        yield* github.run(
-          ["pr", "view", url, "--json", "body", "--repo", "timmo001/skills"],
-          { readOnly: true },
-        ),
+      const { body: previous } = yield* github.read(
+        "gh pr view",
+        PullRequest.get({
+          selector: url,
+          repository: SKILLS_REPOSITORY,
+          fields: ["body"],
+        }),
       );
 
       const benchmark = previous.indexOf(BENCHMARK_MARKER);
 
-      yield* github.run([
-        "pr",
-        "edit",
-        url,
-        "--title",
-        title,
-        "--body",
-        benchmark === -1
-          ? body
-          : withSkillUpdatesBenchmark(
-              body,
-              previous.slice(benchmark).trimEnd(),
-            ),
-        "--add-assignee",
-        "timmo001",
-        "--repo",
-        "timmo001/skills",
-      ]);
+      yield* github.write(
+        "gh pr edit",
+        PullRequest.edit(url, {
+          repository: SKILLS_REPOSITORY,
+          title,
+          body:
+            benchmark === -1
+              ? body
+              : withSkillUpdatesBenchmark(
+                  body,
+                  previous.slice(benchmark).trimEnd(),
+                ),
+          addAssignees: ["timmo001"],
+        }),
+      );
     } else
-      url = (yield* github.run([
-        "pr",
-        "create",
-        "--base",
-        "main",
-        "--head",
-        branch,
-        "--title",
-        title,
-        "--body",
-        body,
-        "--assignee",
-        "timmo001",
-        "--repo",
-        "timmo001/skills",
-      ])).trim();
+      url = (yield* github.write(
+        "gh pr create",
+        PullRequest.create({
+          repository: SKILLS_REPOSITORY,
+          base: "main",
+          head: branch,
+          title,
+          body,
+          assignees: ["timmo001"],
+        }),
+      )).url;
     yield* applySkillUpdateAutoMergePolicy(
       url,
       isShaOnlySkillPatch(patch, name),
       existing,
     );
-    yield* github.run([
-      "workflow",
-      "run",
-      "validate.yml",
-      "--ref",
-      branch,
-      "--repo",
-      "timmo001/skills",
-    ]);
+    yield* github.write(
+      "gh workflow run validate.yml",
+      Workflow.dispatch({
+        repo: SKILLS_REPOSITORY,
+        workflow: "validate.yml",
+        ref: branch,
+      }),
+    );
   },
 );
 
@@ -777,35 +745,33 @@ const refreshDashboard = Effect.fn("UpdatesAgent.refreshDashboard")(function* (
   const markdown = renderUpdateMarkdown(report);
   const marker = "<!-- adapted-skill-updates -->";
 
-  const number = (yield* github.run(
-    [
-      "issue",
-      "list",
-      "--state",
-      "open",
-      "--limit",
-      "100",
-      "--json",
-      "number,body",
-      "--jq",
-      `map(select(.body | contains("${marker}")))[0].number // empty`,
-      "--repo",
-      "timmo001/skills",
-    ],
-    { readOnly: true },
-  )).trim();
+  const dashboard = (yield* github.read(
+    "gh issue list",
+    Issue.query({
+      repo: SKILLS_REPOSITORY,
+      state: "open",
+      limit: 100,
+      fields: ["number", "body"],
+    }),
+  )).find((issue) => issue.body.includes(marker));
 
-  yield* github.run([
-    "issue",
-    number ? "edit" : "create",
-    ...(number ? [number] : []),
-    "--title",
-    "Skill updates",
-    "--body",
-    markdown,
-    "--repo",
-    "timmo001/skills",
-  ]);
+  yield* dashboard
+    ? github.write(
+        "gh issue edit",
+        Issue.edit(dashboard.number, {
+          repo: SKILLS_REPOSITORY,
+          title: "Skill updates",
+          body: markdown,
+        }),
+      )
+    : github.write(
+        "gh issue create",
+        Issue.create({
+          repo: SKILLS_REPOSITORY,
+          title: "Skill updates",
+          body: markdown,
+        }),
+      );
 });
 
 export const runGitHubSkillUpdates = Effect.fn("UpdatesAgent.runGitHub")(
@@ -925,10 +891,10 @@ const fetchRun = Effect.fn("UpdatesAgent.fetchRun")(function* (
       operation: "workflow.url",
       message: "workflowApi must be an https://api.github.com URL",
     });
-  const raw = yield* github.api(endpoint);
+  const request = { endpoint, method: "GET" } as const;
 
   if (runId) {
-    const run = yield* decodeJson("workflow", WorkflowRun, raw);
+    const run = yield* github.read(endpoint, Api.json(request, WorkflowRun));
 
     if (run.conclusion !== "success")
       return yield* new SkillUpdatesAgentError({
@@ -939,7 +905,7 @@ const fetchRun = Effect.fn("UpdatesAgent.fetchRun")(function* (
     return { id: run.id, url: run.html_url };
   }
 
-  const runs = yield* decodeJson("workflow", WorkflowRuns, raw);
+  const runs = yield* github.read(endpoint, Api.json(request, WorkflowRuns));
   const run = latestSuccessfulWorkflowRun(runs);
 
   return (
@@ -1110,25 +1076,17 @@ export const recoverUpdateBranches = Effect.fn(
 
       if (remote !== tip) return true;
 
-      const open = yield* github.run(
-        [
-          "pr",
-          "list",
-          "--head",
-          branch,
-          "--state",
-          "open",
-          "--json",
-          "number",
-          "--jq",
-          "length",
-          "--repo",
-          "timmo001/skills",
-        ],
-        { readOnly: true },
+      const open = yield* github.read(
+        "gh pr list",
+        PullRequest.query({
+          repository: SKILLS_REPOSITORY,
+          head: branch,
+          state: "open",
+          fields: ["number"],
+        }),
       );
 
-      if (open.trim() !== "0") return true;
+      if (open.length > 0) return true;
 
       yield* runOrFail(
         "git",
@@ -1159,24 +1117,14 @@ const latestPullRequestNumber = Effect.fn(
 )(function* () {
   const github = yield* GitHub;
 
-  const pulls = yield* decodeJson(
-    "pull-requests",
-    PullRequestNumbers,
-    yield* github.run(
-      [
-        "pr",
-        "list",
-        "--state",
-        "all",
-        "--limit",
-        "1",
-        "--json",
-        "number",
-        "--repo",
-        "timmo001/skills",
-      ],
-      { readOnly: true },
-    ),
+  const pulls = yield* github.read(
+    "gh pr list",
+    PullRequest.query({
+      repository: SKILLS_REPOSITORY,
+      state: "all",
+      limit: 1,
+      fields: ["number"],
+    }),
   );
 
   return pulls[0]?.number ?? 0;
@@ -1190,24 +1138,14 @@ const pendingSkillUpdates = Effect.fn("UpdatesAgent.pendingSkillUpdates")(
 
     if (pending.length === 0) return pending;
 
-    const open = yield* decodeJson(
-      "pull-requests",
-      PullRequestTitles,
-      yield* github.run(
-        [
-          "pr",
-          "list",
-          "--state",
-          "open",
-          "--limit",
-          "100",
-          "--json",
-          "number,title",
-          "--repo",
-          "timmo001/skills",
-        ],
-        { readOnly: true },
-      ),
+    const open = yield* github.read(
+      "gh pr list",
+      PullRequest.query({
+        repository: SKILLS_REPOSITORY,
+        state: "open",
+        limit: 100,
+        fields: ["number", "title"],
+      }),
     );
 
     const titles = new Set(pending.flatMap(skillUpdateTitles));
@@ -1216,13 +1154,7 @@ const pendingSkillUpdates = Effect.fn("UpdatesAgent.pendingSkillUpdates")(
     for (const { number, title } of open.filter(({ title }) =>
       titles.has(title),
     ))
-      pulls.push({
-        title,
-        patch: yield* github.run(
-          ["pr", "diff", String(number), "--repo", "timmo001/skills"],
-          { readOnly: true },
-        ),
-      });
+      pulls.push({ title, patch: yield* pullRequestDiff(number) });
 
     return skillUpdatesNeedingWork(report.skills, pulls);
   },
@@ -1233,48 +1165,26 @@ export const validatePullRequestPolicy = Effect.fn(
 )(function* (after: number) {
   const github = yield* GitHub;
 
-  const pulls = yield* decodeJson(
-    "pull-requests",
-    PullRequestNumbers,
-    yield* github.run(
-      [
-        "pr",
-        "list",
-        "--state",
-        "all",
-        "--limit",
-        "100",
-        "--json",
-        "number",
-        "--repo",
-        "timmo001/skills",
-      ],
-      { readOnly: true },
-    ),
-  );
+  const pulls = yield* recentPullRequests();
 
   for (const { number } of pulls.filter(({ number }) => number > after)) {
-    const details = yield* decodeJson(
-      "pull-request",
-      PullRequestPolicy,
-      yield* github.run(
-        [
-          "pr",
-          "view",
-          String(number),
-          "--json",
-          "title,state,mergedAt,assignees,autoMergeRequest,commits",
-          "--repo",
-          "timmo001/skills",
+    const details = yield* github.read(
+      "gh pr view",
+      PullRequest.get({
+        selector: number,
+        repository: SKILLS_REPOSITORY,
+        fields: [
+          "title",
+          "state",
+          "mergedAt",
+          "assignees",
+          "autoMergeRequest",
+          "commits",
         ],
-        { readOnly: true },
-      ),
+      }),
     );
 
-    const patch = yield* github.run(
-      ["pr", "diff", String(number), "--repo", "timmo001/skills"],
-      { readOnly: true },
-    );
+    const patch = yield* pullRequestDiff(number);
 
     const shaTitle = details.title.match(/^\[SHA-only\] Update ([a-z0-9-]+)$/);
     const contentTitle = details.title.match(/^Update skill: ([a-z0-9-]+)$/);
@@ -1309,54 +1219,23 @@ export const validatePullRequestPolicy = Effect.fn(
   }
 });
 
-const PullRequestBody = Schema.Struct({ body: Schema.String });
-
-const PullRequestTitleBody = Schema.Struct({
-  title: Schema.String,
-  body: Schema.String,
-});
-
 /** Add upstream file links to each skill update pull request opened after `after`. */
 const linkUpstreamChanges = Effect.fn("UpdatesAgent.linkUpstreamChanges")(
   function* (after: number) {
     const github = yield* GitHub;
 
-    const created = (yield* decodeJson(
-      "pull-requests",
-      PullRequestNumbers,
-      yield* github.run(
-        [
-          "pr",
-          "list",
-          "--state",
-          "all",
-          "--limit",
-          "100",
-          "--json",
-          "number",
-          "--repo",
-          "timmo001/skills",
-        ],
-        { readOnly: true },
-      ),
-    )).filter(({ number }) => number > after);
+    const created = (yield* recentPullRequests()).filter(
+      ({ number }) => number > after,
+    );
 
     for (const { number } of created) {
-      const { title, body } = yield* decodeJson(
-        "pull-request",
-        PullRequestTitleBody,
-        yield* github.run(
-          [
-            "pr",
-            "view",
-            String(number),
-            "--json",
-            "title,body",
-            "--repo",
-            "timmo001/skills",
-          ],
-          { readOnly: true },
-        ),
+      const { title, body } = yield* github.read(
+        "gh pr view",
+        PullRequest.get({
+          selector: number,
+          repository: SKILLS_REPOSITORY,
+          fields: ["title", "body"],
+        }),
       );
 
       const skill = title.match(
@@ -1365,13 +1244,7 @@ const linkUpstreamChanges = Effect.fn("UpdatesAgent.linkUpstreamChanges")(
 
       if (!skill || body.includes(UPSTREAM_MARKER)) continue;
 
-      const pin = upstreamPinChange(
-        yield* github.run(
-          ["pr", "diff", String(number), "--repo", "timmo001/skills"],
-          { readOnly: true },
-        ),
-        skill,
-      );
+      const pin = upstreamPinChange(yield* pullRequestDiff(number), skill);
 
       if (!pin) continue;
 
@@ -1383,15 +1256,13 @@ const linkUpstreamChanges = Effect.fn("UpdatesAgent.linkUpstreamChanges")(
 
       if (!section) continue;
 
-      yield* github.run([
-        "pr",
-        "edit",
-        String(number),
-        "--body",
-        withUpstreamChanges(body, section),
-        "--repo",
-        "timmo001/skills",
-      ]);
+      yield* github.write(
+        "gh pr edit",
+        PullRequest.edit(number, {
+          repository: SKILLS_REPOSITORY,
+          body: withUpstreamChanges(body, section),
+        }),
+      );
     }
   },
 );
@@ -1404,25 +1275,9 @@ const annotatePullRequests = Effect.fn("UpdatesAgent.annotatePullRequests")(
   ) {
     const github = yield* GitHub;
 
-    const created = (yield* decodeJson(
-      "pull-requests",
-      PullRequestNumbers,
-      yield* github.run(
-        [
-          "pr",
-          "list",
-          "--state",
-          "all",
-          "--limit",
-          "100",
-          "--json",
-          "number",
-          "--repo",
-          "timmo001/skills",
-        ],
-        { readOnly: true },
-      ),
-    )).filter(({ number }) => number > after);
+    const created = (yield* recentPullRequests()).filter(
+      ({ number }) => number > after,
+    );
 
     const section = renderSkillUpdatesBenchmark(attempts, {
       ...context,
@@ -1430,32 +1285,22 @@ const annotatePullRequests = Effect.fn("UpdatesAgent.annotatePullRequests")(
     });
 
     for (const { number } of created) {
-      const { body } = yield* decodeJson(
-        "pull-request",
-        PullRequestBody,
-        yield* github.run(
-          [
-            "pr",
-            "view",
-            String(number),
-            "--json",
-            "body",
-            "--repo",
-            "timmo001/skills",
-          ],
-          { readOnly: true },
-        ),
+      const { body } = yield* github.read(
+        "gh pr view",
+        PullRequest.get({
+          selector: number,
+          repository: SKILLS_REPOSITORY,
+          fields: ["body"],
+        }),
       );
 
-      yield* github.run([
-        "pr",
-        "edit",
-        String(number),
-        "--body",
-        withSkillUpdatesBenchmark(body, section),
-        "--repo",
-        "timmo001/skills",
-      ]);
+      yield* github.write(
+        "gh pr edit",
+        PullRequest.edit(number, {
+          repository: SKILLS_REPOSITORY,
+          body: withSkillUpdatesBenchmark(body, section),
+        }),
+      );
     }
   },
 );
@@ -1668,18 +1513,11 @@ const runDevice = Effect.fn("UpdatesAgent.runDevice")(function* (
     yield* github.waitForNetwork();
     yield* github
       .stream(
-        [
-          "run",
-          "watch",
-          runId,
-          "--repo",
-          "timmo001/skills",
-          "--compact",
-          "--exit-status",
-          "--interval",
-          "10",
-        ],
-        { cwd: process.cwd(), timeout: null },
+        `gh run watch ${runId}`,
+        Workflow.watch(
+          { repo: SKILLS_REPOSITORY, runId: Number(runId), interval: 10 },
+          { cwd: process.cwd(), timeout: null },
+        ),
       )
       .pipe(
         Stream.mapError((error) =>

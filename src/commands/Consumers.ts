@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { Api, Repository } from "@timmo001/effect-gh";
 import {
   Console,
   Effect,
@@ -423,9 +424,13 @@ const syncRepository = Effect.fn("Consumers.syncRepository")(function* (
   const skills = (...args: string[]) => skillsCli.run(args, { cwd: checkout });
 
   // A failed clone removes the directory it created, so retrying is safe.
-  yield* github.run(
-    ["repo", "clone", repository, checkout, "--", "--depth", "1"],
-    { readOnly: true },
+  yield* github.read(
+    `gh repo clone ${repository}`,
+    Repository.clone({
+      repository,
+      directory: checkout,
+      gitArgs: ["--depth", "1"],
+    }),
   );
 
   const branch = (yield* git("rev-parse", "--abbrev-ref", "HEAD")).trim();
@@ -651,12 +656,11 @@ const checkEligible = Effect.fn("Consumers.checkEligible")(function* (
   if (repository === source)
     return yield* editError(`${repository} is the skills source`);
 
+  const endpoint = `repos/${repository}`;
+
   const info = yield* github
-    .apiJson(`repos/${repository}`)
-    .pipe(
-      Effect.flatMap(Schema.decodeUnknownEffect(RepositoryInfo)),
-      consumersError("repository.read"),
-    );
+    .read(endpoint, Api.json({ endpoint, method: "GET" }, RepositoryInfo))
+    .pipe(consumersError("repository.read"));
 
   if (info.full_name !== repository)
     return yield* editError(`${repository} has moved to ${info.full_name}`);
@@ -690,15 +694,10 @@ const startEdit = Effect.fn("Consumers.startEdit")(function* (
 
   const target =
     repository ??
-    (yield* github
-      .run(
-        ["repo", "view", "--json", "nameWithOwner", "--jq", ".nameWithOwner"],
-        { readOnly: true },
-      )
-      .pipe(
-        Effect.map((output) => output.trim()),
-        consumersError("repository.detect"),
-      ));
+    (yield* github.read("gh repo view", Repository.view()).pipe(
+      Effect.map((info) => info.nameWithOwner),
+      consumersError("repository.detect"),
+    ));
 
   if (yield* git("status", "--porcelain", "--", CONSUMERS_FILE))
     return yield* editError(`${CONSUMERS_FILE} has uncommitted changes`);

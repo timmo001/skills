@@ -39,11 +39,11 @@ import {
   CommandExecutor,
 } from "../src/services/CommandExecutor.js";
 import { withSkillsCli } from "./helpers/skills-cli.js";
+import { fakeGitHub, type FakeGitHubHandlers } from "./helpers/fake-github.js";
 import {
   GitHub,
   GitHubError,
   NetworkUnavailableError,
-  type GitHubService,
 } from "../src/services/GitHub.js";
 import { coordinationGitHub } from "./helpers/coordination-github.js";
 
@@ -62,18 +62,13 @@ const config: SkillUpdatesAgentConfig = {
 };
 
 const githubLayer = (
-  run: GitHubService["run"],
-  stream: GitHubService["stream"] = () => Stream.empty,
+  run: NonNullable<FakeGitHubHandlers["run"]>,
+  stream: FakeGitHubHandlers["stream"] = () => Stream.empty,
 ) =>
-  Layer.succeed(GitHub, {
-    waitForNetwork: () => Effect.void,
-    isAvailable: () => Effect.succeed(true),
-    run,
-    stream,
-    json: () => Effect.succeed({}),
-    api: () => Effect.succeed(""),
-    apiJson: () => Effect.succeed({}),
-  });
+  Layer.succeed(
+    GitHub,
+    fakeGitHub({ run, stream, api: () => Effect.succeed("") }),
+  );
 
 const shaOnlyPatch = (oldSha: string, newSha: string) =>
   [
@@ -96,16 +91,16 @@ describe("updates agent policies", () => {
     Effect.gen(function* () {
       const failure = yield* runGitHubSkillUpdates("/unused").pipe(
         Effect.provide(
-          Layer.succeed(GitHub, {
-            waitForNetwork: () =>
-              Effect.fail(new NetworkUnavailableError({ message: "offline" })),
-            isAvailable: () => Effect.die("Unexpected CLI check"),
-            run: () => Effect.die("Unexpected GitHub command"),
-            stream: () => Stream.empty,
-            json: () => Effect.die("Unexpected JSON request"),
-            api: () => Effect.die("Unexpected API request"),
-            apiJson: () => Effect.die("Unexpected API request"),
-          }),
+          Layer.succeed(
+            GitHub,
+            fakeGitHub({
+              waitForNetwork: () =>
+                Effect.fail(
+                  new NetworkUnavailableError({ message: "offline" }),
+                ),
+              isAvailable: () => Effect.die("Unexpected CLI check"),
+            }),
+          ),
         ),
         Effect.provide(
           withSkillsCli(
@@ -256,23 +251,24 @@ describe("updates agent policies", () => {
       yield* runGitHubSkillUpdates(root).pipe(
         Effect.provide(commandLayer),
         Effect.provide(
-          Layer.succeed(GitHub, {
-            waitForNetwork: () => Effect.void,
-            isAvailable: () => Effect.succeed(true),
-            stream: () => Stream.empty,
-            run: (args) => {
-              githubCalls.push([...args]);
+          Layer.succeed(
+            GitHub,
+            fakeGitHub({
+              run: (args) => {
+                githubCalls.push([...args]);
 
-              return Effect.succeed(
-                args[0] === "pr" && args[1] === "create"
-                  ? "https://github.com/timmo001/skills/pull/1"
-                  : "",
-              );
-            },
-            json: () => Effect.succeed({}),
-            api: () => Effect.succeed(""),
-            apiJson: () => Effect.succeed([{ sha: newSha }]),
-          }),
+                return Effect.succeed(
+                  args[1] === "list"
+                    ? "[]"
+                    : args[0] === "pr" && args[1] === "create"
+                      ? "https://github.com/timmo001/skills/pull/1"
+                      : "",
+                );
+              },
+              api: () => Effect.succeed(""),
+              apiJson: () => Effect.succeed([{ sha: newSha }]),
+            }),
+          ),
         ),
       );
       expect(
@@ -280,7 +276,7 @@ describe("updates agent policies", () => {
           (args) =>
             args[0] === "pr" &&
             args[1] === "create" &&
-            args.includes("[SHA-only] Update example"),
+            args.includes("--title=[SHA-only] Update example"),
         ),
       ).toBe(true);
       expect(
@@ -315,10 +311,10 @@ describe("updates agent policies", () => {
         [
           "pr",
           "merge",
+          "--repo=timmo001/skills",
           "--disable-auto",
+          "--",
           "https://github.com/timmo001/skills/pull/1",
-          "--repo",
-          "timmo001/skills",
         ],
       ]);
     }),
@@ -604,7 +600,12 @@ describe("updates agent policies", () => {
                 mergedAt: null,
                 assignees: [{ login: "timmo001" }],
                 autoMergeRequest: { mergeMethod: "SQUASH" },
-                commits: [{ messageHeadline: "[SHA-only] Update example" }],
+                commits: [
+                  {
+                    oid: "c".repeat(40),
+                    messageHeadline: "[SHA-only] Update example",
+                  },
+                ],
               }),
             );
 
@@ -642,7 +643,12 @@ describe("updates agent policies", () => {
                 mergedAt: null,
                 assignees: [{ login: "timmo001" }],
                 autoMergeRequest: { mergeMethod: "SQUASH" },
-                commits: [{ messageHeadline: "Update skill: example" }],
+                commits: [
+                  {
+                    oid: "c".repeat(40),
+                    messageHeadline: "Update skill: example",
+                  },
+                ],
               }),
             );
 
@@ -865,7 +871,7 @@ describe("updates agent policies", () => {
           return { commands, layer };
         };
 
-        const github = githubLayer(() => Effect.succeed("0\n"));
+        const github = githubLayer(() => Effect.succeed("[]"));
 
         const owned = executor(
           "update/diagnose-upstream",
@@ -908,7 +914,7 @@ describe("updates agent policies", () => {
             Effect.provide(
               Layer.merge(
                 reviewed.layer,
-                githubLayer(() => Effect.succeed("1\n")),
+                githubLayer(() => Effect.succeed('[{"number":1}]')),
               ),
             ),
           ),
@@ -1066,31 +1072,31 @@ describe("updates agent policies", () => {
 
       const shared = coordinationGitHub();
 
-      const github = Layer.succeed(GitHub, {
-        waitForNetwork: () => Effect.void,
-        isAvailable: () => Effect.succeed(true),
-        stream: () => Stream.empty,
-        api: (endpoint, options) =>
-          endpoint.includes("/git/")
-            ? shared.api(endpoint, options)
-            : Effect.succeed(
-                JSON.stringify({
-                  id: 42,
-                  conclusion: "success",
-                  html_url: "https://github.com/example/actions/runs/42",
-                }),
-              ),
-        apiJson: () => Effect.succeed({}),
-        json: () => Effect.succeed({}),
-        run: (args) =>
-          Effect.succeed(
-            args[0] === "pr" && args[1] === "list"
-              ? args.includes("1")
-                ? '[{"number":4}]'
-                : "[]"
-              : "",
-          ),
-      });
+      const github = Layer.succeed(
+        GitHub,
+        fakeGitHub({
+          api: (endpoint, options) =>
+            endpoint.includes("/git/")
+              ? shared.api(endpoint, options)
+              : Effect.succeed(
+                  JSON.stringify({
+                    id: 42,
+                    conclusion: "success",
+                    html_url: "https://github.com/example/actions/runs/42",
+                  }),
+                ),
+          run: (args) =>
+            Effect.succeed(
+              args[0] === "pr" && args[1] === "list"
+                ? args.includes("--limit=1")
+                  ? '[{"number":4}]'
+                  : "[]"
+                : args[1] === "list"
+                  ? "[]"
+                  : "",
+            ),
+        }),
+      );
 
       const run = runDeviceSkillUpdates(configFile, "42").pipe(
         Effect.provide(withSkillsCli(executor)),

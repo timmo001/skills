@@ -1,5 +1,6 @@
 import { Effect, Schema } from "effect";
-import { GitHubError, type GitHubService } from "../../src/services/GitHub.js";
+import { GitHubError } from "../../src/services/GitHub.js";
+import type { FakeGitHubHandlers } from "./fake-github.js";
 import { skillUpdatesStateRef } from "../../src/commands/UpdatesAgentCoordination.js";
 
 const CommitInput = Schema.Struct({
@@ -48,7 +49,7 @@ export const coordinationGitHub = () => {
 
   const writes: { sha: string; parent: string | undefined }[] = [];
 
-  const api: GitHubService["api"] = (endpoint, options) =>
+  const api: NonNullable<FakeGitHubHandlers["api"]> = (endpoint, options) =>
     Effect.gen(function* () {
       if (endpoint.includes("/git/ref/")) {
         if (faults.readFailure) return yield* githubFailure(faults.readFailure);
@@ -58,10 +59,10 @@ export const coordinationGitHub = () => {
         return JSON.stringify({ object: { sha: head } });
       }
 
-      if (endpoint.endsWith("/git/trees") && options?.method === "POST")
+      if (endpoint.endsWith("/git/trees") && options.method === "POST")
         return JSON.stringify({ sha: "a".repeat(40) });
 
-      if (endpoint.endsWith("/git/commits") && options?.method === "POST") {
+      if (endpoint.endsWith("/git/commits") && options.method === "POST") {
         const commit = yield* Schema.decodeUnknownEffect(CommitInput)(
           options.body,
         ).pipe(Effect.orDie);
@@ -83,7 +84,7 @@ export const coordinationGitHub = () => {
         });
       }
 
-      if (endpoint.includes("/git/refs") && options?.method) {
+      if (endpoint.includes("/git/refs") && options.method !== "GET") {
         const input = yield* Schema.decodeUnknownEffect(RefInput)(
           options.body,
         ).pipe(Effect.orDie);

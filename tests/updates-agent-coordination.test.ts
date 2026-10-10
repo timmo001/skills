@@ -1,13 +1,5 @@
 import { describe, expect, it } from "@effect/vitest";
-import {
-  Deferred,
-  Duration,
-  Effect,
-  Fiber,
-  Layer,
-  Result,
-  Stream,
-} from "effect";
+import { Deferred, Duration, Effect, Fiber, Layer, Result } from "effect";
 import { TestClock } from "effect/testing";
 import {
   claimSkillUpdates,
@@ -18,21 +10,14 @@ import {
 } from "../src/commands/UpdatesAgentCoordination.js";
 import { GitHub } from "../src/services/GitHub.js";
 import { coordinationGitHub } from "./helpers/coordination-github.js";
+import { fakeGitHub } from "./helpers/fake-github.js";
 
 const fixture = () => {
   const remote = coordinationGitHub();
 
   return {
     ...remote,
-    layer: Layer.succeed(GitHub, {
-      waitForNetwork: () => Effect.void,
-      api: remote.api,
-      apiJson: () => Effect.die("Unexpected apiJson"),
-      run: () => Effect.die("Unexpected run"),
-      json: () => Effect.die("Unexpected json"),
-      stream: () => Stream.empty,
-      isAvailable: () => Effect.succeed(true),
-    }),
+    layer: Layer.succeed(GitHub, fakeGitHub({ api: remote.api })),
   };
 };
 

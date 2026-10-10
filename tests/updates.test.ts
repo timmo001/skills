@@ -21,11 +21,11 @@ import {
   type CommandExecutorService,
 } from "../src/services/CommandExecutor.js";
 import { withSkillsCli } from "./helpers/skills-cli.js";
+import { fakeGitHub, type FakeGitHubHandlers } from "./helpers/fake-github.js";
 import {
   GitHub,
   GitHubError,
   NetworkUnavailableError,
-  type GitHubService,
 } from "../src/services/GitHub.js";
 
 const sha = (character: string) => character.repeat(40);
@@ -40,17 +40,15 @@ interface FixtureImportMetadata {
   distribution?: "external";
 }
 
-const githubLayer = (overrides: Partial<GitHubService> = {}) =>
-  Layer.succeed(GitHub, {
-    waitForNetwork: () => Effect.void,
-    isAvailable: () => Effect.succeed(true),
-    run: () => Effect.succeed(""),
-    stream: () => Stream.empty,
-    json: () => Effect.succeed({}),
-    api: () => Effect.succeed(""),
-    apiJson: () => Effect.succeed([{ sha: sha("b") }]),
-    ...overrides,
-  });
+const githubLayer = (overrides: FakeGitHubHandlers = {}) =>
+  Layer.succeed(
+    GitHub,
+    fakeGitHub({
+      run: () => Effect.succeed(""),
+      apiJson: () => Effect.succeed([{ sha: sha("b") }]),
+      ...overrides,
+    }),
+  );
 
 const commandLayer = (overrides: Partial<CommandExecutorService> = {}) =>
   withSkillsCli(

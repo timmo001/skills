@@ -1,12 +1,14 @@
 import {
-  Api,
+  Cli,
   Gh,
-  GhChunk,
-  GhCommandError,
+  Issue,
+  RateLimit,
+  Workflow,
   httpStatus,
   isTransient,
   type GhError,
   type GhOptions,
+  type Interface as GhInterface,
 } from "@timmo001/effect-gh";
 import {
   Config,
@@ -29,20 +31,10 @@ export class GitHubError extends Schema.TaggedError<GitHubError>()(
     stderr: Schema.String,
     status: Schema.NullOr(Schema.Int),
     retryable: Schema.Boolean,
+    /** The response did not match the operation's schema. */
+    decode: Schema.optionalKey(Schema.Boolean),
   },
 ) {}
-
-export interface GitHubApiOptions {
-  readonly jq?: string | undefined;
-  readonly method?: "POST" | "PATCH";
-  readonly body?: Schema.Json;
-}
-
-export interface GitHubRunOptions {
-  /** Opt in only for known-idempotent reads. Mutations are never retried by default. */
-  readonly readOnly?: boolean;
-  readonly timeout?: GhOptions["timeout"];
-}
 
 /** The network probe exhausted its bounded wait without reaching GitHub. */
 export class NetworkUnavailableError extends Schema.TaggedError<NetworkUnavailableError>()(
@@ -56,27 +48,29 @@ export interface GitHubService {
     GitHubError | NetworkUnavailableError
   >;
   readonly isAvailable: () => Effect.Effect<boolean, GitHubError>;
-  readonly run: (
-    args: readonly string[],
-    options?: GitHubRunOptions,
-  ) => Effect.Effect<string, GitHubError>;
-  readonly stream: (
-    args: readonly string[],
-    options?: Pick<GhOptions, "cwd" | "timeout">,
-  ) => Stream.Stream<GhChunk, GitHubError>;
-  readonly json: (
-    args: readonly string[],
-    options?: GitHubRunOptions,
-  ) => Effect.Effect<unknown, GitHubError>;
-  readonly api: (
-    endpoint: string,
-    options?: GitHubApiOptions,
-  ) => Effect.Effect<string, GitHubError>;
-  readonly apiJson: (
-    endpoint: string,
-    options?: GitHubApiOptions,
-  ) => Effect.Effect<unknown, GitHubError>;
+  /**
+   * Run a known-idempotent effect-gh read, retrying transient failures.
+   * `label` names the operation in errors.
+   */
+  readonly read: <A, R>(
+    label: string,
+    operation: Effect.Effect<A, GhOperationError, R>,
+  ) => Effect.Effect<A, GitHubError, Exclude<R, Gh>>;
+  /** Run an effect-gh mutation. A failed mutation may have applied, so it is never retried. */
+  readonly write: <A, R>(
+    label: string,
+    operation: Effect.Effect<A, GhOperationError, R>,
+  ) => Effect.Effect<A, GitHubError, Exclude<R, Gh>>;
+  /** Run an effect-gh stream, such as a run watch. Streams are never replayed. */
+  readonly stream: <A, R>(
+    label: string,
+    operation: Stream.Stream<A, GhOperationError, R>,
+  ) => Stream.Stream<A, GitHubError, Exclude<R, Gh>>;
 }
+
+/** Failures effect-gh operations can raise, including rejected inputs. */
+export type GhOperationError =
+  GhError | Issue.InvalidInput | Workflow.InvalidOptions;
 
 const isNetworkFailure = (error: GitHubError) =>
   error.status === null &&
@@ -90,28 +84,33 @@ const isGitTransportDrop = (stderr: string) =>
     stderr,
   );
 
-const fromGhError = (command: string, error: GhError, stderr?: string) =>
+/** Map an effect-gh failure into the domain error. */
+export const fromGhError = (
+  command: string,
+  error: GhOperationError,
+): GitHubError =>
+  error instanceof Issue.InvalidInput ||
+  error instanceof Workflow.InvalidOptions
+    ? new GitHubError({
+        command,
+        exitCode: 0,
+        stderr: String(error.cause),
+        status: null,
+        retryable: false,
+      })
+    : fromCommandError(command, error);
+
+const fromCommandError = (command: string, error: GhError) =>
   Match.value(error).pipe(
     Match.tags({
-      GhCommandError: (error) => {
-        // Classify the full stderr, which can outgrow the SDK's retained tail.
-        const full = new GhCommandError({
-          executable: error.executable,
-          exitCode: error.exitCode,
-          stdout: error.stdout,
-          stdoutTruncated: error.stdoutTruncated,
-          stderr: (stderr ?? error.stderr).trim(),
-          stderrTruncated: false,
-        });
-
-        return new GitHubError({
+      GhCommandError: (error) =>
+        new GitHubError({
           command,
-          exitCode: full.exitCode,
-          stderr: full.stderr,
-          status: Option.getOrNull(httpStatus(full)),
-          retryable: isTransient(full) || isGitTransportDrop(full.stderr),
-        });
-      },
+          exitCode: error.exitCode,
+          stderr: error.stderr.trim(),
+          status: Option.getOrNull(httpStatus(error)),
+          retryable: isTransient(error) || isGitTransportDrop(error.stderr),
+        }),
       GhTimeoutError: (error) =>
         new GitHubError({
           command,
@@ -127,6 +126,7 @@ const fromGhError = (command: string, error: GhError, stderr?: string) =>
           stderr: String(error.cause),
           status: null,
           retryable: false,
+          decode: true,
         }),
       GhPlatformError: (error) =>
         new GitHubError({
@@ -136,22 +136,37 @@ const fromGhError = (command: string, error: GhError, stderr?: string) =>
           status: null,
           retryable: false,
         }),
+      GhOutputLimitError: (error) =>
+        new GitHubError({
+          command,
+          exitCode: -1,
+          stderr: `Command output passed ${error.limitBytes} bytes`,
+          status: null,
+          retryable: false,
+        }),
     }),
     Match.exhaustive,
   );
 
-const decodeJson = (command: string, output: string) =>
-  Effect.try({
-    try: () => JSON.parse(output),
-    catch: (cause) =>
-      new GitHubError({
-        command,
-        exitCode: 0,
-        stderr: String(cause),
-        status: null,
-        retryable: false,
-      }),
+/** Merge an auth token into every gh call made through this service. */
+const withEnv = (
+  gh: GhInterface,
+  env: Readonly<Record<string, string>> | undefined,
+): GhInterface => {
+  if (!env) return gh;
+
+  const merge = <O extends GhOptions | undefined>(options: O) => ({
+    ...options,
+    env: { ...env, ...options?.env },
   });
+
+  return {
+    execute: (args, options) => gh.execute(args, merge(options)),
+    json: (args, schema, options) => gh.json(args, schema, merge(options)),
+    stream: (args, options) => gh.stream(args, merge(options)),
+    interactive: (args, options) => gh.interactive(args, merge(options)),
+  };
+};
 
 export class GitHub extends Context.Service<GitHub, GitHubService>()(
   "skill-maintenance/GitHub",
@@ -179,59 +194,34 @@ export class GitHub extends Context.Service<GitHub, GitHubService>()(
         Option.getOrUndefined,
       );
 
-      const stream: GitHubService["stream"] = (args, options) =>
-        gh
-          .stream(args, { ...options, ...(env && { env }) })
-          .pipe(
-            Stream.mapError((error) =>
-              fromGhError(`gh ${args.join(" ")}`, error),
-            ),
-          );
+      const service = withEnv(gh, env);
 
-      const run = Effect.fn("GitHub.run")(
-        function* (args: readonly string[], options?: GitHubRunOptions) {
-          // Keep full stderr for status and retry classification, beyond the SDK error tail.
-          let stderr = "";
+      const write: GitHubService["write"] = (label, operation) =>
+        operation.pipe(
+          Effect.provideService(Gh, service),
+          Effect.mapError((error) => fromGhError(label, error)),
+        );
 
-          return yield* gh
-            .stream(args, {
-              ...(env && { env }),
-              ...(options?.timeout !== undefined && {
-                timeout: options.timeout,
-              }),
-            })
-            .pipe(
-              Stream.tap((chunk) =>
-                Effect.sync(() => {
-                  if (GhChunk.guards.Stderr(chunk)) stderr += chunk.text;
-                }),
-              ),
-              Stream.runFold(
-                () => "",
-                (output, chunk) =>
-                  GhChunk.guards.Stdout(chunk) ? output + chunk.text : output,
-              ),
-              Effect.mapError((error) =>
-                fromGhError(`gh ${args.join(" ")}`, error, stderr),
-              ),
-            );
-        },
-        (effect, _args, options) =>
-          options?.readOnly
-            ? effect.pipe(
-                Effect.retry({
-                  schedule: Schedule.exponential("1 second"),
-                  times: retries,
-                  while: (error) => error.retryable,
-                }),
-              )
-            : effect,
-      );
+      const stream: GitHubService["stream"] = (label, operation) =>
+        operation.pipe(
+          Stream.provideService(Gh, service),
+          Stream.mapError((error) => fromGhError(label, error)),
+        );
+
+      const read: GitHubService["read"] = (label, operation) =>
+        write(label, operation).pipe(
+          Effect.retry({
+            schedule: Schedule.exponential("1 second"),
+            times: retries,
+            while: (error) => error.retryable,
+          }),
+        );
 
       const waitForNetwork = Effect.fn("GitHub.waitForNetwork")(function* () {
-        yield* run(["api", "rate_limit", "--method", "GET"], {
-          timeout: "2 seconds",
-        }).pipe(
+        yield* write(
+          "gh api rate_limit",
+          RateLimit.get("core", { timeout: "2 seconds" }),
+        ).pipe(
           // Timer runs missed during suspend start at resume, before Wi-Fi
           // reconnects, so allow about a minute for the connection.
           Effect.retry({
@@ -253,72 +243,16 @@ export class GitHub extends Context.Service<GitHub, GitHubService>()(
         );
       });
 
-      const json = Effect.fn("GitHub.json")(function* (
-        args: readonly string[],
-        options?: GitHubRunOptions,
-      ) {
-        return yield* decodeJson(
-          `gh ${args.join(" ")}`,
-          yield* run(args, options),
-        );
-      });
-
-      const api = Effect.fn("GitHub.api")(function* (
-        endpoint: string,
-        options?: GitHubApiOptions,
-      ) {
-        if (options?.method)
-          return (yield* Api.raw({
-            endpoint,
-            method: options.method,
-            ...(options.body !== undefined && { body: options.body }),
-            ...(env && { options: { env } }),
-          }).pipe(
-            Effect.provideService(Gh, gh),
-            Effect.mapError((error) =>
-              fromGhError(`gh api ${endpoint}`, error),
-            ),
-          )).stdout.trim();
-
-        return (yield* run(
-          [
-            "api",
-            endpoint,
-            "--method",
-            "GET",
-            ...(options?.jq ? ["--jq", options.jq] : []),
-          ],
-          { readOnly: true },
-        )).trim();
-      });
-
-      const apiJson = Effect.fn("GitHub.apiJson")(function* (
-        endpoint: string,
-        options?: GitHubApiOptions,
-      ) {
-        return yield* decodeJson(
-          `gh api ${endpoint}`,
-          yield* api(endpoint, options),
-        );
-      });
-
       const isAvailable = Effect.fn("GitHub.isAvailable")(function* () {
-        return yield* gh.execute(["--version"]).pipe(
+        return yield* Cli.version().pipe(
+          Effect.provideService(Gh, service),
           Effect.as(true),
           Effect.catchTag("GhCommandError", () => Effect.succeed(false)),
           Effect.mapError((error) => fromGhError("gh --version", error)),
         );
       });
 
-      return GitHub.of({
-        run,
-        stream,
-        json,
-        api,
-        apiJson,
-        isAvailable,
-        waitForNetwork,
-      });
+      return GitHub.of({ read, write, stream, isAvailable, waitForNetwork });
     }),
   );
 }
