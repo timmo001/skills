@@ -133,6 +133,21 @@
       }
     },
     {
+      "name": "timmo-ha-bridge-cli",
+      "description": "External import from timmo001/ha-bridge",
+      "license": "Apache-2.0",
+      "metadata": {
+        "skill": "ha-bridge-cli"
+      },
+      "skills": "./",
+      "source": {
+        "source": "git-subdir",
+        "url": "timmo001/ha-bridge",
+        "path": "skills/ha-bridge-cli",
+        "sha": "d06add7d267f2bbfa55777c3a7062030191a4916"
+      }
+    },
+    {
       "name": "timmo-herdr",
       "description": "External import from herdrdev/herdr",
       "license": "Apache-2.0",
@@ -204,7 +219,7 @@
         "source": "git-subdir",
         "url": "backnotprop/plannotator",
         "path": "apps/skills/core/plannotator",
-        "sha": "e1de79bcee60bda3f69a39f090151d372750c5f7"
+        "sha": "77aeaaab0e6ac88c9536380ad7be51af57d70b20"
       }
     },
     {
