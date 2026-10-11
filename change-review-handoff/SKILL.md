@@ -43,9 +43,11 @@ user has already reviewed this exact diff.
 - A plain approval with no comments sends nothing back to the session, so
   once the reviews are open, send one Inbox message with a standing
   next-steps question: "If you have no notes, what next?", with the options
-  from step 4. After a guided review, the same message says the guide and
-  the diff review for each repository are ready, guide first, so the user
-  never finds the diff review open on its own. Record the message id.
+  from step 4. After a guided review, send it as a reply to the guide
+  (`reply_to` set to the `submit_guide` message id), so the guide, its
+  comments and the question share one thread, and say the guide and the diff
+  review for each repository are ready, guide first, so the user never finds
+  the diff review open on its own. Record the message id.
 - Put the changeset in that message above the question, so the user can
   decide from the Inbox: the changed files per repository with their added
   and removed line counts, then a short fenced `diff` preview of the key
@@ -57,7 +59,9 @@ user has already reviewed this exact diff.
 
 ## 3. Act On What Arrives
 
-- **Feedback** (annotations, or notes that ask for changes): replace the
+- **Feedback** (diff review annotations, comments on the guide's code, which
+  arrive as a reply in the guide's thread, or notes that ask for changes):
+  replace the
   standing question first (send into its thread with `supersedes`), so a pick
   on the old diff is never sent. Address each point, rerun the relevant
   checks, open the review again for the updated diff, and send a fresh
