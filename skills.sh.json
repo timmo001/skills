@@ -39,6 +39,7 @@
       "description": "Skills for named tools, services, and target repositories.",
       "skills": [
         "agentic-workflows",
+        "change-review-handoff",
         "decision-models",
         "gh-stack",
         "github-development-rulesets",
