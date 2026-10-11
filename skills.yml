@@ -232,7 +232,7 @@ skills:
   session-coordination:
     tools:
       - repo: herdrdev/herdr
-        reviewed: "v0.9.1"
+        reviewed: "v0.9.3"
   show-me:
     import:
       upstreamSha: bba9d13ab34f0a87f1cc33df4dd196372393ddfc
