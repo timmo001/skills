@@ -144,7 +144,7 @@
         "source": "git-subdir",
         "url": "timmo001/ha-bridge",
         "path": "skills/ha-bridge-cli",
-        "sha": "d06add7d267f2bbfa55777c3a7062030191a4916"
+        "sha": "7f56ca1ace8350cfa28e53fd4ea095b2aa055af7"
       }
     },
     {
@@ -160,6 +160,21 @@
         "url": "herdrdev/herdr",
         "path": "skills/herdr",
         "sha": "1ab85d31ac59c484a7347a237abfb072fe1cf166"
+      }
+    },
+    {
+      "name": "timmo-home-assistant",
+      "description": "External import from timmo001/ha-bridge",
+      "license": "Apache-2.0",
+      "metadata": {
+        "skill": "home-assistant"
+      },
+      "skills": "./",
+      "source": {
+        "source": "git-subdir",
+        "url": "timmo001/ha-bridge",
+        "path": "skills/home-assistant",
+        "sha": "d4d4dfb7f65f53ab846a4296db11c7d33529bb33"
       }
     },
     {
