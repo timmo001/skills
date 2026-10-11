@@ -72,7 +72,7 @@ Skills coupled to the current OpenCode, dotfiles, notes, or maintainer workflow.
 
 | Skill | Description |
 | --- | --- |
-| [`check-skill-updates`](./check-skill-updates/) | Check imported skills for upstream changes and review safe updates. Use when an import's origin in skills.yml may have changed or when refreshing installed skills from their source repositories. |
+| [`check-skill-updates`](./check-skill-updates/) | Check imported skills for upstream changes and review safe updates. Use when an import's origin in skills.yml may have changed, when a tool a skill depends on has a new release, or when refreshing installed skills from their source repositories. |
 | [`git-context`](./git-context/) | Patterns for working with git branches, remotes, diffs against the default branch, and rebases. Use when resolving rebase conflicts, continuing interactive rebases, amending commits, or any git operation that would open an interactive editor. |
 | [`handoff`](./handoff/) | Save concise continuation context when work moves to another session or the user requests a handoff. |
 | [`import-external-skill`](./import-external-skill/) | Import skills from external repositories into this Agent Skills repository. Use when pulling in a public skill, reviewing an external skill set, or adapting upstream content into an existing skill. |

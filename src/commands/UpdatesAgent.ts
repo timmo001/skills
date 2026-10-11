@@ -33,6 +33,10 @@ import {
   writeSkillsCatalogue,
 } from "./Catalogue.js";
 import { importSkill } from "./Import.js";
+import {
+  buildSkillReviewReport,
+  renderSkillReviewMarkdown,
+} from "./SkillReviews.js";
 import { SKILLS_FILE, getImport } from "../imports/metadata.js";
 import {
   originDirectory,
@@ -763,7 +767,16 @@ const refreshDashboard = Effect.fn("UpdatesAgent.refreshDashboard")(function* (
 ) {
   const github = yield* GitHub;
   const report = yield* buildUpdateReport(root);
-  const markdown = renderUpdateMarkdown(report);
+  const reviews = yield* Effect.result(buildSkillReviewReport(root));
+
+  // A failed release check still leaves the import section to post.
+  const markdown = [
+    renderUpdateMarkdown(report),
+    Result.isSuccess(reviews)
+      ? renderSkillReviewMarkdown(reviews.success)
+      : `## Skill reviews\n\nThe release check failed: ${reviews.failure.message}\n`,
+  ].join("\n");
+
   const marker = "<!-- adapted-skill-updates -->";
 
   const dashboard = (yield* github.read(

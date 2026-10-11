@@ -166,7 +166,7 @@ export const validate = Effect.fn("Validate.run")(function* (root: string) {
     renderSkillsFile(skillsResult.success.file) !== skillsResult.success.text
   )
     failures.push(
-      `${SKILLS_FILE}: not in canonical form; run skill-maintenance import <name> --metadata-only to rewrite it`,
+      `${SKILLS_FILE}: not in canonical form; run skill-maintenance skill-reviews --format (or import <name> --metadata-only) to rewrite it`,
     );
 
   const records = Result.isSuccess(skillsResult)
@@ -175,11 +175,30 @@ export const validate = Effect.fn("Validate.run")(function* (root: string) {
 
   for (const [name, entry] of records) {
     const metadata = entry.import;
+    const tools = entry.tools ?? [];
 
-    if (!metadata) {
+    if (!metadata && tools.length === 0) {
       failures.push(`${SKILLS_FILE}: ${name} has no records`);
       continue;
     }
+
+    if (tools.length > 0) {
+      if (metadata && isExternal(metadata))
+        failures.push(
+          `${SKILLS_FILE}: ${name} external import has no local content to review against its tools`,
+        );
+      else if (!skillNames.includes(name))
+        failures.push(
+          `${SKILLS_FILE}: ${name} lists tools but has no skill directory`,
+        );
+
+      if (new Set(tools.map(({ repo }) => repo)).size !== tools.length)
+        failures.push(
+          `${SKILLS_FILE}: ${name} lists a tool repository more than once`,
+        );
+    }
+
+    if (!metadata) continue;
 
     if (isExternal(metadata)) {
       if (metadata.localEdits.length !== 0)

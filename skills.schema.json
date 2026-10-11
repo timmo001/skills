@@ -54,6 +54,30 @@
             ],
             "additionalProperties": false,
             "description": "Where an imported skill comes from and how it differs"
+          },
+          "tools": {
+            "type": "array",
+            "description": "Tools whose new releases mean this skill needs a review",
+            "items": {
+              "type": "object",
+              "properties": {
+                "repo": {
+                  "type": "string",
+                  "pattern": "^[\\w.-]+\\/[\\w.-]+$",
+                  "description": "GitHub repository of the tool, owner/name"
+                },
+                "reviewed": {
+                  "type": "string",
+                  "minLength": 1,
+                  "description": "Release tag the skill was last reviewed against"
+                }
+              },
+              "required": [
+                "repo",
+                "reviewed"
+              ],
+              "additionalProperties": false
+            }
           }
         },
         "additionalProperties": false

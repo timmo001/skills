@@ -15,6 +15,7 @@ import {
 } from "../commands/Consumers.js";
 import { importSkill } from "../commands/Import.js";
 import { install } from "../commands/Install.js";
+import { skillReviews } from "../commands/SkillReviews.js";
 import { updates } from "../commands/Updates.js";
 import {
   runDeviceSkillUpdates,
@@ -127,6 +128,39 @@ export const updatesCommand = Command.make(
       ),
     ),
 ).pipe(Command.withDescription("Check and update tracked upstream skills"));
+
+export const skillReviewsCommand = Command.make(
+  "skill-reviews",
+  {
+    json: bool("json", "Print the versioned machine report"),
+    check: bool("check", "Exit non-zero when any skill needs a review"),
+    format: bool(
+      "format",
+      "Rewrite skills.yml in canonical form without reading releases",
+    ),
+    reviewed: Flag.String("reviewed").pipe(
+      Flag.optional,
+      Flag.withDescription(
+        "Mark this skill reviewed at its tools' latest releases",
+      ),
+    ),
+  },
+  ({ check, format, json, reviewed }) =>
+    resolveSkillsRoot().pipe(
+      Effect.flatMap((root) =>
+        skillReviews(root, {
+          json,
+          check,
+          format,
+          reviewed: optional(reviewed),
+        }),
+      ),
+    ),
+).pipe(
+  Command.withDescription(
+    "Report skills whose tools have a release newer than the reviewed one",
+  ),
+);
 
 export const checkCommand = Command.make(
   "check",
@@ -292,6 +326,7 @@ export const skillMaintenanceCommand = Command.make("skill-maintenance").pipe(
     importCommand,
     installCommand,
     updatesCommand,
+    skillReviewsCommand,
     checkCommand,
     updatesAgentCommand,
     consumersCommand,

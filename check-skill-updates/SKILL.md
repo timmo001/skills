@@ -1,8 +1,8 @@
 ---
 name: check-skill-updates
 license: Apache-2.0
-compatibility: Requires mise, the Skills CLI, and network access. Repository import reviews also require this repository's skills.yml and built skill-maintenance CLI, Git, and authenticated GitHub CLI.
-description: Check imported skills for upstream changes and review safe updates. Use when an import's origin in skills.yml may have changed or when refreshing installed skills from their source repositories.
+compatibility: Requires mise, the Skills CLI, and network access. Repository import and skill reviews also require this repository's skills.yml and built skill-maintenance CLI, Git, and authenticated GitHub CLI.
+description: Check imported skills for upstream changes and review safe updates. Use when an import's origin in skills.yml may have changed, when a tool a skill depends on has a new release, or when refreshing installed skills from their source repositories.
 ---
 
 # Check Skill Updates
@@ -47,6 +47,25 @@ For each tracked import:
 8. Run `./dist/skill-maintenance check --skill <name> --diff-origin` for each reviewed adapted import.
 
 Use the `import-external-skill` adaptation workflow when upstream and local changes overlap.
+
+## Skill Reviews
+
+A skill that depends on a tool lists it under `tools` in its `skills.yml` entry, with the release tag it was last reviewed against:
+
+```yaml
+skills:
+  change-review-handoff:
+    tools:
+      - repo: backnotprop/plannotator
+        reviewed: "v0.28.14"
+```
+
+1. Run `./dist/skill-maintenance skill-reviews --json`. The daily dashboard issue shows the same list under "Skill reviews".
+2. For each `release-available` item, read the release notes from the reviewed tag up to the latest (`gh release view <tag> --repo <repo>` for each tag in between) and compare them with the skill.
+3. Propose the edits the new releases call for, or say that none are needed, and ask before making them.
+4. Once the user agrees, make the edits and run `./dist/skill-maintenance skill-reviews --reviewed <skill>`, which records the latest tags it just read. Commit the tag move with the edits.
+
+Add a `tools` entry when a skill starts depending on a tool's behaviour, and run `skill-reviews --format` after editing `skills.yml` by hand. External imports cannot list tools: their content comes from upstream.
 
 ## Safety
 

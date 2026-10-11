@@ -44,10 +44,26 @@ export interface ImportMetadata extends Schema.Schema.Type<
   typeof ImportMetadata
 > {}
 
+export const ToolReview = Schema.Struct({
+  repo: Schema.String.check(Schema.isPattern(/^[\w.-]+\/[\w.-]+$/u)).annotate({
+    description: "GitHub repository of the tool, owner/name",
+  }),
+  reviewed: Schema.NonEmptyString.annotate({
+    description: "Release tag the skill was last reviewed against",
+  }),
+});
+
+export interface ToolReview extends Schema.Schema.Type<typeof ToolReview> {}
+
 export const SkillEntry = Schema.Struct({
   import: Schema.optionalKey(
     ImportMetadata.annotate({
       description: "Where an imported skill comes from and how it differs",
+    }),
+  ),
+  tools: Schema.optionalKey(
+    Schema.Array(ToolReview).annotate({
+      description: "Tools whose new releases mean this skill needs a review",
     }),
   ),
 });
@@ -99,33 +115,45 @@ export const renderSkillsFile = (file: SkillsFile) => {
   for (const name of names) {
     const entry = file.skills[name];
     const metadata = entry?.import;
+    const tools = entry?.tools ?? [];
 
-    if (!metadata) {
+    if (!metadata && tools.length === 0) {
       lines.push(`  ${name}: {}`);
       continue;
     }
 
+    lines.push(`  ${name}:`);
+
     // upstreamSha sits two lines under the skill key, so a diff hunk for a
-    // SHA change always carries the key in its context.
-    lines.push(
-      `  ${name}:`,
-      "    import:",
-      `      upstreamSha: ${metadata.upstreamSha}`,
-      `      origin: ${quote(metadata.origin)}`,
-      ...(metadata.sourceName
-        ? [`      sourceName: ${quote(metadata.sourceName)}`]
-        : []),
-      `      license: ${quote(metadata.license)}`,
-      ...(metadata.localEdits.length === 0
-        ? ["      localEdits: []"]
-        : [
-            "      localEdits:",
-            ...metadata.localEdits.map((edit) => `        - ${quote(edit)}`),
-          ]),
-      ...(metadata.distribution
-        ? [`      distribution: ${metadata.distribution}`]
-        : []),
-    );
+    // SHA change always carries the key in its context. Tools come after.
+    if (metadata)
+      lines.push(
+        "    import:",
+        `      upstreamSha: ${metadata.upstreamSha}`,
+        `      origin: ${quote(metadata.origin)}`,
+        ...(metadata.sourceName
+          ? [`      sourceName: ${quote(metadata.sourceName)}`]
+          : []),
+        `      license: ${quote(metadata.license)}`,
+        ...(metadata.localEdits.length === 0
+          ? ["      localEdits: []"]
+          : [
+              "      localEdits:",
+              ...metadata.localEdits.map((edit) => `        - ${quote(edit)}`),
+            ]),
+        ...(metadata.distribution
+          ? [`      distribution: ${metadata.distribution}`]
+          : []),
+      );
+
+    if (tools.length > 0)
+      lines.push(
+        "    tools:",
+        ...tools.flatMap((tool) => [
+          `      - repo: ${tool.repo}`,
+          `        reviewed: ${quote(tool.reviewed)}`,
+        ]),
+      );
   }
 
   return [...lines, ""].join("\n");
@@ -261,6 +289,34 @@ export const writeReviewedSha = Effect.fn("Imports.writeReviewedSha")(
       skills: {
         ...file.skills,
         [name]: { ...entry, import: { ...entry.import, upstreamSha: decoded } },
+      },
+    });
+  },
+);
+
+/** Set the reviewed release tag of some of one skill's tools, keyed by repository. */
+export const writeReviewedTags = Effect.fn("Skills.writeReviewedTags")(
+  function* (root: string, name: string, tags: ReadonlyMap<string, string>) {
+    const { file } = yield* readSkillsFile(root);
+    const entry = file.skills[name];
+
+    if (!entry?.tools) {
+      return yield* new MetadataError({
+        operation: "skills.write",
+        message: `no tool reviews: ${name}`,
+      });
+    }
+
+    yield* writeSkillsFile(root, {
+      skills: {
+        ...file.skills,
+        [name]: {
+          ...entry,
+          tools: entry.tools.map((tool) => ({
+            ...tool,
+            reviewed: tags.get(tool.repo) ?? tool.reviewed,
+          })),
+        },
       },
     });
   },
