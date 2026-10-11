@@ -127,7 +127,7 @@ If a configured checkout has uncommitted changes or is off its default branch, t
 
 The runner also defers with status 2 when another local run holds the lock, or when GitHub stays unreachable for about a minute, which covers runs started at resume before Wi-Fi reconnects.
 
-Before starting a model, the runner fast-forwards the primary repository and builds the update report. If every pending update already has an open pull request whose `skills.yml` change sets the current upstream SHA, it skips the model and records the run as processed. Skills whose upstream no longer exists count as nothing to do; errors and invalid origins still start the model.
+Before starting a model, the runner fast-forwards the primary repository and builds the update report. If every pending update already has an open pull request whose `skills.yml` change sets the current upstream SHA, it skips the model and records the run as processed. Skills whose upstream no longer exists count as nothing to do; errors and invalid origins still start the model. A skill whose tool has a release newer than its reviewed tag is also work, unless an open pull request already sets every latest tag. When reviewing it changes nothing but the tag, the pull request is `[Tag-only] Update <skill>` and auto-merges like `[SHA-only]`; the policy check compares `skills.yml` at the pull request's merge base and head to confirm only that skill's pins moved.
 
 After a model run passes the pull request policy, the runner appends an "Agent run" section to each pull request that run opened. It lists every attempt's model and variant (without the provider), result, time, cost and token counts from the OpenCode session, so models can be compared. Failing to add it is logged and does not fail the run.
 
