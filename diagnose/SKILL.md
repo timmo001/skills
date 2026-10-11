@@ -2,16 +2,6 @@
 name: diagnose
 description: Investigate bugs using source, observed failures, and proportionate verification. Use for regressions, intermittent failures, incorrect behaviour, or performance problems whose cause needs investigation.
 license: MIT
-# origin: https://github.com/mattpocock/skills/tree/main/skills/engineering/diagnosing-bugs
-# upstream-sha: f3fc5632f401156837ee3872f14fe33ccf1024ea
-# local-edits:
-#   - SKILL.md: local name retained after upstream rename, condensed body, rewritten description, OpenCode tool guidance, no test-first workflow
-#   - hitl-loop.template.sh: capture non-sensitive observations; leave sign-in and other secret-bearing actions as user steps
-#   - SKILL.md: removed subagent preference for codebase discovery
-#   - SKILL.md: allow source-led diagnosis and proportionate verification without a mandatory reproducer or hypothesis quota
-#   - SKILL.md: route test additions through the shared value-based testing policy
-#   - SKILL.md: route browser tools through browser-access
-#   - SKILL.md: adapted the forced-failure safeguard to proportionate verification without test-first requirements
 ---
 
 # Diagnose

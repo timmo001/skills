@@ -3,10 +3,6 @@ name: wrangler
 description: Use the project's Wrangler CLI for Cloudflare development, configuration, and deployment. Load before running Wrangler or changing its configuration; retrieve exact flags and binding shapes from current docs and installed schemas.
 compatibility: Requires the project's Wrangler dependency and supported Node.js runtime. Remote operations require Cloudflare authentication.
 license: Apache-2.0
-# origin: https://github.com/cloudflare/skills/tree/main/skills/wrangler
-# upstream-sha: 41e0d19858946d18af9ee2c2feebbe2e11d829ff
-# local-edits:
-#   - SKILL.md: replaced the bundled CLI manual with project-local version, source lookup, and scoped verification guidance
 ---
 
 # Wrangler

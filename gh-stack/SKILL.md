@@ -3,11 +3,6 @@ name: gh-stack
 compatibility: Requires Git, authenticated GitHub CLI with the gh stack extension, and GitHub access. Commits use the dot git commit gateway.
 description: Manage stacked branches and pull requests with GitHub's `gh stack` extension. Use when work involves stacked PRs, dependent branches, stack creation, navigation, submission, synchronisation, rebasing, restructuring, linking, or merging.
 license: MIT
-# origin: https://github.com/github/gh-stack/tree/main/skills/gh-stack
-# upstream-sha: 7cb154450f413291a51ba0b9c69e064edde56a98
-# local-edits:
-#   - SKILL.md: condensed upstream reference, replaced mutation instructions with local authorisation rules, and summarised distributed-worktree modify behavior; upstream reference files intentionally omitted
-#   - SKILL.md: added compatibility metadata for concrete environment requirements
 ---
 
 # GitHub Stacks

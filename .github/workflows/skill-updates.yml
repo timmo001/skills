@@ -7,7 +7,7 @@ on:
     branches:
       - main
     paths:
-      - "imports.json"
+      - "skills.yml"
       - "*/**"
       - "!scripts/**"
       - "!.github/**"

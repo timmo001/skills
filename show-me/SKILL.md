@@ -2,14 +2,6 @@
 name: show-me
 description: Help the user understand the current topic visually with concise diagrams, code-shape sketches, and focused HTML artifacts. Use ONLY when the user explicitly asks to see, visualise, diagram, sketch, or be shown the preceding explanation.
 license: MIT
-# origin: https://github.com/humanlayer/skills/tree/main/plugins/show-me/skills/show-me
-# upstream-sha: bba9d13ab34f0a87f1cc33df4dd196372393ddfc
-# local-edits:
-#   - SKILL.md: explicit-only description replaces disable-model-invocation
-#   - SKILL.md: HTML artefacts are reported by path and opened only on request
-#   - SKILL.md: added an Avoid section
-#   - SKILL.md: capitalised section headings
-#   - agents/openai.yaml: omitted
 ---
 
 Help the user understand the current topic of conversation visually. Skip the preamble and keep prose brief. Pick the smallest view that makes the key point clear.

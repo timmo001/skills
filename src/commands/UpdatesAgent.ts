@@ -33,7 +33,7 @@ import {
   writeSkillsCatalogue,
 } from "./Catalogue.js";
 import { importSkill } from "./Import.js";
-import { getImport } from "../imports/metadata.js";
+import { SKILLS_FILE, getImport } from "../imports/metadata.js";
 import {
   originDirectory,
   parseOrigin,
@@ -260,15 +260,71 @@ const skillUpdateTitles = (skill: string) => [
   `[SHA-only] Update ${skill}`,
 ];
 
+interface SkillYamlChange {
+  removedSha?: string;
+  addedSha?: string;
+  origin?: string;
+}
+
+/**
+ * Pin changes per skill in a patch's `skills.yml` section. `renderSkillsFile`
+ * puts `upstreamSha` two lines under the skill key, so the key is always in
+ * the hunk's context and each changed line belongs to the last key above it.
+ */
+const skillYamlChanges = (patch: string) => {
+  const changes = new Map<string, SkillYamlChange>();
+  let inFile = false;
+  let inHunk = false;
+  let current: string | undefined;
+
+  for (const line of patch.split("\n")) {
+    const file = line.match(/^diff --git a\/(.+) b\/(.+)$/);
+
+    if (file) {
+      inFile = file[1] === SKILLS_FILE && file[2] === SKILLS_FILE;
+      inHunk = false;
+      current = undefined;
+      continue;
+    }
+
+    if (!inFile) continue;
+
+    if (line.startsWith("@@")) {
+      inHunk = true;
+      current = undefined;
+      continue;
+    }
+
+    if (!inHunk) continue;
+
+    const key = line.match(/^[ +-] {2}([a-z0-9-]+):(?: \{\})?$/)?.[1];
+
+    if (key) {
+      current = key;
+      continue;
+    }
+
+    if (!current) continue;
+
+    const change = changes.get(current) ?? {};
+    changes.set(current, change);
+
+    const [, sign, sha] =
+      line.match(/^([+-]) {6}upstreamSha: ([0-9a-f]{40})$/) ?? [];
+
+    if (sha && sign === "-") change.removedSha = sha;
+    else if (sha && sign === "+") change.addedSha = sha;
+
+    const origin = line.match(/^[ +] {6}origin: "([^"\\]+)"$/)?.[1];
+
+    if (origin) change.origin = origin;
+  }
+
+  return changes;
+};
+
 const setsUpstreamSha = (patch: string, skill: string, sha: string) =>
-  patch
-    .split("\n")
-    .some(
-      (line) =>
-        line.startsWith("+") &&
-        line.slice(1).trimStart().startsWith(`"${skill}":`) &&
-        line.includes(`"upstreamSha": "${sha}"`),
-    );
+  skillYamlChanges(patch).get(skill)?.addedSha === sha;
 
 /** Pending updates without an open pull request for their current upstream SHA. */
 export const skillUpdatesNeedingWork = (
@@ -379,44 +435,23 @@ export function isShaOnlySkillPatch(patch: string, skill: string): boolean {
     else if (line.startsWith("+")) change.added.push(line.slice(1));
   }
 
-  const metadata = changes.get("imports.json");
-
-  const frontmatter = changes.get(`${skill}/SKILL.md`);
+  const metadata = changes.get(SKILLS_FILE);
 
   if (
-    changes.size !== 2 ||
+    changes.size !== 1 ||
     !metadata ||
-    !frontmatter ||
     metadata.removed.length !== 1 ||
-    metadata.added.length !== 1 ||
-    frontmatter.removed.length !== 1 ||
-    frontmatter.added.length !== 1
+    metadata.added.length !== 1
   )
     return false;
-  const pattern = /"upstreamSha": "([0-9a-f]{40})"/;
-  const oldMetadata = metadata.removed[0] ?? "";
-  const newMetadata = metadata.added[0] ?? "";
-  const oldSha = oldMetadata.match(pattern)?.[1];
-  const newSha = newMetadata.match(pattern)?.[1];
 
-  const oldFrontmatter = frontmatter.removed[0]?.match(
-    /^# upstream-sha: ([0-9a-f]{40})$/,
-  )?.[1];
-
-  const newFrontmatter = frontmatter.added[0]?.match(
-    /^# upstream-sha: ([0-9a-f]{40})$/,
-  )?.[1];
+  // The file's only changed lines are this skill's old and new pin.
+  const pin = skillYamlChanges(patch).get(skill);
 
   return (
-    oldMetadata.includes(`"${skill}":`) &&
-    newMetadata.includes(`"${skill}":`) &&
-    oldSha !== undefined &&
-    newSha !== undefined &&
-    oldSha !== newSha &&
-    oldMetadata.replace(pattern, '"upstreamSha": "<sha>"') ===
-      newMetadata.replace(pattern, '"upstreamSha": "<sha>"') &&
-    oldFrontmatter === oldSha &&
-    newFrontmatter === newSha
+    pin?.removedSha !== undefined &&
+    pin.addedSha !== undefined &&
+    pin.removedSha !== pin.addedSha
   );
 }
 
@@ -428,13 +463,13 @@ export function isScopedSkillPatch(patch: string, skill: string): boolean {
   });
 
   const allowed = (file: string) =>
-    file === "imports.json" ||
+    file === SKILLS_FILE ||
     file === CATALOGUE_FILE ||
     file === MARKETPLACE_FILE ||
     file.startsWith(`${skill}/`);
 
   return (
-    files.some(([from, to]) => from === "imports.json" && to === from) &&
+    files.some(([from, to]) => from === SKILLS_FILE && to === from) &&
     files.every(([from, to]) => from === to && allowed(from))
   );
 }
@@ -494,26 +529,12 @@ export const withUpstreamChanges = (body: string, section: string) => {
   return `${base ? `${base}\n\n` : ""}${section}${tail}\n`;
 };
 
-/** The skill's pinned SHA change and origin, read from a pull request's imports.json diff. */
+/** The skill's pinned SHA change and origin, read from a pull request's skills.yml diff. */
 export const upstreamPinChange = (patch: string, skill: string) => {
-  const entry = (prefix: "-" | "+") =>
-    patch
-      .split("\n")
-      .find(
-        (line) =>
-          line.startsWith(prefix) &&
-          !line.startsWith(`${prefix}${prefix}${prefix}`) &&
-          line.slice(1).trimStart().startsWith(`"${skill}":`),
-      );
-
-  const sha = (line: string | undefined) =>
-    line?.match(/"upstreamSha": "([0-9a-f]{40})"/)?.[1];
-
-  const removed = entry("-");
-  const added = entry("+");
-  const before = sha(removed);
-  const after = sha(added);
-  const origin = added?.match(/"origin": "([^"]+)"/)?.[1];
+  const pin = skillYamlChanges(patch).get(skill);
+  const before = pin?.removedSha;
+  const after = pin?.addedSha;
+  const origin = pin?.origin;
 
   return before && after && origin && before !== after
     ? { origin, before, after }
@@ -624,7 +645,7 @@ const publishCleanUpdate = Effect.fn("UpdatesAgent.publishCleanUpdate")(
     yield* validateRepository(root);
     yield* runOrFail(
       "git",
-      ["add", "--", "imports.json", CATALOGUE_FILE, MARKETPLACE_FILE],
+      ["add", "--", SKILLS_FILE, CATALOGUE_FILE, MARKETPLACE_FILE],
       root,
     );
 
@@ -647,7 +668,7 @@ const publishCleanUpdate = Effect.fn("UpdatesAgent.publishCleanUpdate")(
         "-m",
         title,
         "--",
-        "imports.json",
+        SKILLS_FILE,
         CATALOGUE_FILE,
         MARKETPLACE_FILE,
       ],

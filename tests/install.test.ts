@@ -2,18 +2,21 @@ import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, Stream } from "effect";
 import { install, MANIFEST_FILE } from "../src/commands/Install.js";
+import type { ImportMetadata } from "../src/imports/metadata.js";
 import { CommandExecutor } from "../src/services/CommandExecutor.js";
 import { withSkillsCli } from "./helpers/skills-cli.js";
+import { writeImportsFixture } from "./helpers/skills-file.js";
 
 const sha = (character: string) => character.repeat(40);
 
-const external = (name: string) => ({
-  origin: `https://github.com/org/repo/tree/main/${name}`,
-  upstreamSha: sha("a"),
-  license: "MIT",
-  localEdits: [],
-  distribution: "external",
-});
+const external = (name: string) =>
+  ({
+    origin: `https://github.com/org/repo/tree/main/${name}`,
+    upstreamSha: sha("a"),
+    license: "MIT",
+    localEdits: [],
+    distribution: "external",
+  }) satisfies ImportMetadata;
 
 const fetchLayer = (fetched: string[]) =>
   withSkillsCli(
@@ -78,14 +81,9 @@ describe("external skill install", () => {
         });
 
         const writeImports = (names: readonly string[]) =>
-          fs.writeFileString(
-            path.join(root, "imports.json"),
-            JSON.stringify({
-              version: 1,
-              imports: Object.fromEntries(
-                names.map((name) => [name, external(name)]),
-              ),
-            }),
+          writeImportsFixture(
+            root,
+            Object.fromEntries(names.map((name) => [name, external(name)])),
           );
 
         yield* writeImports(["fresh", "linked", "stale"]);
@@ -108,7 +106,7 @@ describe("external skill install", () => {
         expect(fetched.sort()).toEqual(["fresh", "stale"]);
         expect(
           yield* fs.readFileString(path.join(target, "fresh", "SKILL.md")),
-        ).toContain(`# upstream-sha: ${sha("a")}`);
+        ).toContain("license: MIT");
         expect(
           yield* fs.readFileString(path.join(target, "stale", "SKILL.md")),
         ).toContain("Body");

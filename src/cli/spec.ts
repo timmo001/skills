@@ -62,7 +62,7 @@ export const importCommand = Command.make(
     apply: bool("apply", "Apply a clean upstream snapshot"),
     metadataOnly: bool(
       "metadata-only",
-      "Materialise imports.json metadata only",
+      "Rewrite skills.yml in canonical form and write its name and licence into SKILL.md, without fetching",
     ),
     reviewedSha: Flag.String("reviewed-sha").pipe(
       Flag.optional,

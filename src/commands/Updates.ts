@@ -3,6 +3,7 @@ import { check as reviewImports } from "./Check.js";
 import { importSkill } from "./Import.js";
 import {
   type ImportMetadata,
+  SKILLS_FILE,
   isExternal,
   readImports,
   trackedSkillPath,
@@ -357,7 +358,7 @@ export const updates = Effect.fn("Updates.run")(function* (
 
     if (updatedNames.length > 0 && !options.noCommit) {
       const executor = yield* CommandExecutor;
-      const paths = ["imports.json", ...updatedPaths];
+      const paths = [SKILLS_FILE, ...updatedPaths];
 
       const staged = yield* executor.inherit(
         "git",

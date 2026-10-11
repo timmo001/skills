@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Skill maintenance records",
+  "$comment": "Generated from SkillsFile by mise run schema",
+  "type": "object",
+  "properties": {
+    "skills": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "properties": {
+          "import": {
+            "type": "object",
+            "properties": {
+              "origin": {
+                "type": "string",
+                "minLength": 1,
+                "description": "GitHub tree URL of the upstream skill directory"
+              },
+              "sourceName": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Upstream skill name, when it differs from the local name"
+              },
+              "upstreamSha": {
+                "$ref": "#/definitions/GitSha"
+              },
+              "license": {
+                "type": "string",
+                "minLength": 1,
+                "description": "Upstream licence identifier, or UNLICENSED"
+              },
+              "localEdits": {
+                "type": "array",
+                "description": "What the committed copy changes from upstream; empty for external imports. An entry describes SKILL.md unless it starts with another file's path",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "distribution": {
+                "type": "string",
+                "enum": [
+                  "external"
+                ],
+                "description": "Installed from the origin at the pinned SHA instead of committed here"
+              }
+            },
+            "required": [
+              "origin",
+              "upstreamSha",
+              "license",
+              "localEdits"
+            ],
+            "additionalProperties": false,
+            "description": "Where an imported skill comes from and how it differs"
+          }
+        },
+        "additionalProperties": false
+      },
+      "description": "Maintenance records keyed by skill directory name"
+    }
+  },
+  "required": [
+    "skills"
+  ],
+  "additionalProperties": false,
+  "definitions": {
+    "GitSha": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{40}$",
+      "description": "Upstream commit the skill was last reviewed against"
+    }
+  }
+}

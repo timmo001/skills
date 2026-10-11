@@ -1,5 +1,5 @@
 import { Console, Effect, FileSystem, Path, Result, Schema } from "effect";
-import { isExternal, readImports } from "../imports/metadata.js";
+import { SKILLS_FILE, isExternal, readImports } from "../imports/metadata.js";
 import { parseOrigin } from "../imports/upstream.js";
 import { parseFrontmatter } from "../lib/frontmatter.js";
 
@@ -170,7 +170,7 @@ export const renderMarketplace = Effect.fn("Catalogue.renderMarketplace")(
       Effect.mapError(
         (error) =>
           new CatalogueError({
-            failures: [`imports.json: ${error.message}`],
+            failures: [`${SKILLS_FILE}: ${error.message}`],
           }),
       ),
     );

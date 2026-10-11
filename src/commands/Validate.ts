@@ -1,9 +1,12 @@
 import { Console, Effect, FileSystem, Path, Result, Schema } from "effect";
 import {
+  SKILLS_FILE,
   isExternal,
-  readImports,
+  readSkillsFile,
+  renderSkillsFile,
   trackedSkillPath,
 } from "../imports/metadata.js";
+import { isProvenanceComment } from "../imports/snapshot.js";
 import { parseFrontmatter } from "../lib/frontmatter.js";
 import { checkSkillsCatalogue } from "./Catalogue.js";
 
@@ -155,75 +158,67 @@ export const validate = Effect.fn("Validate.run")(function* (root: string) {
     failures.push(
       `PORTABILITY.md: unknown skills: ${extraInventory.sort().join(", ")}`,
     );
-  const importsResult = yield* Effect.result(readImports(root));
+  const skillsResult = yield* Effect.result(readSkillsFile(root));
 
-  if (Result.isFailure(importsResult))
-    failures.push(`imports.json: ${importsResult.failure.message}`);
+  if (Result.isFailure(skillsResult))
+    failures.push(`${SKILLS_FILE}: ${skillsResult.failure.message}`);
+  else if (
+    renderSkillsFile(skillsResult.success.file) !== skillsResult.success.text
+  )
+    failures.push(
+      `${SKILLS_FILE}: not in canonical form; run skill-maintenance import <name> --metadata-only to rewrite it`,
+    );
 
-  const imports = Result.isSuccess(importsResult)
-    ? importsResult.success
-    : { version: 1 as const, imports: {} };
+  const records = Result.isSuccess(skillsResult)
+    ? Object.entries(skillsResult.success.file.skills)
+    : [];
 
-  for (const [name, metadata] of Object.entries(imports.imports)) {
+  for (const [name, entry] of records) {
+    const metadata = entry.import;
+
+    if (!metadata) {
+      failures.push(`${SKILLS_FILE}: ${name} has no records`);
+      continue;
+    }
+
     if (isExternal(metadata)) {
       if (metadata.localEdits.length !== 0)
         failures.push(
-          `imports.json: ${name} external import must not declare local edits`,
+          `${SKILLS_FILE}: ${name} external import must not declare local edits`,
         );
 
       for (const committed of [name, path.join("upstream", name)])
         if (yield* fs.exists(path.join(root, committed)))
           failures.push(
-            `imports.json: ${name} external import must not be committed at ${committed}/`,
+            `${SKILLS_FILE}: ${name} external import must not be committed at ${committed}/`,
           );
       continue;
     }
 
     if (metadata.localEdits.length === 0)
       failures.push(
-        `imports.json: ${name} adapted import must declare local edits, or be marked external`,
+        `${SKILLS_FILE}: ${name} adapted import must declare local edits, or be marked external`,
       );
     const tracked = trackedSkillPath(root, name, path);
 
     if (!(yield* fs.exists(tracked))) {
-      failures.push(`imports.json: missing skill directory: ${name}`);
+      failures.push(`${SKILLS_FILE}: missing skill directory: ${name}`);
       continue;
     }
 
-    const text = yield* fs.readFileString(tracked);
-    const fm = text.split("---", 3)[1] ?? "";
+    const fm = (yield* fs.readFileString(tracked)).split("---", 3)[1] ?? "";
 
-    for (const expected of [
-      `# origin: ${metadata.origin}`,
-      `# upstream-sha: ${metadata.upstreamSha}`,
-      ...(metadata.license ? [`license: ${metadata.license}`] : []),
-    ])
-      if (!fm.split("\n").includes(expected))
-        failures.push(
-          `${name}: materialised metadata does not match imports.json`,
-        );
-
-    const edits = fm
-      .split("\n")
-      .filter((line) => line.startsWith("#   - "))
-      .map((line) => line.slice(6));
-
-    if (edits.join("\0") !== metadata.localEdits.join("\0"))
-      failures.push(
-        `${name}: materialised local edits do not match imports.json`,
-      );
+    if (!fm.split("\n").includes(`license: ${metadata.license}`))
+      failures.push(`${name}: license does not match ${SKILLS_FILE}`);
   }
 
   for (const name of skillNames) {
     const text = yield* fs.readFileString(path.join(root, name, "SKILL.md"));
 
-    if (
-      (text.split("---", 3)[1] ?? "")
-        .split("\n")
-        .some((line) => line.startsWith("# origin:")) &&
-      !imports.imports[name]
-    )
-      failures.push(`imports.json: missing imports: ${name}`);
+    if ((text.split("---", 3)[1] ?? "").split("\n").some(isProvenanceComment))
+      failures.push(
+        `${name}: provenance comments belong in ${SKILLS_FILE}, not the frontmatter`,
+      );
   }
 
   if (failures.length === 0) {

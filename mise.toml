@@ -53,6 +53,14 @@ description = "Validate skills, imports and repository metadata"
 depends = ["build"]
 run = "./dist/skill-maintenance validate"
 
+[tasks.schema]
+description = "Generate skills.schema.json from the skills.yml schema"
+run = "bun src/generateSkillsSchema.ts"
+
+[tasks."schema:check"]
+description = "Check skills.schema.json matches the skills.yml schema"
+run = "bun src/generateSkillsSchema.ts --check"
+
 [tasks.validate]
 description = "Run every check in parallel"
-depends = ["lint", "lint:yaml", "typecheck", "test", "format:check", "validate:skills"]
+depends = ["lint", "lint:yaml", "typecheck", "test", "format:check", "schema:check", "validate:skills"]

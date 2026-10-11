@@ -1,9 +1,15 @@
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, Exit, FileSystem, Layer, Path, Stream } from "effect";
+import type { Mutable } from "effect/Types";
 import { importSkill } from "../src/commands/Import.js";
 import { check, CheckError } from "../src/commands/Check.js";
-import { getImport, writeReviewedSha } from "../src/imports/metadata.js";
+import {
+  type ImportMetadata,
+  getImport,
+  renderSkillsFile,
+  writeReviewedSha,
+} from "../src/imports/metadata.js";
 import {
   applyClean,
   directoriesMatch,
@@ -20,14 +26,6 @@ const metadata = {
   localEdits: [],
   distribution: "external" as const,
 };
-
-interface FixtureImportMetadata {
-  origin: string;
-  upstreamSha: string;
-  license: string;
-  localEdits: readonly string[];
-  distribution?: string;
-}
 
 const snapshotExecutorLayer = (content: string, originExists = true) =>
   withSkillsCli(
@@ -75,11 +73,18 @@ const snapshotExecutorLayer = (content: string, originExists = true) =>
     ),
   );
 
+const skillsFile = (imports: Readonly<Record<string, ImportMetadata>>) =>
+  renderSkillsFile({
+    skills: Object.fromEntries(
+      Object.entries(imports).map(([name, entry]) => [name, { import: entry }]),
+    ),
+  });
+
 const importedMetadata = (
   localEdits: readonly string[],
-  distribution?: string,
+  distribution?: "external",
 ) => {
-  const example: FixtureImportMetadata = {
+  const example: Mutable<ImportMetadata> = {
     origin: metadata.origin,
     upstreamSha: metadata.upstreamSha,
     license: metadata.license,
@@ -88,14 +93,11 @@ const importedMetadata = (
 
   if (distribution) example.distribution = distribution;
 
-  return JSON.stringify({
-    version: 1,
-    imports: { example },
-  });
+  return skillsFile({ example });
 };
 
 describe("import snapshots", () => {
-  it.effect("materialises provenance without changing the body", () =>
+  it.effect("materialises name and licence without changing the body", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -113,12 +115,12 @@ describe("import snapshots", () => {
       const content = yield* fs.readFileString(file);
       expect(content).toContain("name: example");
       expect(content).toContain("license: MIT");
-      expect(content).toContain(`# upstream-sha: ${"a".repeat(40)}`);
+      expect(content).not.toContain("# upstream-sha:");
       expect(content.endsWith("\n# Body\n")).toBe(true);
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
   );
 
-  it.effect("compares every file while ignoring only provenance comments", () =>
+  it.effect("compares every file, including SKILL.md", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -140,14 +142,11 @@ describe("import snapshots", () => {
         );
       }
 
-      yield* fs.writeFileString(
-        path.join(local, "SKILL.md"),
-        `---\nname: example\ndescription: Example\n# origin: old\n# upstream-sha: ${"a".repeat(40)}\n# local-edits:\n#   - adapted\n---\nBody\n#   - retained body comment\n`,
-      );
-      yield* fs.writeFileString(
-        path.join(upstream, "SKILL.md"),
-        `---\nname: example\ndescription: Example\n# origin: new\n# upstream-sha: ${"b".repeat(40)}\n---\nBody\n#   - retained body comment\n`,
-      );
+      for (const dir of [local, upstream])
+        yield* fs.writeFileString(
+          path.join(dir, "SKILL.md"),
+          "---\nname: example\ndescription: Example\n---\nBody\n",
+        );
       expect(yield* directoriesMatch(local, upstream)).toBe(true);
       yield* fs.writeFileString(
         path.join(upstream, "references", "guide.md"),
@@ -174,13 +173,13 @@ describe("import snapshots", () => {
       });
 
       yield* fs.writeFileString(
-        path.join(root, "imports.json"),
-        `{\n  "version": 1,\n  "imports": {\n    "example": { "origin": "${metadata.origin}", "upstreamSha": "${"b".repeat(40)}", "localEdits": [], "distribution": "external" }\n  }\n}\n`,
+        path.join(root, "skills.yml"),
+        skillsFile({ example: { ...metadata, upstreamSha: "b".repeat(40) } }),
       );
       yield* applyClean(root, "example", metadata, "c".repeat(40));
-      expect(
-        yield* fs.readFileString(path.join(root, "imports.json")),
-      ).toContain(`"upstreamSha": "${"c".repeat(40)}"`);
+      expect(yield* fs.readFileString(path.join(root, "skills.yml"))).toContain(
+        `upstreamSha: ${"c".repeat(40)}`,
+      );
       expect(yield* fs.exists(path.join(root, "example"))).toBe(false);
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
   );
@@ -205,7 +204,7 @@ describe("import snapshots", () => {
     }).pipe(Effect.provide(NodeServices.layer)),
   );
 
-  it.effect("updates only one reviewed SHA without reformatting metadata", () =>
+  it.effect("updates only one reviewed SHA in the canonical file", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -214,20 +213,18 @@ describe("import snapshots", () => {
         prefix: "skill-sha-test-",
       });
 
-      const before = [
-        "{",
-        '  "version": 1,',
-        '  "imports": {',
-        `    "example": { "origin": "${metadata.origin}", "upstreamSha": "${"a".repeat(40)}", "license": "MIT", "localEdits": [], "distribution": "external" },`,
-        `    "other": { "origin": "https://github.com/org/repo/tree/main/other", "upstreamSha": "${"c".repeat(40)}", "license": "MIT", "localEdits": [], "distribution": "external" }`,
-        "  }",
-        "}",
-        "",
-      ].join("\n");
+      const before = skillsFile({
+        example: metadata,
+        other: {
+          ...metadata,
+          origin: "https://github.com/org/repo/tree/main/other",
+          upstreamSha: "c".repeat(40),
+        },
+      });
 
-      yield* fs.writeFileString(path.join(root, "imports.json"), before);
+      yield* fs.writeFileString(path.join(root, "skills.yml"), before);
       yield* writeReviewedSha(root, "example", "b".repeat(40));
-      expect(yield* fs.readFileString(path.join(root, "imports.json"))).toBe(
+      expect(yield* fs.readFileString(path.join(root, "skills.yml"))).toBe(
         before.replace("a".repeat(40), "b".repeat(40)),
       );
     }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
@@ -244,7 +241,7 @@ describe("import snapshots", () => {
           prefix: "skill-metadata-test-",
         });
 
-        const file = path.join(root, "imports.json");
+        const file = path.join(root, "skills.yml");
         yield* fs.writeFileString(file, importedMetadata([], "external"));
         expect((yield* getImport(root, "example")).distribution).toBe(
           "external",
@@ -256,37 +253,44 @@ describe("import snapshots", () => {
       }).pipe(Effect.scoped, Effect.provide(NodeServices.layer)),
   );
 
-  it.effect("materialises metadata without fetching a snapshot", () =>
-    Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
+  it.effect(
+    "records a reviewed SHA and drops old provenance comments without fetching",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
 
-      const root = yield* fs.makeTempDirectoryScoped({
-        prefix: "skill-metadata-only-test-",
-      });
+        const root = yield* fs.makeTempDirectoryScoped({
+          prefix: "skill-metadata-only-test-",
+        });
 
-      yield* fs.writeFileString(
-        path.join(root, "imports.json"),
-        importedMetadata(["adapted"]),
-      );
-      yield* fs.makeDirectory(path.join(root, "example"));
-      yield* fs.writeFileString(
-        path.join(root, "example", "SKILL.md"),
-        "---\nname: example\ndescription: Example\n---\nBody\n",
-      );
-      yield* importSkill(root, "example", {
-        apply: false,
-        metadataOnly: true,
-        reviewedSha: "b".repeat(40),
-      });
-      expect(
-        yield* fs.readFileString(path.join(root, "example", "SKILL.md")),
-      ).toContain(`# upstream-sha: ${"b".repeat(40)}`);
-    }).pipe(
-      Effect.scoped,
-      Effect.provide(snapshotExecutorLayer("")),
-      Effect.provide(NodeServices.layer),
-    ),
+        yield* fs.writeFileString(
+          path.join(root, "skills.yml"),
+          importedMetadata(["adapted"]),
+        );
+        yield* fs.makeDirectory(path.join(root, "example"));
+        yield* fs.writeFileString(
+          path.join(root, "example", "SKILL.md"),
+          `---\nname: example\ndescription: Example\nlicense: MIT\n# origin: ${metadata.origin}\n# upstream-sha: ${"a".repeat(40)}\n# local-edits:\n#   - adapted\n---\nBody\n#   - retained body comment\n`,
+        );
+        yield* importSkill(root, "example", {
+          apply: false,
+          metadataOnly: true,
+          reviewedSha: "b".repeat(40),
+        });
+        expect(
+          yield* fs.readFileString(path.join(root, "example", "SKILL.md")),
+        ).toBe(
+          "---\nname: example\ndescription: Example\nlicense: MIT\n---\nBody\n#   - retained body comment\n",
+        );
+        expect(
+          yield* fs.readFileString(path.join(root, "skills.yml")),
+        ).toContain(`upstreamSha: ${"b".repeat(40)}`);
+      }).pipe(
+        Effect.scoped,
+        Effect.provide(snapshotExecutorLayer("")),
+        Effect.provide(NodeServices.layer),
+      ),
   );
 
   it.effect("rejects an adapted import that exactly matches its source", () =>
@@ -299,13 +303,13 @@ describe("import snapshots", () => {
       });
 
       yield* fs.writeFileString(
-        path.join(root, "imports.json"),
+        path.join(root, "skills.yml"),
         importedMetadata(["adapted"]),
       );
       yield* fs.makeDirectory(path.join(root, "example"));
       yield* fs.writeFileString(
         path.join(root, "example", "SKILL.md"),
-        `---\nname: example\ndescription: Example\nlicense: MIT\n# origin: ${metadata.origin}\n# upstream-sha: ${metadata.upstreamSha}\n# local-edits:\n#   - adapted\n---\nBody\n`,
+        "---\nname: example\ndescription: Example\nlicense: MIT\n---\nBody\n",
       );
 
       const result = yield* Effect.exit(
@@ -340,13 +344,13 @@ describe("import snapshots", () => {
       });
 
       yield* fs.writeFileString(
-        path.join(root, "imports.json"),
+        path.join(root, "skills.yml"),
         importedMetadata(["adapted"]),
       );
       yield* fs.makeDirectory(path.join(root, "example"));
       yield* fs.writeFileString(
         path.join(root, "example", "SKILL.md"),
-        `---\nname: example\ndescription: Example\nlicense: MIT\n# origin: ${metadata.origin}\n# upstream-sha: ${metadata.upstreamSha}\n# local-edits:\n#   - adapted\n---\nBody\n`,
+        "---\nname: example\ndescription: Example\nlicense: MIT\n---\nBody\n",
       );
 
       const failure = yield* Effect.flip(
@@ -380,7 +384,7 @@ describe("import snapshots", () => {
       });
 
       yield* fs.writeFileString(
-        path.join(root, "imports.json"),
+        path.join(root, "skills.yml"),
         importedMetadata(["adapted"]),
       );
 
@@ -411,7 +415,7 @@ describe("import snapshots", () => {
       });
 
       yield* fs.writeFileString(
-        path.join(root, "imports.json"),
+        path.join(root, "skills.yml"),
         importedMetadata([], "external"),
       );
 
@@ -442,7 +446,7 @@ describe("import snapshots", () => {
       });
 
       yield* fs.writeFileString(
-        path.join(root, "imports.json"),
+        path.join(root, "skills.yml"),
         importedMetadata(["retained after upstream deletion"]),
       );
       yield* fs.makeDirectory(path.join(root, "example"));

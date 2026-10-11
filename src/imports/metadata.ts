@@ -1,29 +1,71 @@
-import { Effect, FileSystem, Path, Schema } from "effect";
+import { Effect, FileSystem, JsonSchema, Path, Schema } from "effect";
+import { Yaml } from "effect/encoding";
 
-const Sha = Schema.String.check(Schema.isPattern(/^[0-9a-f]{40}$/)).annotate({
+/** The single maintenance record for skills in this repository. */
+export const SKILLS_FILE = "skills.yml";
+
+/** The JSON Schema generated from {@link SkillsFile} for editors. */
+export const SKILLS_SCHEMA_FILE = "skills.schema.json";
+
+// The `u` flag lets the pattern reach the generated JSON Schema.
+const Sha = Schema.String.check(Schema.isPattern(/^[0-9a-f]{40}$/u)).annotate({
   identifier: "GitSha",
 });
 
 export const ImportMetadata = Schema.Struct({
-  origin: Schema.NonEmptyString,
-  sourceName: Schema.optionalKey(Schema.NonEmptyString),
-  upstreamSha: Sha,
-  license: Schema.NonEmptyString,
-  localEdits: Schema.Array(Schema.NonEmptyString),
+  origin: Schema.NonEmptyString.annotate({
+    description: "GitHub tree URL of the upstream skill directory",
+  }),
+  sourceName: Schema.optionalKey(
+    Schema.NonEmptyString.annotate({
+      description: "Upstream skill name, when it differs from the local name",
+    }),
+  ),
+  upstreamSha: Sha.annotate({
+    description: "Upstream commit the skill was last reviewed against",
+  }),
+  license: Schema.NonEmptyString.annotate({
+    description: "Upstream licence identifier, or UNLICENSED",
+  }),
+  localEdits: Schema.Array(Schema.NonEmptyString).annotate({
+    description:
+      "What the committed copy changes from upstream; empty for external imports. An entry describes SKILL.md unless it starts with another file's path",
+  }),
   /** `external` imports are unedited upstream skills installed from their origin, not committed here. */
-  distribution: Schema.optionalKey(Schema.Literal("external")),
+  distribution: Schema.optionalKey(
+    Schema.Literal("external").annotate({
+      description:
+        "Installed from the origin at the pinned SHA instead of committed here",
+    }),
+  ),
 });
 
 export interface ImportMetadata extends Schema.Schema.Type<
   typeof ImportMetadata
 > {}
 
-export const ImportsFile = Schema.Struct({
-  version: Schema.Literal(1),
-  imports: Schema.Record(Schema.String, ImportMetadata),
+export const SkillEntry = Schema.Struct({
+  import: Schema.optionalKey(
+    ImportMetadata.annotate({
+      description: "Where an imported skill comes from and how it differs",
+    }),
+  ),
 });
 
-export interface ImportsFile extends Schema.Schema.Type<typeof ImportsFile> {}
+export interface SkillEntry extends Schema.Schema.Type<typeof SkillEntry> {}
+
+export const SkillsFile = Schema.Struct({
+  skills: Schema.Record(Schema.String, SkillEntry).annotate({
+    description: "Maintenance records keyed by skill directory name",
+  }),
+});
+
+export interface SkillsFile extends Schema.Schema.Type<typeof SkillsFile> {}
+
+/** Imported skills keyed by name, read from {@link SKILLS_FILE}. */
+export interface ImportsFile {
+  readonly imports: Readonly<Record<string, ImportMetadata>>;
+}
 
 export class MetadataError extends Schema.TaggedError<MetadataError>()(
   "MetadataError",
@@ -36,23 +78,133 @@ const metadataError = (operation: string) =>
       new MetadataError({ operation, message: String(cause) }),
   );
 
-export const readImports = Effect.fn("Imports.read")(function* (root: string) {
+const HEADER = [
+  `# yaml-language-server: $schema=./${SKILLS_SCHEMA_FILE}`,
+  "---",
+  "# Maintenance records for skills in this repository. skill-maintenance",
+  "# reads and rewrites this file in canonical form; skills carry no",
+  "# provenance comments of their own.",
+];
+
+const quote = (value: string) => JSON.stringify(value);
+
+/** Render the canonical text of {@link SKILLS_FILE}: sorted skills, fixed key order. */
+export const renderSkillsFile = (file: SkillsFile) => {
+  const names = Object.keys(file.skills).sort();
+
+  if (names.length === 0) return [...HEADER, "skills: {}", ""].join("\n");
+
+  const lines = [...HEADER, "skills:"];
+
+  for (const name of names) {
+    const entry = file.skills[name];
+    const metadata = entry?.import;
+
+    if (!metadata) {
+      lines.push(`  ${name}: {}`);
+      continue;
+    }
+
+    // upstreamSha sits two lines under the skill key, so a diff hunk for a
+    // SHA change always carries the key in its context.
+    lines.push(
+      `  ${name}:`,
+      "    import:",
+      `      upstreamSha: ${metadata.upstreamSha}`,
+      `      origin: ${quote(metadata.origin)}`,
+      ...(metadata.sourceName
+        ? [`      sourceName: ${quote(metadata.sourceName)}`]
+        : []),
+      `      license: ${quote(metadata.license)}`,
+      ...(metadata.localEdits.length === 0
+        ? ["      localEdits: []"]
+        : [
+            "      localEdits:",
+            ...metadata.localEdits.map((edit) => `        - ${quote(edit)}`),
+          ]),
+      ...(metadata.distribution
+        ? [`      distribution: ${metadata.distribution}`]
+        : []),
+    );
+  }
+
+  return [...lines, ""].join("\n");
+};
+
+/** Generate the editor schema from {@link SkillsFile}. */
+export const renderSkillsSchema = () => {
+  const document = JsonSchema.toDocumentDraft07(
+    Schema.toJsonSchemaDocument(SkillsFile, { onExcessProperty: "error" }),
+  );
+
+  return `${JSON.stringify(
+    {
+      $schema: "http://json-schema.org/draft-07/schema#",
+      title: "Skill maintenance records",
+      $comment: "Generated from SkillsFile by mise run schema",
+      ...document.schema,
+      definitions: document.definitions,
+    },
+    null,
+    2,
+  )}\n`;
+};
+
+/** Read and decode {@link SKILLS_FILE}, keeping its text for the canonical-form check. */
+export const readSkillsFile = Effect.fn("Skills.read")(function* (
+  root: string,
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
 
   const text = yield* fs
-    .readFileString(path.join(root, "imports.json"))
-    .pipe(metadataError("imports.read"));
+    .readFileString(path.join(root, SKILLS_FILE))
+    .pipe(metadataError("skills.read"));
 
-  const json = yield* Effect.try({
-    try: () => JSON.parse(text),
+  const yaml = yield* Effect.try({
+    try: () => Yaml.parse(text),
     catch: (cause) =>
-      new MetadataError({ operation: "imports.json", message: String(cause) }),
+      new MetadataError({ operation: "skills.yaml", message: String(cause) }),
   });
 
-  return yield* Schema.decodeUnknownEffect(ImportsFile)(json).pipe(
-    metadataError("imports.decode"),
-  );
+  const file = yield* Schema.decodeUnknownEffect(SkillsFile)(yaml, {
+    onExcessProperty: "error",
+  }).pipe(metadataError("skills.decode"));
+
+  return { file, text };
+});
+
+const writeSkillsFile = Effect.fn("Skills.write")(function* (
+  root: string,
+  file: SkillsFile,
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+
+  yield* fs
+    .writeFileString(path.join(root, SKILLS_FILE), renderSkillsFile(file))
+    .pipe(metadataError("skills.write"));
+});
+
+/** Rewrite a hand-edited {@link SKILLS_FILE} in canonical form. */
+export const formatSkillsFile = Effect.fn("Skills.format")(function* (
+  root: string,
+) {
+  const { file, text } = yield* readSkillsFile(root);
+
+  if (renderSkillsFile(file) !== text) yield* writeSkillsFile(root, file);
+});
+
+export const readImports = Effect.fn("Imports.read")(function* (root: string) {
+  const { file } = yield* readSkillsFile(root);
+
+  return {
+    imports: Object.fromEntries(
+      Object.entries(file.skills).flatMap(([name, entry]) =>
+        entry.import ? [[name, entry.import] as const] : [],
+      ),
+    ),
+  } satisfies ImportsFile;
 });
 
 export const getImport = Effect.fn("Imports.get")(function* (
@@ -93,48 +245,23 @@ export const writeReviewedSha = Effect.fn("Imports.writeReviewedSha")(
       metadataError("imports.sha"),
     );
 
-    const fs = yield* FileSystem.FileSystem;
-    const path = yield* Path.Path;
-    const file = path.join(root, "imports.json");
+    const { file } = yield* readSkillsFile(root);
+    const entry = file.skills[name];
 
-    const text = yield* fs
-      .readFileString(file)
-      .pipe(metadataError("imports.read"));
-
-    const escapedName = name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const marker = new RegExp(`"${escapedName}"\\s*:\\s*\\{`);
-    const match = marker.exec(text);
-
-    if (!match) {
+    if (!entry?.import) {
       return yield* new MetadataError({
         operation: "imports.write",
         message: `unknown imported skill: ${name}`,
       });
     }
 
-    const start = match.index;
-    const remaining = text.slice(start + match[0].length);
-    const nextEntry = /,\s*"[^"]+"\s*:\s*\{/.exec(remaining);
+    if (entry.import.upstreamSha === decoded) return;
 
-    const end = nextEntry
-      ? start + match[0].length + nextEntry.index
-      : text.length;
-
-    const entry = text.slice(start, end);
-    const shaPattern = /("upstreamSha"\s*:\s*")[0-9a-f]+(")/;
-
-    if (!shaPattern.test(entry)) {
-      return yield* new MetadataError({
-        operation: "imports.write",
-        message: `${name}: missing upstream SHA`,
-      });
-    }
-
-    const updated = entry.replace(shaPattern, `$1${decoded}$2`);
-
-    if (updated === entry) return;
-    yield* fs
-      .writeFileString(file, text.slice(0, start) + updated + text.slice(end))
-      .pipe(metadataError("imports.write"));
+    yield* writeSkillsFile(root, {
+      skills: {
+        ...file.skills,
+        [name]: { ...entry, import: { ...entry.import, upstreamSha: decoded } },
+      },
+    });
   },
 );

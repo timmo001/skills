@@ -1,5 +1,6 @@
 import { Console, Effect, Path, Schema } from "effect";
 import {
+  formatSkillsFile,
   getImport,
   isExternal,
   trackedSkillPath,
@@ -27,6 +28,8 @@ export const importSkill = Effect.fn("ImportSkill.run")(function* (
     readonly reviewedSha?: string | undefined;
   },
 ) {
+  if (options.metadataOnly) yield* formatSkillsFile(root);
+
   let metadata = yield* getImport(root, name);
 
   if (options.reviewedSha) {
@@ -69,7 +72,7 @@ export const importSkill = Effect.fn("ImportSkill.run")(function* (
     Effect.gen(function* () {
       if (yield* directoriesMatch(target, candidate)) {
         yield* Console.error(
-          `${name}: adapted import exactly matches its source; mark it external in imports.json instead`,
+          `${name}: adapted import exactly matches its source; mark it external in skills.yml instead`,
         );
 
         return yield* new ImportError({

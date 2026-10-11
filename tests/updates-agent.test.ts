@@ -39,6 +39,7 @@ import {
   CommandExecutor,
 } from "../src/services/CommandExecutor.js";
 import { withSkillsCli } from "./helpers/skills-cli.js";
+import { writeImportsFixture } from "./helpers/skills-file.js";
 import { fakeGitHub, type FakeGitHubHandlers } from "./helpers/fake-github.js";
 import {
   GitHub,
@@ -70,21 +71,31 @@ const githubLayer = (
     fakeGitHub({ run, stream, api: () => Effect.succeed("") }),
   );
 
+const skillsFileHeader = [
+  "diff --git a/skills.yml b/skills.yml",
+  "--- a/skills.yml",
+  "+++ b/skills.yml",
+];
+
+/** A `skills.yml` hunk moving one skill's pin, laid out as `renderSkillsFile` writes it. */
+const pinHunk = (
+  skill: string,
+  oldSha: string,
+  newSha: string,
+  origin = "https://github.com/org/repo/tree/main/example",
+) => [
+  "@@ -5,7 +5,7 @@ skills:",
+  `   ${skill}:`,
+  "     import:",
+  `-      upstreamSha: ${oldSha}`,
+  `+      upstreamSha: ${newSha}`,
+  `       origin: "${origin}"`,
+  '       license: "MIT"',
+  "       localEdits: []",
+];
+
 const shaOnlyPatch = (oldSha: string, newSha: string) =>
-  [
-    "diff --git a/example/SKILL.md b/example/SKILL.md",
-    "--- a/example/SKILL.md",
-    "+++ b/example/SKILL.md",
-    "@@ -1 +1 @@",
-    `-# upstream-sha: ${oldSha}`,
-    `+# upstream-sha: ${newSha}`,
-    "diff --git a/imports.json b/imports.json",
-    "--- a/imports.json",
-    "+++ b/imports.json",
-    "@@ -1 +1 @@",
-    `-    "example": { "upstreamSha": "${oldSha}" },`,
-    `+    "example": { "upstreamSha": "${newSha}" },`,
-  ].join("\n");
+  [...skillsFileHeader, ...pinHunk("example", oldSha, newSha)].join("\n");
 
 describe("updates agent policies", () => {
   it.effect("does not start GitHub Actions work while offline", () =>
@@ -168,25 +179,19 @@ describe("updates agent policies", () => {
       const oldSha = "a".repeat(40);
       const newSha = "b".repeat(40);
       const origin = "https://github.com/org/repo/tree/main/example";
-      yield* fs.writeFileString(
-        path.join(root, "imports.json"),
-        JSON.stringify({
-          version: 1,
-          imports: {
-            example: {
-              origin,
-              upstreamSha: oldSha,
-              license: "MIT",
-              localEdits: [],
-              distribution: "external",
-            },
-          },
-        }),
-      );
+      yield* writeImportsFixture(root, {
+        example: {
+          origin,
+          upstreamSha: oldSha,
+          license: "MIT",
+          localEdits: [],
+          distribution: "external",
+        },
+      });
       yield* fs.makeDirectory(path.join(root, "example"));
       yield* fs.writeFileString(
         path.join(root, "example", "SKILL.md"),
-        `---\nname: example\ndescription: Example\nlicense: MIT\n# origin: ${origin}\n# upstream-sha: ${oldSha}\n---\nSame body\n`,
+        "---\nname: example\ndescription: Example\nlicense: MIT\n---\nSame body\n",
       );
       yield* fs.writeFileString(
         path.join(root, "skills.sh.json"),
@@ -328,9 +333,8 @@ describe("updates agent policies", () => {
 
         const patch = (sha: string) =>
           [
-            "diff --git a/imports.json b/imports.json",
-            `-    "example": { "upstreamSha": "${"a".repeat(40)}", "localEdits": [] },`,
-            `+    "example": { "upstreamSha": "${sha}", "localEdits": [] },`,
+            ...skillsFileHeader,
+            ...pinHunk("example", "a".repeat(40), sha),
           ].join("\n");
 
         const skills = [
@@ -410,12 +414,8 @@ describe("updates agent policies", () => {
 
       const pin = upstreamPinChange(
         [
-          "diff --git a/imports.json b/imports.json",
-          "--- a/imports.json",
-          "+++ b/imports.json",
-          "@@ -1 +1 @@",
-          `-    "example": { "origin": "${origin}", "upstreamSha": "${oldSha}" },`,
-          `+    "example": { "origin": "${origin}", "upstreamSha": "${newSha}" },`,
+          ...skillsFileHeader,
+          ...pinHunk("example", oldSha, newSha, origin),
         ].join("\n"),
         "example",
       );
@@ -458,6 +458,50 @@ describe("updates agent policies", () => {
 
       expect(body).toBe(`Summary\n\n${section}\n\n${benchmark.trimEnd()}\n`);
       expect(withUpstreamChanges(body, section)).toBe(body);
+    }),
+  );
+
+  it.effect("attributes pin changes in one hunk to their own skills", () =>
+    Effect.sync(() => {
+      const a = "a".repeat(40);
+      const b = "b".repeat(40);
+      const c = "c".repeat(40);
+      const d = "d".repeat(40);
+
+      const patch = [
+        ...skillsFileHeader,
+        "@@ -5,14 +5,14 @@ skills:",
+        "   alpha:",
+        "     import:",
+        `-      upstreamSha: ${a}`,
+        `+      upstreamSha: ${b}`,
+        '       origin: "https://github.com/org/repo/tree/main/alpha"',
+        '       license: "MIT"',
+        "       localEdits: []",
+        "   beta:",
+        "     import:",
+        `-      upstreamSha: ${c}`,
+        `+      upstreamSha: ${d}`,
+        '       origin: "https://github.com/org/repo/tree/main/beta"',
+      ].join("\n");
+
+      expect(upstreamPinChange(patch, "alpha")).toEqual({
+        origin: "https://github.com/org/repo/tree/main/alpha",
+        before: a,
+        after: b,
+      });
+      expect(upstreamPinChange(patch, "beta")).toEqual({
+        origin: "https://github.com/org/repo/tree/main/beta",
+        before: c,
+        after: d,
+      });
+      // beta's new SHA must not count as covering alpha.
+      expect(
+        skillUpdatesNeedingWork(
+          [{ name: "alpha", state: "update-available", upstreamSha: d }],
+          [{ title: "Update skill: alpha", patch }],
+        ),
+      ).toEqual(["alpha"]);
     }),
   );
 
@@ -526,13 +570,16 @@ describe("updates agent policies", () => {
       const oldSha = "a".repeat(40);
       const newSha = "b".repeat(40);
 
+      // An external pin also moves its marketplace pin, so it is never SHA-only.
       const patch = [
-        "diff --git a/imports.json b/imports.json",
-        "--- a/imports.json",
-        "+++ b/imports.json",
+        ...skillsFileHeader,
+        ...pinHunk("example", oldSha, newSha),
+        "diff --git a/.claude-plugin/marketplace.json b/.claude-plugin/marketplace.json",
+        "--- a/.claude-plugin/marketplace.json",
+        "+++ b/.claude-plugin/marketplace.json",
         "@@ -1 +1 @@",
-        `-    "example": { "upstreamSha": "${oldSha}" },`,
-        `+    "example": { "upstreamSha": "${newSha}" },`,
+        `-        "sha": "${oldSha}"`,
+        `+        "sha": "${newSha}"`,
       ].join("\n");
 
       expect(isShaOnlySkillPatch(patch, "example")).toBe(false);
@@ -546,21 +593,31 @@ describe("updates agent policies", () => {
       const newSha = "b".repeat(40);
 
       const metadataPatch = [
-        "diff --git a/example/SKILL.md b/example/SKILL.md",
-        "--- a/example/SKILL.md",
-        "+++ b/example/SKILL.md",
-        "@@ -1 +1 @@",
-        `-# upstream-sha: ${oldSha}`,
-        `+# upstream-sha: ${newSha}`,
-        "diff --git a/imports.json b/imports.json",
-        "--- a/imports.json",
-        "+++ b/imports.json",
-        "@@ -1 +1 @@",
-        `-    "example": { "origin": "old", "upstreamSha": "${oldSha}" },`,
-        `+    "example": { "origin": "new", "upstreamSha": "${newSha}" },`,
+        ...skillsFileHeader,
+        "@@ -5,7 +5,7 @@ skills:",
+        "   example:",
+        "     import:",
+        `-      upstreamSha: ${oldSha}`,
+        `+      upstreamSha: ${newSha}`,
+        '-      origin: "old"',
+        '+      origin: "new"',
       ].join("\n");
 
       expect(isShaOnlySkillPatch(metadataPatch, "example")).toBe(false);
+      expect(
+        isShaOnlySkillPatch(
+          [
+            "diff --git a/example/SKILL.md b/example/SKILL.md",
+            "--- a/example/SKILL.md",
+            "+++ b/example/SKILL.md",
+            "@@ -1 +1 @@",
+            "-Old",
+            "+New",
+            shaOnlyPatch(oldSha, newSha),
+          ].join("\n"),
+          "example",
+        ),
+      ).toBe(false);
       expect(
         isShaOnlySkillPatch(
           "diff --git a/example/SKILL.md b/renamed/SKILL.md",
@@ -571,7 +628,7 @@ describe("updates agent policies", () => {
         isScopedSkillPatch(
           [
             "diff --git a/example/SKILL.md b/example/SKILL.md",
-            "diff --git a/imports.json b/imports.json",
+            "diff --git a/skills.yml b/skills.yml",
             "diff --git a/other/SKILL.md b/other/SKILL.md",
           ].join("\n"),
           "example",
@@ -631,7 +688,7 @@ describe("updates agent policies", () => {
                 "diff --git a/example/SKILL.md b/example/SKILL.md",
                 "-Old",
                 "+New",
-                "diff --git a/imports.json b/imports.json",
+                "diff --git a/skills.yml b/skills.yml",
               ].join("\n"),
             );
 
@@ -849,7 +906,7 @@ describe("updates agent policies", () => {
             ["symbolic-ref", "origin/main\n"],
             ["log", subjects],
             ["rev-parse", "abc123\n"],
-            ["status", " M imports.json\n"],
+            ["status", " M skills.yml\n"],
             ["ls-remote", `abc123\trefs/heads/${branch}\n`],
           ]);
 
@@ -958,21 +1015,15 @@ describe("updates agent policies", () => {
       const stateFile = path.join(root, "state", "last-run");
       const configFile = path.join(root, "agent.yml");
       yield* fs.makeDirectory(path.join(root, ".git"));
-      yield* fs.writeFileString(
-        path.join(root, "imports.json"),
-        // An invalid origin still needs attention, so the model runs.
-        JSON.stringify({
-          version: 1,
-          imports: {
-            example: {
-              origin: "not-a-github-url",
-              upstreamSha: "a".repeat(40),
-              license: "MIT",
-              localEdits: [],
-            },
-          },
-        }),
-      );
+      // An invalid origin still needs attention, so the model runs.
+      yield* writeImportsFixture(root, {
+        example: {
+          origin: "not-a-github-url",
+          upstreamSha: "a".repeat(40),
+          license: "MIT",
+          localEdits: [],
+        },
+      });
       yield* fs.writeFileString(
         configFile,
         [

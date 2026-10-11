@@ -2,12 +2,6 @@
 name: to-questionnaire
 description: Turn a decision the user cannot answer alone into a channel-aware questionnaire draft for one other person. Use when missing knowledge belongs to a colleague, maintainer, or domain expert and the user needs questions for GitHub, Slack, Discord, or a document.
 license: MIT
-# origin: https://github.com/mattpocock/skills/tree/main/skills/productivity/to-questionnaire
-# upstream-sha: 321658273cb1d20b76026717d027d505790106d4
-# local-edits:
-#   - draft in chat by default
-#   - adapt output for multiple channels
-#   - require explicit permission before external actions
 ---
 
 # To Questionnaire

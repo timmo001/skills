@@ -20,7 +20,10 @@ import {
   CommandExecutor,
   type CommandExecutorService,
 } from "../src/services/CommandExecutor.js";
+import type { Mutable } from "effect/Types";
+import type { ImportMetadata } from "../src/imports/metadata.js";
 import { withSkillsCli } from "./helpers/skills-cli.js";
+import { writeImportsFixture } from "./helpers/skills-file.js";
 import { fakeGitHub, type FakeGitHubHandlers } from "./helpers/fake-github.js";
 import {
   GitHub,
@@ -31,14 +34,6 @@ import {
 const sha = (character: string) => character.repeat(40);
 
 const originUrl = "https://github.com/org/repo/tree/main/example";
-
-interface FixtureImportMetadata {
-  origin: string;
-  upstreamSha: string;
-  license: string;
-  localEdits: readonly string[];
-  distribution?: "external";
-}
 
 const githubLayer = (overrides: FakeGitHubHandlers = {}) =>
   Layer.succeed(
@@ -123,29 +118,21 @@ const makeRepository = Effect.fn("Test.makeRepository")(function* (
     prefix: "skill-updates-test-",
   });
 
-  const importMetadata: FixtureImportMetadata = {
+  const example: Mutable<ImportMetadata> = {
     origin: originUrl,
     upstreamSha: sha("a"),
     license: "MIT",
     localEdits,
   };
 
-  if (localEdits.length === 0) importMetadata.distribution = "external";
-  yield* fs.writeFileString(
-    path.join(root, "imports.json"),
-    JSON.stringify({
-      version: 1,
-      imports: {
-        example: importMetadata,
-      },
-    }),
-  );
+  if (localEdits.length === 0) example.distribution = "external";
+  yield* writeImportsFixture(root, { example });
 
   if (localEdits.length === 0) return root;
   yield* fs.makeDirectory(path.join(root, "example"));
   yield* fs.writeFileString(
     path.join(root, "example", "SKILL.md"),
-    `---\nname: example\ndescription: Example\nlicense: MIT\n# origin: ${originUrl}\n# upstream-sha: ${sha("a")}${localEdits.length > 0 ? `\n# local-edits:\n${localEdits.map((edit) => `#   - ${edit}`).join("\n")}` : ""}\n---\n${body}\n`,
+    `---\nname: example\ndescription: Example\nlicense: MIT\n---\n${body}\n`,
   );
 
   return root;
@@ -407,30 +394,24 @@ describe("versioned update reports", () => {
   it.effect("continues after one snapshot comparison fails", () =>
     Effect.gen(function* () {
       const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
 
       const root = yield* fs.makeTempDirectoryScoped({
         prefix: "skill-report-failure-test-",
       });
 
-      const imported = (name: string) => ({
-        origin: `https://github.com/org/repo/tree/main/${name}`,
-        upstreamSha: sha("a"),
-        license: "MIT",
-        localEdits: [],
-        distribution: "external",
-      });
+      const imported = (name: string) =>
+        ({
+          origin: `https://github.com/org/repo/tree/main/${name}`,
+          upstreamSha: sha("a"),
+          license: "MIT",
+          localEdits: [],
+          distribution: "external",
+        }) satisfies ImportMetadata;
 
-      yield* fs.writeFileString(
-        path.join(root, "imports.json"),
-        JSON.stringify({
-          version: 1,
-          imports: {
-            broken: imported("broken"),
-            later: imported("later"),
-          },
-        }),
-      );
+      yield* writeImportsFixture(root, {
+        broken: imported("broken"),
+        later: imported("later"),
+      });
 
       const pinned = new Set<string>();
 
@@ -568,9 +549,9 @@ describe("versioned update reports", () => {
         skipReview: true,
       });
       expect(yield* fs.exists(path.join(root, "example"))).toBe(false);
-      expect(
-        yield* fs.readFileString(path.join(root, "imports.json")),
-      ).toContain(sha("b"));
+      expect(yield* fs.readFileString(path.join(root, "skills.yml"))).toContain(
+        sha("b"),
+      );
     }).pipe(
       Effect.scoped,
       Effect.provide(

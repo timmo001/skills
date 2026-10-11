@@ -2,14 +2,6 @@
 name: grilling
 description: Grill the user about a plan, decision, or idea in dependency-ready rounds. Use when the user wants to stress-test their thinking or uses a grill trigger phrase.
 license: MIT
-# origin: https://github.com/mattpocock/skills/tree/main/skills/productivity/grilling
-# upstream-sha: 95249b0b49782349740fd9b8c6ce32b4e59e497a
-# local-edits:
-#   - preserve Light/Full intensity and materiality rules, defaulting to Light
-#   - use direct read-only investigation for fact-finding
-#   - cap question-tool rounds at five questions
-#   - present each round in chat first and keep questions concise via asking-questions
-#   - limit the upstream yes-accepts-recommendation rule to yes/no questions
 ---
 
 # Grilling

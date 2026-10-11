@@ -27,27 +27,12 @@ const snapshotError = (operation: string) =>
       }),
   );
 
-const withoutProvenance = (lines: readonly string[]) => {
-  const kept: string[] = [];
-  let inLocalEdits = false;
+/** A frontmatter comment from the retired provenance overlay, now kept in `skills.yml`. */
+export const isProvenanceComment = (line: string) =>
+  /^# (origin|upstream-sha|local-edits):/.test(line) ||
+  line.startsWith("#   - ");
 
-  for (const line of lines) {
-    if (line === "# local-edits:") {
-      inLocalEdits = true;
-      continue;
-    }
-
-    if (inLocalEdits && line.startsWith("#   - ")) continue;
-    inLocalEdits = false;
-
-    if (line.startsWith("# origin:") || line.startsWith("# upstream-sha:"))
-      continue;
-    kept.push(line);
-  }
-
-  return kept;
-};
-
+/** Write the local `name` and `license` into a skill's frontmatter; the rest of its record lives in `skills.yml`. */
 export const materialiseMetadata = Effect.fn("Snapshot.materialiseMetadata")(
   function* (file: string, name: string, metadata: ImportMetadata) {
     const fs = yield* FileSystem.FileSystem;
@@ -74,24 +59,21 @@ export const materialiseMetadata = Effect.fn("Snapshot.materialiseMetadata")(
       });
     }
 
-    const fields = withoutProvenance(lines.slice(1, end)).filter(
-      (line) => !line.startsWith("name:") && !line.startsWith("license:"),
-    );
-
-    const overlay = ["---", `name: ${name}`, ...fields];
-
-    if (metadata.license) overlay.push(`license: ${metadata.license}`);
-    overlay.push(
-      `# origin: ${metadata.origin}`,
-      `# upstream-sha: ${metadata.upstreamSha}`,
-    );
-
-    if (metadata.localEdits.length > 0) {
-      overlay.push(
-        "# local-edits:",
-        ...metadata.localEdits.map((edit) => `#   - ${edit}`),
+    const fields = lines
+      .slice(1, end)
+      .filter(
+        (line) =>
+          !line.startsWith("name:") &&
+          !line.startsWith("license:") &&
+          !isProvenanceComment(line),
       );
-    }
+
+    const overlay = [
+      "---",
+      `name: ${name}`,
+      ...fields,
+      `license: ${metadata.license}`,
+    ];
 
     const body = lines.slice(end + 1);
 
@@ -101,21 +83,6 @@ export const materialiseMetadata = Effect.fn("Snapshot.materialiseMetadata")(
       .pipe(snapshotError("metadata.write"));
   },
 );
-
-const comparableSkill = (content: string) => {
-  const lines = content.split(/\r?\n/);
-
-  if (lines[0] !== "---") return content;
-  const end = lines.indexOf("---", 1);
-
-  if (end < 0) return content;
-
-  return [
-    "---",
-    ...withoutProvenance(lines.slice(1, end)),
-    ...lines.slice(end),
-  ].join("\n");
-};
 
 const listFiles = Effect.fn("Snapshot.listFiles")(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -180,15 +147,7 @@ export const directoryChanges = Effect.fn("Snapshot.directoryChanges")(
       const localBytes = yield* fs.readFile(path.join(local, localFile));
       const upstreamBytes = yield* fs.readFile(path.join(upstream, file));
 
-      if (file === "SKILL.md") {
-        const decoder = new TextDecoder();
-
-        if (
-          comparableSkill(decoder.decode(localBytes)) !==
-          comparableSkill(decoder.decode(upstreamBytes))
-        )
-          changes.push({ path: file, status: "modified" });
-      } else if (
+      if (
         localBytes.length !== upstreamBytes.length ||
         localBytes.some((byte, index) => byte !== upstreamBytes[index])
       )

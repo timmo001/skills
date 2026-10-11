@@ -3,17 +3,6 @@ name: retro
 description: Run a retrospective on one or more agent sessions and propose improvements to the agent's environment, including skills, steering files, automated checks, and tooling. Use ONLY when the user invokes /retro or explicitly asks for a retrospective or a review of past sessions.
 compatibility: Reading sessions other than the current one uses the OpenCode 2 CLI (opencode2 session list and export) and jq. Routing findings assumes the dot-managed skills, dotfiles, and private overlay repositories.
 license: MIT
-# origin: https://github.com/mattpocock/skills/tree/main/skills/engineering/retro
-# upstream-sha: a7d038f6bf7f01b516408e95e2fb56e0b338fa6f
-# local-edits:
-#   - SKILL.md: explicit-only description replaces upstream invocation gating
-#   - SKILL.md: writing-dot-skills replaces writing-for-agents
-#   - SKILL.md: reads other sessions through opencode2 session export and jq
-#   - SKILL.md: added a Skills category for selection, adherence, conflicts, and gaps
-#   - SKILL.md: maps checks and standards to Oxlint rules, dot git commit guards, and code-review instead of CODING_STANDARDS.md
-#   - SKILL.md: routes findings to owning repositories and stops before edits
-#   - SKILL.md: added compatibility metadata for concrete environment requirements
-#   - agents/openai.yaml: omitted
 ---
 
 The user has asked for a **retrospective**. You are suggesting improvements to the coding agent's **environment** to improve future runs. Report findings only; change nothing until the user picks which to apply.

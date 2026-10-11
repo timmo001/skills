@@ -6,11 +6,6 @@ description: >-
   @timmo001/oxlint-rules. Use when asked to create, cut, prepare, or publish an
   oxlint-rules release, including its version bump and npm and JSR publication.
 license: Apache-2.0
-# origin: https://github.com/timmo001/oxlint-rules/tree/main/skills/release-oxlint-rules
-# upstream-sha: 05c84299d080e5e0dde79a7b0e5cff9a20cc7408
-# local-edits:
-#   - SKILL.md: read publication status once and stop when publication is incomplete
-#   - SKILL.md: added compatibility metadata for concrete environment requirements
 ---
 
 # Release Oxlint Rules

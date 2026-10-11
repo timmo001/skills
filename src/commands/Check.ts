@@ -55,7 +55,7 @@ export const check = Effect.fn("Check.run")(function* (
 
         if (yield* directoriesMatch(target, candidate)) {
           yield* Console.error(
-            `${name}: adapted import exactly matches upstream; mark it external in imports.json instead`,
+            `${name}: adapted import exactly matches upstream; mark it external in skills.yml instead`,
           );
           exactMatches.push(name);
 

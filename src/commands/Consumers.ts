@@ -14,6 +14,7 @@ import { CommandExecutor } from "../services/CommandExecutor.js";
 import { GitHub, GitHubError } from "../services/GitHub.js";
 import {
   type ImportsFile,
+  SKILLS_FILE,
   isExternal,
   readImports,
 } from "../imports/metadata.js";
@@ -322,7 +323,7 @@ interface Catalogue {
 /**
  * Resolve every skill that could be shared, with committed skills pinned to
  * the source checkout's `HEAD`. Installing `installs` needs that commit
- * published and their folders and `imports.json` unchanged; removing does not.
+ * published and their folders and `skills.yml` unchanged; removing does not.
  */
 const loadCatalogue = Effect.fn("Consumers.loadCatalogue")(function* (
   root: string,
@@ -375,7 +376,7 @@ const loadCatalogue = Effect.fn("Consumers.loadCatalogue")(function* (
       "status",
       "--porcelain",
       "--",
-      "imports.json",
+      SKILLS_FILE,
       ...installs.filter((name) => hashes.has(name)),
     );
 

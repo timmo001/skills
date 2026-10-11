@@ -3,16 +3,6 @@ name: decision-models
 description: "Make typed, calibrated decisions about text, JSON or images with decision models, locally through Ollaya or Ollama or hosted as Cloudflare Clef on Workers AI: classify (choice), rate (score) or check a yes/no statement (noul), with probabilities you can threshold. Use it to triage tickets and emails, route requests, moderate posts, screen prompts for jailbreaks or injections, or any step where the agent needs a quick judgement it can act on, instead of reasoning it out in text. Also use it whenever the user names a decision model such as laya, winnow, tev1, nimble, clef or clef-flash, which are models, not commands. Works through the Ollaya MCP server (the `decide` tool), the `ollaya` CLI or local HTTP API, Ollama's local HTTP API, or the Cloudflare API MCP server."
 compatibility: Requires a local runtime, either Ollaya (CLI, MCP server or HTTP API) or Ollama 0.35.0 or later (HTTP API), plus nvidia-smi on machines with an NVIDIA GPU, or hosted Cloudflare Clef on Workers AI through the Cloudflare API MCP server or an authenticated API token. Hosted requests are billed per input token beyond the free daily allocation.
 license: Apache-2.0
-# origin: https://github.com/ollaya-dev/ollaya/tree/main/skills/ollaya-decisions
-# upstream-sha: 798a9b56477c9d8ab457aa3887a71c5103acedd4
-# local-edits:
-#   - SKILL.md: renamed to decision-models and added hosted Cloudflare Clef on Workers AI as a fallback provider alongside Ollaya
-#   - SKILL.md: added compatibility metadata for concrete environment requirements
-#   - SKILL.md: dropped the metadata.homepage block (https://ollaya.dev); the frontmatter validator allows no nested keys
-#   - SKILL.md: added a cascade that starts on winnow:e4b with an NVIDIA GPU or laya on CPU and escalates unclear answers to local or hosted Clef
-#   - SKILL.md: replaced the upstream model advice with a pointer to that cascade
-#   - SKILL.md: retained hosted Clef support and the local decision cascade alongside the upstream Arbiter model entry
-#   - SKILL.md: added Ollama's HTTP API as an equal local runtime alongside Ollaya, with its decision models in the cascade
 ---
 
 # Typed decisions with Ollaya, Ollama or Cloudflare Clef
