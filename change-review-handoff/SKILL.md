@@ -46,6 +46,11 @@ user has already reviewed this exact diff.
   from step 4. After a guided review, the same message says the guide and
   the diff review for each repository are ready, guide first, so the user
   never finds the diff review open on its own. Record the message id.
+- Put the changeset in that message above the question, so the user can
+  decide from the Inbox: the changed files per repository with their added
+  and removed line counts, then a short fenced `diff` preview of the key
+  hunks. Keep the preview to a few lines per file, and for a large change
+  show only the hunks that matter most and say the rest is in the review.
 - Tell the user in one line what opened, and that they can either send notes
   from the review or answer the next-steps question in the Inbox or chat.
   Then end the turn. Do not poll, rerun, or reopen the review.
