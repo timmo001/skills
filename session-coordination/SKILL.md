@@ -134,6 +134,9 @@ host's configuration.
 
 ## Work And Collect
 
+- After a server restart, Herdr reopens the exact session for agents that reported
+  a resume command. Check live state and recent output before launching a
+  replacement or re-sending a prompt.
 - If the verified host opener already delivered the brief, do not send it again;
   use `herdr agent wait` when its result is needed. Otherwise send it directly with
   `herdr agent prompt`, using `--wait` for a dependent result. Bound both waits with
