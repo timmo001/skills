@@ -15,7 +15,7 @@ General engineering and writing skills that work across Agent Skills clients.
 
 | Skill | Description |
 | --- | --- |
-| [`asking-questions`](./asking-questions/) | Decide when to ask the user a question and how to present it. Use before any clarifying question, choice, or confirmation, whether through a structured question tool or in chat, and to decide whether to hold questions until findings are presented or divert to grilling; do not use to run light or full grilling rounds. |
+| [`asking-questions`](./asking-questions/) | Decide when to ask the user a question and how to present it. Use before any clarifying question, choice, or confirmation, whether through the Plannotator Inbox, a structured question tool or in chat, and to decide whether to hold questions until findings are presented or divert to grilling; do not use to run light or full grilling rounds. |
 | [`bro`](./bro/) | Re-pitch the immediately preceding response with enough context to follow, using plain, concise, unambiguous language. Use ONLY when the user explicitly invokes /bro or says the previous response did not land. |
 | [`browser-access`](./browser-access/) | Decide whether browser access is needed and keep authorised checks narrow. Use for frontend or UI diagnosis, before proposing or using Chrome DevTools or other browser automation, and when the user explicitly requests browser interaction. |
 | [`changeset-scope`](./changeset-scope/) | Keep all scoped code work contained to the user-defined changeset. Use for implementation, fixes, diagnosis, refactoring, cleanup, and review when explicit instructions, named files, diffs, branches, pull requests, or injected work scopes define the boundary. |

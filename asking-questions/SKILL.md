@@ -1,7 +1,7 @@
 ---
 name: asking-questions
 license: Apache-2.0
-description: Decide when to ask the user a question and how to present it. Use before any clarifying question, choice, or confirmation, whether through a structured question tool or in chat, and to decide whether to hold questions until findings are presented or divert to grilling; do not use to run light or full grilling rounds.
+description: Decide when to ask the user a question and how to present it. Use before any clarifying question, choice, or confirmation, whether through the Plannotator Inbox, a structured question tool or in chat, and to decide whether to hold questions until findings are presented or divert to grilling; do not use to run light or full grilling rounds.
 ---
 
 # Asking Questions
@@ -48,7 +48,9 @@ Each question must make sense from the chat directly above it. If the thing bein
 ## How to Ask
 
 - Ask the fewest questions that unblock the work, ideally one and at most three in a pass.
-- Use the client's structured question capability when available; otherwise ask concisely in chat.
+- When the `plannotator_inbox` tool is available, send blocking questions to the Plannotator Inbox by default, as `:::question` blocks, even if the user never mentioned it. The user may read it away from the terminal, so the message carries its own short explainer and recommendation. Also ask the same question in plain chat at the end of the response, so the user can answer in either place. Don't use a blocking structured question tool alongside it: it holds the turn open, so the Inbox reply can't arrive.
+- Ask in chat alone when the user says to, or asked their question in chat expecting a quick answer.
+- Otherwise use the client's structured question capability when available, or ask concisely in chat.
 - Prefer concrete options over open prompts. Put the recommended option first and mark it `(Recommended)`.
 - Do not ask the user to reply with numbered text when the client captures structured choices.
 
@@ -65,6 +67,9 @@ Details, reasoning, and trade-offs go in the chat above. The question and its op
 ## While Waiting and After
 
 - Finish non-blocked read-only discovery before asking.
+- After sending through the Inbox, end the turn. The reply arrives as a new turn once the session is idle; don't poll with `wait_for_reply` or start a background wait, which keeps the session busy and holds the reply back.
+- Take the first answer from either place. If it came in chat, close the Inbox thread with `resolve_message` so the question doesn't linger there; if it came from the Inbox, don't ask again in chat. A later answer to a question already settled is stale: don't act on it, and mention it only if it conflicts.
+- When the work came from an Inbox reply, send follow-up questions back to that thread with `reply_to`, as well as in chat.
 - Until a must-have answer arrives, do not edit files or run state-changing commands.
 - If the user says to proceed without answering, state the assumptions in a sentence and continue with the safest defaults.
 - After the answer, restate the resulting requirement in one or two sentences. Carry on only with what the answer actually authorised. Answering a design or clarifying question settles that detail; it is not approval to start implementing. If the work was still at the discussion or proposal stage, present the updated plan and wait for the go-ahead before editing.
