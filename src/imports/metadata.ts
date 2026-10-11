@@ -178,6 +178,21 @@ export const renderSkillsSchema = () => {
   )}\n`;
 };
 
+/** Decode the text of a {@link SKILLS_FILE}, from disk or from a git revision. */
+export const decodeSkillsFile = Effect.fn("Skills.decode")(function* (
+  text: string,
+) {
+  const yaml = yield* Effect.try({
+    try: () => Yaml.parse(text),
+    catch: (cause) =>
+      new MetadataError({ operation: "skills.yaml", message: String(cause) }),
+  });
+
+  return yield* Schema.decodeUnknownEffect(SkillsFile)(yaml, {
+    onExcessProperty: "error",
+  }).pipe(metadataError("skills.decode"));
+});
+
 /** Read and decode {@link SKILLS_FILE}, keeping its text for the canonical-form check. */
 export const readSkillsFile = Effect.fn("Skills.read")(function* (
   root: string,
@@ -189,17 +204,7 @@ export const readSkillsFile = Effect.fn("Skills.read")(function* (
     .readFileString(path.join(root, SKILLS_FILE))
     .pipe(metadataError("skills.read"));
 
-  const yaml = yield* Effect.try({
-    try: () => Yaml.parse(text),
-    catch: (cause) =>
-      new MetadataError({ operation: "skills.yaml", message: String(cause) }),
-  });
-
-  const file = yield* Schema.decodeUnknownEffect(SkillsFile)(yaml, {
-    onExcessProperty: "error",
-  }).pipe(metadataError("skills.decode"));
-
-  return { file, text };
+  return { file: yield* decodeSkillsFile(text), text };
 });
 
 const writeSkillsFile = Effect.fn("Skills.write")(function* (

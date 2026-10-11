@@ -22,6 +22,7 @@ import {
   Stream,
 } from "effect";
 import { Yaml } from "effect/encoding";
+import type { Mutable } from "effect/Types";
 import {
   buildUpdateReport,
   renderUpdateMarkdown,
@@ -34,10 +35,18 @@ import {
 } from "./Catalogue.js";
 import { importSkill } from "./Import.js";
 import {
+  type SkillReviewItem,
   buildSkillReviewReport,
   renderSkillReviewMarkdown,
 } from "./SkillReviews.js";
-import { SKILLS_FILE, getImport } from "../imports/metadata.js";
+import {
+  SKILLS_FILE,
+  type SkillEntry,
+  type SkillsFile,
+  decodeSkillsFile,
+  getImport,
+  renderSkillsFile,
+} from "../imports/metadata.js";
 import {
   originDirectory,
   parseOrigin,
@@ -141,6 +150,56 @@ const pullRequestDiff = Effect.fn("UpdatesAgent.pullRequestDiff")(function* (
     PullRequest.diff(number, { repository: SKILLS_REPOSITORY }),
   );
 });
+
+/** A pull request's `skills.yml`, decoded at its merge base with `main` and at its head. */
+const pullRequestSkillsFiles = Effect.fn("UpdatesAgent.pullRequestSkillsFiles")(
+  function* (root: string, number: number) {
+    const github = yield* GitHub;
+    const executor = yield* CommandExecutor;
+
+    const { headRefOid } = yield* github.read(
+      "gh pr view",
+      PullRequest.get({
+        selector: number,
+        repository: SKILLS_REPOSITORY,
+        fields: ["headRefOid"],
+      }),
+    );
+
+    yield* runOrFail(
+      "git",
+      ["fetch", "--quiet", "origin", "main", `refs/pull/${number}/head`],
+      root,
+    );
+
+    const git = (args: readonly string[]) =>
+      executor.run("git", args, { cwd: root }).pipe(
+        Effect.mapError(
+          (error) =>
+            new SkillUpdatesAgentError({
+              operation: `git ${args.join(" ")}`,
+              message: error.stderr,
+            }),
+        ),
+      );
+
+    const base = (yield* git(["merge-base", "origin/main", headRefOid])).trim();
+
+    const read = (ref: string) =>
+      git(["show", `${ref}:${SKILLS_FILE}`]).pipe(
+        Effect.flatMap(decodeSkillsFile),
+        Effect.mapError(
+          (error) =>
+            new SkillUpdatesAgentError({
+              operation: "pull-request.skills",
+              message: `Pull request #${number}: ${error.message}`,
+            }),
+        ),
+      );
+
+    return { before: yield* read(base), after: yield* read(headRefOid) };
+  },
+);
 
 export class SkillUpdatesAgentError extends Schema.TaggedError<SkillUpdatesAgentError>()(
   "SkillUpdatesAgentError",
@@ -262,7 +321,89 @@ export const withSkillUpdatesBenchmark = (body: string, section: string) => {
 const skillUpdateTitles = (skill: string) => [
   `Update skill: ${skill}`,
   `[SHA-only] Update ${skill}`,
+  `[Tag-only] Update ${skill}`,
 ];
+
+/** One skill's entry with its pins blanked, rendered for comparison. */
+const withoutPins = (skill: string, entry: SkillEntry) => {
+  const stripped: Mutable<SkillEntry> = {};
+
+  if (entry.import)
+    stripped.import = { ...entry.import, upstreamSha: "0".repeat(40) };
+
+  if (entry.tools)
+    stripped.tools = entry.tools.map((tool) => ({ ...tool, reviewed: "-" }));
+
+  return renderSkillsFile({ skills: { [skill]: stripped } });
+};
+
+/** Every entry except `skill`, rendered for comparison. */
+const otherEntries = (file: SkillsFile, skill: string) =>
+  renderSkillsFile({
+    skills: Object.fromEntries(
+      Object.entries(file.skills).filter(([name]) => name !== skill),
+    ),
+  });
+
+/**
+ * `"sha"` or `"tag"` when `skill`'s entry differs between the two files only
+ * in its pins, and nothing else in the file changed; `null` otherwise. An SHA
+ * move wins over a tag move. This decides which pull requests may auto-merge.
+ */
+export const pinOnlyChange = (
+  before: SkillsFile,
+  after: SkillsFile,
+  skill: string,
+): "sha" | "tag" | null => {
+  const old = before.skills[skill];
+  const updated = after.skills[skill];
+
+  if (
+    !old ||
+    !updated ||
+    otherEntries(before, skill) !== otherEntries(after, skill) ||
+    withoutPins(skill, old) !== withoutPins(skill, updated)
+  )
+    return null;
+
+  if (old.import?.upstreamSha !== updated.import?.upstreamSha) return "sha";
+
+  if (JSON.stringify(old.tools) !== JSON.stringify(updated.tools)) return "tag";
+
+  return null;
+};
+
+/**
+ * Skills behind a tool release, without an open pull request whose
+ * `skills.yml` already sets every latest tag, described for the model.
+ */
+export const toolReviewsNeedingWork = (
+  items: readonly SkillReviewItem[],
+  pulls: readonly { readonly title: string; readonly after: SkillsFile }[],
+) => {
+  const behind = new Map<string, SkillReviewItem[]>();
+
+  for (const item of items.filter(({ state }) => state === "release-available"))
+    behind.set(item.skill, [...(behind.get(item.skill) ?? []), item]);
+
+  return [...behind].flatMap(([skill, tools]) => {
+    const covered = pulls.some(
+      ({ title, after }) =>
+        skillUpdateTitles(skill).includes(title) &&
+        tools.every(({ repo, latest }) =>
+          after.skills[skill]?.tools?.some(
+            (tool) => tool.repo === repo && tool.reviewed === latest,
+          ),
+        ),
+    );
+
+    return covered
+      ? []
+      : [
+          `${skill} (tool release: ${tools.map(({ repo, reviewed, latest }) => `${repo} ${reviewed} -> ${latest}`).join(", ")})`,
+        ];
+  });
+};
 
 interface SkillYamlChange {
   removedSha?: string;
@@ -361,7 +502,7 @@ export const skillUpdatesAgentPrompt = (
     "Trusted automation context:",
     `- Dashboard issue: ${config.dashboardIssue}`,
     `- Completed workflow run: ${run.url}`,
-    `- Updates needing work, checked against upstream by this runner: ${pending.join(", ")}. Use this list when the dashboard is incomplete or could not check upstream.`,
+    `- Updates needing work, checked against upstream and tool releases by this runner: ${pending.join(", ")}. Use this list when the dashboard is incomplete or could not check upstream.`,
     "",
     "Start your final message with one line containing only `STATUS: success` or `STATUS: failure`, followed by a concise summary. Use `STATUS: success` only after all requested work and cleanup completed. Otherwise use `STATUS: failure` and describe the blocker in the summary.",
   ].join("\n");
@@ -1025,7 +1166,8 @@ export const requireRepositoryState = Effect.fn(
 const updateBranchPattern =
   /^(?:skill-update\/|update\/|update-skill-|sha-only\/)/;
 
-const updateCommitPattern = /^(?:\[SHA-only\] Update |Update skill: )\S+$/;
+const updateCommitPattern =
+  /^(?:\[SHA-only\] Update |\[Tag-only\] Update |Update skill: )\S+$/;
 
 export interface RecoveredUpdateBranch {
   readonly description: string;
@@ -1170,7 +1312,11 @@ const pendingSkillUpdates = Effect.fn("UpdatesAgent.pendingSkillUpdates")(
     const report = yield* buildUpdateReport(root);
     const pending = skillUpdatesNeedingWork(report.skills, []);
 
-    if (pending.length === 0) return pending;
+    // A release that could not be read is not work the model can do.
+    const reviews = (yield* buildSkillReviewReport(root)).items;
+    const behind = toolReviewsNeedingWork(reviews, []);
+
+    if (pending.length === 0 && behind.length === 0) return [];
 
     const open = yield* github.read(
       "gh pr list",
@@ -1182,21 +1328,36 @@ const pendingSkillUpdates = Effect.fn("UpdatesAgent.pendingSkillUpdates")(
       }),
     );
 
-    const titles = new Set(pending.flatMap(skillUpdateTitles));
+    const importTitles = new Set(pending.flatMap(skillUpdateTitles));
+
+    const reviewTitles = new Set(
+      reviews.flatMap(({ skill }) => skillUpdateTitles(skill)),
+    );
+
     const pulls: { title: string; patch: string }[] = [];
+    const reviewPulls: { title: string; after: SkillsFile }[] = [];
 
-    for (const { number, title } of open.filter(({ title }) =>
-      titles.has(title),
-    ))
-      pulls.push({ title, patch: yield* pullRequestDiff(number) });
+    for (const { number, title } of open) {
+      if (importTitles.has(title))
+        pulls.push({ title, patch: yield* pullRequestDiff(number) });
 
-    return skillUpdatesNeedingWork(report.skills, pulls);
+      if (reviewTitles.has(title))
+        reviewPulls.push({
+          title,
+          after: (yield* pullRequestSkillsFiles(root, number)).after,
+        });
+    }
+
+    return [
+      ...skillUpdatesNeedingWork(report.skills, pulls),
+      ...toolReviewsNeedingWork(reviews, reviewPulls),
+    ];
   },
 );
 
 export const validatePullRequestPolicy = Effect.fn(
   "UpdatesAgent.validatePullRequestPolicy",
-)(function* (after: number) {
+)(function* (root: string, after: number) {
   const github = yield* GitHub;
 
   const pulls = yield* recentPullRequests();
@@ -1220,21 +1381,34 @@ export const validatePullRequestPolicy = Effect.fn(
 
     const patch = yield* pullRequestDiff(number);
 
-    const shaTitle = details.title.match(/^\[SHA-only\] Update ([a-z0-9-]+)$/);
+    const pinTitle = details.title.match(
+      /^\[(SHA|Tag)-only\] Update ([a-z0-9-]+)$/,
+    );
+
     const contentTitle = details.title.match(/^Update skill: ([a-z0-9-]+)$/);
-    const skill = shaTitle?.[1] ?? contentTitle?.[1];
+    const skill = pinTitle?.[2] ?? contentTitle?.[1];
 
     const commitsValid =
       !!skill &&
       details.commits.length === 1 &&
       details.commits[0]?.messageHeadline === details.title;
 
-    const shaValid =
-      !!shaTitle &&
+    // A pin-only change touches only skills.yml, and only the skill's pins.
+    const files = yield* pullRequestSkillsFiles(root, number);
+    const kind = skill ? pinOnlyChange(files.before, files.after, skill) : null;
+
+    const pinOnly =
+      kind !== null &&
+      [...patch.matchAll(/^diff --git a\/(.+) b\/(.+)$/gm)].every(
+        ([, from, to]) => from === SKILLS_FILE && to === SKILLS_FILE,
+      );
+
+    const pinValid =
+      !!pinTitle &&
+      pinOnly &&
+      kind === (pinTitle[1] === "SHA" ? "sha" : "tag") &&
       details.assignees.some(({ login }) => login === "timmo001") &&
-      details.autoMergeRequest?.mergeMethod === "SQUASH" &&
-      !!skill &&
-      isShaOnlySkillPatch(patch, skill);
+      details.autoMergeRequest?.mergeMethod === "SQUASH";
 
     const contentValid =
       !!contentTitle &&
@@ -1242,10 +1416,10 @@ export const validatePullRequestPolicy = Effect.fn(
       details.mergedAt === null &&
       details.autoMergeRequest === null &&
       !!skill &&
-      !isShaOnlySkillPatch(patch, skill) &&
+      !pinOnly &&
       isScopedSkillPatch(patch, skill);
 
-    if (!commitsValid || (!shaValid && !contentValid))
+    if (!commitsValid || (!pinValid && !contentValid))
       return yield* new SkillUpdatesAgentError({
         operation: "pull-request.policy",
         message: `Pull request #${number} does not satisfy the skill update policy`,
@@ -1714,7 +1888,7 @@ const runDevice = Effect.fn("UpdatesAgent.runDevice")(function* (
       }
 
       yield* requireRepositoryState(states);
-      yield* validatePullRequestPolicy(initialPr);
+      yield* validatePullRequestPolicy(primaryRepository, initialPr);
 
       // Upstream links help review; never fail a published run on them.
       if (attempts.length > 0)

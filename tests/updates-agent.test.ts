@@ -16,6 +16,7 @@ import {
   isScopedSkillPatch,
   isShaOnlySkillPatch,
   latestSuccessfulWorkflowRun,
+  pinOnlyChange,
   recoverUpdateBranches,
   renderSkillUpdatesBenchmark,
   renderUpstreamChanges,
@@ -33,6 +34,11 @@ import {
   withUpstreamChanges,
   type SkillUpdatesAgentConfig,
 } from "../src/commands/UpdatesAgent.js";
+import {
+  type ImportMetadata,
+  type SkillsFile,
+  renderSkillsFile,
+} from "../src/imports/metadata.js";
 import { parseNameStatus } from "../src/imports/upstream.js";
 import {
   CommandError,
@@ -96,6 +102,33 @@ const pinHunk = (
 
 const shaOnlyPatch = (oldSha: string, newSha: string) =>
   [...skillsFileHeader, ...pinHunk("example", oldSha, newSha)].join("\n");
+
+const exampleImport = (
+  upstreamSha: string,
+  localEdits: readonly string[] = ["adapted"],
+): ImportMetadata => ({
+  origin: "https://github.com/org/repo/tree/main/example",
+  upstreamSha,
+  license: "MIT",
+  localEdits,
+});
+
+/** Git that answers the policy's merge-base and `skills.yml` reads at both ends. */
+const skillsFilesLayer = (before: SkillsFile, after: SkillsFile) =>
+  Layer.succeed(CommandExecutor, {
+    capture: () => Effect.succeed({ stdout: "", stderr: "", exitCode: 0 }),
+    run: (_command, args) =>
+      Effect.sync(() => {
+        if (args[0] === "merge-base") return "base\n";
+
+        if (args[0] !== "show") return "";
+
+        return renderSkillsFile(args[1]?.startsWith("base:") ? before : after);
+      }),
+    exitCode: () => Effect.succeed(0),
+    inherit: () => Effect.succeed(0),
+    stream: () => Stream.empty,
+  });
 
 describe("updates agent policies", () => {
   it.effect("does not start GitHub Actions work while offline", () =>
@@ -505,6 +538,60 @@ describe("updates agent policies", () => {
     }),
   );
 
+  it.effect("allows auto-merge only for changes to one skill's pins", () =>
+    Effect.sync(() => {
+      const tool = (reviewed: string) => [{ repo: "org/tool", reviewed }];
+
+      const file = (
+        sha: string,
+        reviewed: string,
+        localEdits: readonly string[] = ["adapted"],
+      ): SkillsFile => ({
+        skills: {
+          example: {
+            import: exampleImport(sha, localEdits),
+            tools: tool(reviewed),
+          },
+          other: { tools: tool("v1") },
+        },
+      });
+
+      const before = file("a".repeat(40), "v1");
+
+      const cases: readonly [
+        string,
+        SkillsFile,
+        string,
+        "sha" | "tag" | null,
+      ][] = [
+        ["SHA move", file("b".repeat(40), "v1"), "example", "sha"],
+        ["tag move", file("a".repeat(40), "v2"), "example", "tag"],
+        ["SHA and tag move", file("b".repeat(40), "v2"), "example", "sha"],
+        [
+          "tag move with a local edit change",
+          file("a".repeat(40), "v2", ["adapted", "more"]),
+          "example",
+          null,
+        ],
+        [
+          "tag move titled for another skill",
+          file("a".repeat(40), "v2"),
+          "other",
+          null,
+        ],
+        [
+          "added entry",
+          { skills: { ...before.skills, added: { tools: tool("v1") } } },
+          "example",
+          null,
+        ],
+      ];
+
+      for (const [label, after, skill, expected] of cases)
+        expect(pinOnlyChange(before, after, skill), label).toBe(expected);
+    }),
+  );
+
   it.effect("requires exactly one explicit status line", () =>
     Effect.sync(() => {
       expect(skillUpdatesAgentResultStatus("STATUS: success\nComplete")).toBe(
@@ -642,8 +729,14 @@ describe("updates agent policies", () => {
 
   it.effect("accepts a valid SHA-only pull request policy", () =>
     Effect.gen(function* () {
-      yield* validatePullRequestPolicy(4);
+      yield* validatePullRequestPolicy("/repo", 4);
     }).pipe(
+      Effect.provide(
+        skillsFilesLayer(
+          { skills: { example: { import: exampleImport("a".repeat(40)) } } },
+          { skills: { example: { import: exampleImport("b".repeat(40)) } } },
+        ),
+      ),
       Effect.provide(
         githubLayer((args) => {
           if (args[0] === "pr" && args[1] === "diff")
@@ -653,6 +746,7 @@ describe("updates agent policies", () => {
             return Effect.succeed(
               JSON.stringify({
                 title: "[SHA-only] Update example",
+                headRefOid: "d".repeat(40),
                 state: "OPEN",
                 mergedAt: null,
                 assignees: [{ login: "timmo001" }],
@@ -674,12 +768,18 @@ describe("updates agent policies", () => {
 
   it.effect("rejects auto-merge on content pull requests", () =>
     Effect.gen(function* () {
-      const failure = yield* Effect.flip(validatePullRequestPolicy(4));
+      const failure = yield* Effect.flip(validatePullRequestPolicy("/repo", 4));
       expect(failure).toBeInstanceOf(SkillUpdatesAgentError);
 
       if (Predicate.isTagged(failure, "SkillUpdatesAgentError"))
         expect(failure.operation).toBe("pull-request.policy");
     }).pipe(
+      Effect.provide(
+        skillsFilesLayer(
+          { skills: { example: { import: exampleImport("a".repeat(40)) } } },
+          { skills: { example: { import: exampleImport("b".repeat(40)) } } },
+        ),
+      ),
       Effect.provide(
         githubLayer((args) => {
           if (args[0] === "pr" && args[1] === "diff")
@@ -696,6 +796,7 @@ describe("updates agent policies", () => {
             return Effect.succeed(
               JSON.stringify({
                 title: "Update skill: example",
+                headRefOid: "d".repeat(40),
                 state: "OPEN",
                 mergedAt: null,
                 assignees: [{ login: "timmo001" }],
