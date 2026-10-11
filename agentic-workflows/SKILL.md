@@ -29,6 +29,11 @@ compiled to GitHub Actions lock files.
      triage and live gates): `debug-agentic-workflow.md`; before executing
      changed code or starting tools/servers for a local reproduction or dry run,
      also read `debug-security-review.md`
+   - AWF model or endpoint 400s, silent cross-family sub-agent failures,
+     `model: auto` failures, install-step 404s after a version pin, or
+     questions about version fields: go straight to the "Model and engine
+     misconfiguration" section of `debug-agentic-workflow.md` before
+     suggesting model changes
    - upgrade: `upgrade-agentic-workflows.md`
    - engine setup: `configure-agentic-engine.md`
    - agent runtime, Docker, gVisor, Docker sbx, ARC DinD, self-hosted
@@ -42,6 +47,7 @@ compiled to GitHub Actions lock files.
    - Playwright integration: `playwright.md`
    - release workflows: `release-workflow.md`
    - drive-backed workflow memory: `drive-memory.md`
+   - experimental append-only event history (`tools.ledger`): `ledger.md`
    - declarative skills or agent plugins: `skills.md`
    - report generation: `report.md`
    - Dependabot manifest updates: `dependabot.md`

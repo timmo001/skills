@@ -13,13 +13,14 @@ skills:
       distribution: external
   agentic-workflows:
     import:
-      upstreamSha: 697ea9ab42c78227a0bd17c854f50f2a215e43ba
+      upstreamSha: 573bb5f72de5c51250da96d0d870d7cb8223ba3c
       origin: "https://github.com/github/gh-aw/tree/main/.github/skills/agentic-workflows"
       license: "MIT"
       localEdits:
         - "made the upstream router self-contained and replaced unavailable repository-relative prompt loading with official source lookup"
         - "added compatibility metadata for concrete environment requirements"
         - "route the new security-review guidance before local reproductions that execute changed code or start tools/servers"
+        - "tests/: omitted (upstream repository guidance contract tests)"
   asking-questions:
     tools:
       - repo: backnotprop/plannotator
