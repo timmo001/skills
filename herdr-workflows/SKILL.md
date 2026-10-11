@@ -21,8 +21,12 @@ assignments and collecting worker results.
   `herdr api snapshot` when topology across the session is genuinely needed.
   Live state establishes what exists, not who authorised or owns it.
 - Get optional native session references from Herdr's `agent_session` fields and
-  use the owning runtime's supported history/resume tools. A missing reference
-  is not evidence of lost work. Read the agent output and current Git state.
+  use the owning runtime's supported history/resume tools. When an agent has
+  reported a resume command, Herdr reopens its exact session after a server
+  restart. Check whether it has already restored before resuming manually.
+- Herdr clears a self-reported agent once its pane returns to an idle shell. A
+  missing reference is not evidence of lost work; read the agent output and
+  current Git state.
 - Pass a short continuation brief directly to the host agent. Use a durable
   handoff only when the work must survive beyond available session history.
 

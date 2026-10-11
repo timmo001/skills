@@ -153,7 +153,7 @@ skills:
   herdr-workflows:
     tools:
       - repo: herdrdev/herdr
-        reviewed: "v0.9.1"
+        reviewed: "v0.9.3"
   home-assistant:
     import:
       upstreamSha: c84d5eac8683c4068b929d31086956700361287e
