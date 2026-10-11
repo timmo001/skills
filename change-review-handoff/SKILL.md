@@ -2,7 +2,7 @@
 name: change-review-handoff
 license: Apache-2.0
 compatibility: Requires Plannotator, through its `plannotator` agent tool or the `plannotator` CLI. Guided reviews use the `plannotator-guide` skill or the Plannotator Inbox; next-step questions follow `asking-questions`.
-description: Hand a finished code change to the user for review in Plannotator and ask what to do once it is approved. Use when an implementation, fix, refactor, or cleanup is complete and verified, before reporting it done; picks a diff review or a guided review plus diff review by size, and offers commit, push, pull request, or publish steps that fit the context.
+description: Hand a finished code change to the user for review in Plannotator, then ask what to do next once they approve. Use when an implementation, fix, refactor, or cleanup is complete and verified, before reporting it done; picks a diff review or a guided review plus diff review by size, and offers commit, push, pull request, or publish steps that fit the context.
 ---
 
 # Change Review Handoff
@@ -40,34 +40,30 @@ user has already reviewed this exact diff.
   `submit_guide` through the Plannotator Inbox, or the `plannotator-guide`
   skill when the user wants an exported file. Cover every repository in the
   changeset.
-- In the same turn, ask for next steps (section 4), then tell the user in one
-  line what opened and end the turn. Do not poll, rerun, or reopen the review.
-
-Ask for next steps when the review opens, not after approval: a code review
-approved with no notes is never sent to the agent, so waiting for the approval
-can stall forever. The user approves in the review and answers the question
-separately.
+- Tell the user in one line what opened, and that a plain approval does not
+  reach you: approve with a short note (any text), or say "approved" in chat
+  or the Inbox. Then end the turn. Do not poll, rerun, or reopen the review,
+  and do not ask about next steps yet: the change may still move.
 
 ## 3. Act On What Arrives
 
-- **Feedback** (annotations, or an approval with notes that asks for
-  changes): address each point, rerun the relevant checks, open the review
-  again for the updated diff, and say whether the pending next-steps answer
-  still applies.
+- **Feedback** (annotations, or notes that ask for changes): address each
+  point, rerun the relevant checks, and open the review again for the updated
+  diff.
 - **Approved with notes:** notes are guidance, not change requests. Apply the
-  small, clear ones and say how each was handled.
-- **Next-steps answer:** treat it as approval of the diff as it stands. If
-  review feedback is still being addressed, finish that and get it reviewed
-  first.
-- **Closed without a decision** (the user says so, or the review is gone from
-  `list` with no answer): report the change as unreviewed. Do not reopen it.
+  small, clear ones, say how each was handled, then ask for next steps.
+- **Approval in chat or the Inbox:** ask for next steps.
+- **Closed without a decision, or silence after the review is gone from
+  `list`:** the approval may have been plain and never sent. When the user
+  next writes, ask whether they approved before doing anything else. Do not
+  reopen the review unprompted.
 
 ## 4. Ask For Next Steps
 
-Ask once, following `asking-questions` (Inbox and chat when the Inbox is
-available), as a multi-choice question so the user can combine steps. Phrase
-it as what to do once the review is approved. Offer only the steps that fit
-the context, and put your recommendation first:
+Only after approval, ask once, following `asking-questions` (Inbox and chat
+when the Inbox is available), as a multi-choice question so the user can
+combine steps. Build the options from the state at that moment. Offer only the
+steps that fit the context, and put your recommendation first:
 
 - Commit (split into coherent commits by the repository's commit workflow).
 - Commit and push.
