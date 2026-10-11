@@ -4,11 +4,13 @@ compatibility: Requires GitHub CLI with the gh aw extension and network access t
 description: Design, create, update, debug, audit, or upgrade GitHub Agentic Workflows with the `gh aw` extension. Use when work involves workflow Markdown, compiled `.lock.yml` files, agent engines, MCP tools, safe outputs, work queues, or `gh aw` commands.
 license: MIT
 # origin: https://github.com/github/gh-aw/tree/main/.github/skills/agentic-workflows
-# upstream-sha: 697ea9ab42c78227a0bd17c854f50f2a215e43ba
+# upstream-sha: 9ded0021d4384be185b8009aaf1e27fcbda9265a
 # local-edits:
 #   - SKILL.md: made the upstream router self-contained and replaced unavailable repository-relative prompt loading with official source lookup
 #   - SKILL.md: added compatibility metadata for concrete environment requirements
 #   - SKILL.md: route the new security-review guidance before local reproductions that execute changed code or start tools/servers
+#   - SKILL.md: route model and version failures to the upstream misconfiguration checklist instead of its unavailable repository-relative path
+#   - tests/: omit upstream gh-aw repository contract fixtures and tests from the portable skill distribution
 ---
 
 # Agentic Workflows
@@ -35,6 +37,10 @@ compiled to GitHub Actions lock files.
      triage and live gates): `debug-agentic-workflow.md`; before executing
      changed code or starting tools/servers for a local reproduction or dry run,
      also read `debug-security-review.md`
+   - AWF model/endpoint 400s, silent cross-family sub-agent failures, `model: auto`
+     failures, install-step 404s after a version pin, or questions about version
+     fields: go directly to the [Model and engine misconfiguration checklist](https://github.com/github/gh-aw/blob/main/.github/aw/debug-agentic-workflow.md#model-and-engine-misconfiguration)
+     before suggesting model changes.
    - upgrade: `upgrade-agentic-workflows.md`
    - engine setup: `configure-agentic-engine.md`
    - agent runtime, Docker, gVisor, Docker sbx, ARC DinD, self-hosted
