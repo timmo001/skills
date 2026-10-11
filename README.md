@@ -42,7 +42,7 @@ Claude Code is supported through the same cross-agent installer. This repository
 
 ## Consumer repositories
 
-Repositories listed in [`consumers.yml`](./consumers.yml) keep project copies of the skills listed for them, so contributors get those skills without installing them. Skills committed here install from the published commit the sync runs from. External imports install from their origin at the reviewed `upstreamSha` in `imports.json`, so a reviewed update reaches consumers on the next sync; unlicensed imports cannot be shared. Copies go to `.agents/skills/` only. Installing needs `HEAD` pushed and the shared skills unchanged in the checkout. `consumers add` shares skills with a repository and `consumers remove` stops sharing them. Each commits and pushes `consumers.yml`, then syncs that repository straight away, so the skills checkout must have no other unpushed commits. Both use the current directory's GitHub repository unless `--repo` is given. `add` only accepts new repositories that are public, owned by the source's owner, and not archived. Removing a repository's last skill, or `remove --all`, deletes its copies first, then drops its entry.
+Repositories listed in [`consumers.yml`](./consumers.yml) keep project copies of the skills listed for them, so contributors get those skills without installing them. Skills committed here install from the published commit the sync runs from. External imports install from their origin at the reviewed `upstreamSha` in `skills.yml`, so a reviewed update reaches consumers on the next sync; unlicensed imports cannot be shared. Copies go to `.agents/skills/` only. Installing needs `HEAD` pushed and the shared skills unchanged in the checkout. `consumers add` shares skills with a repository and `consumers remove` stops sharing them. Each commits and pushes `consumers.yml`, then syncs that repository straight away, so the skills checkout must have no other unpushed commits. Both use the current directory's GitHub repository unless `--repo` is given. `add` only accepts new repositories that are public, owned by the source's owner, and not archived. Removing a repository's last skill, or `remove --all`, deletes its copies first, then drops its entry.
 
 ```bash
 ./dist/skill-maintenance consumers add [--repo <owner/repo>] <skill>...
@@ -66,7 +66,7 @@ Each repository is cloned into a temporary directory. Newly listed skills are ad
 
 `SKILL.md` is the source of truth. Keep supporting files one link away from it and use relative paths within a skill.
 
-Unchanged upstream skills are `external` imports: `imports.json` records their origin and pinned SHA, but their content is not committed here. Install them with:
+Unchanged upstream skills are `external` imports: `skills.yml` records their origin and pinned SHA, but their content is not committed here. Install them with:
 
 ```bash
 ./dist/skill-maintenance install --target ~/.agents/skills
@@ -83,7 +83,7 @@ mise exec npm:skills -- skills add . --list
 
 `mise run validate` runs every check in parallel and builds the CLI once.
 
-The local validator checks the portable metadata contract, directory names, relative links, `skills.sh.json` / `PORTABILITY.md` coverage, and drift of the generated [`SKILLS.md`](./SKILLS.md#skills-catalogue) catalogue. TypeScript checks use Effect-aware Oxlint rules from `@timmo001/oxlint-rules/configs/recommended-effect`. CI also verifies the independent installer discovery result.
+The local validator checks the portable metadata contract, directory names, relative links, `skills.yml` against its schema and canonical form, `skills.sh.json` / `PORTABILITY.md` coverage, and drift of the generated [`SKILLS.md`](./SKILLS.md#skills-catalogue) catalogue. TypeScript checks use Effect-aware Oxlint rules from `@timmo001/oxlint-rules/configs/recommended-effect`. CI also verifies the independent installer discovery result.
 
 Imports are checked daily and after skill changes merge to `main`. Adapted imports are reported for manual review; unchanged upstream snapshots receive automated update pull requests.
 
@@ -127,7 +127,7 @@ If a configured checkout has uncommitted changes or is off its default branch, t
 
 The runner also defers with status 2 when another local run holds the lock, or when GitHub stays unreachable for about a minute, which covers runs started at resume before Wi-Fi reconnects.
 
-Before starting a model, the runner fast-forwards the primary repository and builds the update report. If every pending update already has an open pull request whose `imports.json` change sets the current upstream SHA, it skips the model and records the run as processed. Skills whose upstream no longer exists count as nothing to do; errors and invalid origins still start the model.
+Before starting a model, the runner fast-forwards the primary repository and builds the update report. If every pending update already has an open pull request whose `skills.yml` change sets the current upstream SHA, it skips the model and records the run as processed. Skills whose upstream no longer exists count as nothing to do; errors and invalid origins still start the model.
 
 After a model run passes the pull request policy, the runner appends an "Agent run" section to each pull request that run opened. It lists every attempt's model and variant (without the provider), result, time, cost and token counts from the OpenCode session, so models can be compared. Failing to add it is logged and does not fail the run.
 
@@ -151,7 +151,7 @@ checker manages reviewed upstream skill revisions separately.
 - Add new skills under `<name>/` at the repository root.
 - Classify each new skill in `skills.sh.json` and `PORTABILITY.md`, then regenerate the human catalogue with `mise run catalogue` (or `./dist/skill-maintenance catalogue`) and commit `SKILLS.md`.
 - Commit imported skills only when this repository contains substantive local edits. Mark unchanged imports `external`; only their origin and pinned SHA are committed.
-- Maintain import provenance, reviewed SHA, licence, local edits, and distribution mode in `imports.json`.
+- Maintain import provenance, reviewed SHA, licence, local edits, and distribution mode in `skills.yml`, the single maintenance record. [`skills.schema.json`](./skills.schema.json) specifies it; regenerate the schema with `mise run schema` after changing the CLI's schema. Skills themselves carry no provenance comments.
 - Use `./dist/skill-maintenance import <name>` to generate a complete upstream comparison. For an external import it compares the pinned and latest upstream revisions, and `--apply` moves the pin. Adapted changes remain manual. The importer rejects an adapted skill that exactly matches every file in its source; mark it external instead.
 - Keep `skills.sh.json`, `PORTABILITY.md`, and `SKILLS.md` in sync.
 - Prefer repository revisions for installed copies. The scheduled checker reports adapted imports for manual review and opens pull requests for unchanged upstream updates.

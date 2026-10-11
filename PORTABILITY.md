@@ -67,10 +67,10 @@ These encode the current OpenCode, dotfiles, notes, or maintainer workflow. Comp
 
 | Skill | Portability work needed |
 | --- | --- |
-| `check-skill-updates` | Consumer updates use mise and the Skills CLI; repository reviews depend on the built skill-maintenance CLI, imports.json, Git, and authenticated GitHub CLI. |
+| `check-skill-updates` | Consumer updates use mise and the Skills CLI; repository reviews depend on the built skill-maintenance CLI, skills.yml, Git, and authenticated GitHub CLI. |
 | `git-context` | Uses the `context-cli` skill for repository snapshots and dotfiles Git helpers. |
 | `handoff` | Uses `notes-cli` for repository-note storage and cleanup. |
-| `import-external-skill` | Depends on this repository's imports.json and built skill-maintenance CLI, Git, mise, Skills CLI, authenticated GitHub CLI, and upstream access. |
+| `import-external-skill` | Depends on this repository's skills.yml and built skill-maintenance CLI, Git, mise, Skills CLI, authenticated GitHub CLI, and upstream access. |
 | `retro` | Reads other sessions through the OpenCode 2 CLI and routes findings to the dot-managed skills, dotfiles, and private overlay repositories. |
 | `session-coordination` | Herdr-managed sessions or explicitly requested native child sessions; uses host background completion notifications when available. |
 | `task-focus` | Uses BTW or fresh sessions, context usage from the dotfiles `dot-session-status` skill when available, and Herdr-managed workspaces/worktrees through the separately installed `herdr` skill. |
@@ -82,6 +82,6 @@ Migrate one coherent family at a time:
 1. Split reusable behaviour from personal wrappers in git, notes, and handoff skills.
 2. Replace runtime-specific tool names with capability descriptions plus small client adapters where needed.
 3. Keep `compatibility` metadata aligned with owning workflows; request external-import additions upstream and check target-client discovery when fields change.
-4. Commit imported skills only when they contain documented local edits. Mark unchanged imports `external` in `imports.json`; `skill-maintenance install` installs them from their origin at the pinned SHA.
-5. Use `imports.json` as the maintenance metadata overlay for adapted imports.
+4. Commit imported skills only when they contain documented local edits. Mark unchanged imports `external` in `skills.yml`; `skill-maintenance install` installs them from their origin at the pinned SHA.
+5. Use `skills.yml` as the single maintenance record for imports, so skills keep only Agent Skills frontmatter.
 6. Build `dist/skill-maintenance` and use `./dist/skill-maintenance import <name>` to fetch and compare upstream content before manually reviewing an adapted skill. This requires Bun 1.4.0 and the locked Effect 4 dependencies, but makes no dotfiles assumptions.
