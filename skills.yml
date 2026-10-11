@@ -20,6 +20,10 @@ skills:
         - "made the upstream router self-contained and replaced unavailable repository-relative prompt loading with official source lookup"
         - "added compatibility metadata for concrete environment requirements"
         - "route the new security-review guidance before local reproductions that execute changed code or start tools/servers"
+  asking-questions:
+    tools:
+      - repo: backnotprop/plannotator
+        reviewed: "v0.28.14"
   bro:
     import:
       upstreamSha: cbd1929589267453029859a43d2ecf411c865b54
@@ -29,6 +33,10 @@ skills:
         - "replaced framework-specific invocation gating with an explicit-only description"
         - "preserve concrete facts, paths, commands, citations, decisions, and next actions"
         - "add context and ASD-STE100-inspired clarity without claiming strict compliance"
+  change-review-handoff:
+    tools:
+      - repo: backnotprop/plannotator
+        reviewed: "v0.28.14"
   cloudflare:
     import:
       upstreamSha: c430dd965cea3a8faf0ef035e3b3d73b38518081
@@ -57,6 +65,9 @@ skills:
         - "replaced the upstream model advice with a pointer to that cascade"
         - "retained hosted Clef support and the local decision cascade alongside the upstream Arbiter model entry"
         - "added Ollama's HTTP API as an equal local runtime alongside Ollaya, with its decision models in the cascade"
+    tools:
+      - repo: ollama/ollama
+        reviewed: "v0.40.0"
   diagnose:
     import:
       upstreamSha: f3fc5632f401156837ee3872f14fe33ccf1024ea
@@ -139,6 +150,10 @@ skills:
       license: "Apache-2.0"
       localEdits: []
       distribution: external
+  herdr-workflows:
+    tools:
+      - repo: herdrdev/herdr
+        reviewed: "v0.9.1"
   home-assistant:
     import:
       upstreamSha: d4d4dfb7f65f53ab846a4296db11c7d33529bb33
@@ -167,6 +182,10 @@ skills:
       license: "MIT"
       localEdits: []
       distribution: external
+  pitchfork-dev-servers:
+    tools:
+      - repo: jdx/pitchfork
+        reviewed: "v2.30.1"
   plannotator:
     import:
       upstreamSha: 77aeaaab0e6ac88c9536380ad7be51af57d70b20
@@ -210,6 +229,10 @@ skills:
         - "routes findings to owning repositories and stops before edits"
         - "added compatibility metadata for concrete environment requirements"
         - "agents/openai.yaml: omitted"
+  session-coordination:
+    tools:
+      - repo: herdrdev/herdr
+        reviewed: "v0.9.1"
   show-me:
     import:
       upstreamSha: bba9d13ab34f0a87f1cc33df4dd196372393ddfc
@@ -221,6 +244,10 @@ skills:
         - "added an Avoid section"
         - "capitalised section headings"
         - "agents/openai.yaml: omitted"
+  task-focus:
+    tools:
+      - repo: herdrdev/herdr
+        reviewed: "v0.9.3"
   terminal-control:
     import:
       upstreamSha: b0a4d8b43977e026dc5d5aa07760bce9e677b90d
