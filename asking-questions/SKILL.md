@@ -49,7 +49,7 @@ Each question must make sense from the chat directly above it. If the thing bein
 
 - Ask the fewest questions that unblock the work, ideally one and at most three in a pass.
 - When the `plannotator_inbox` tool is available, send blocking questions to the Plannotator Inbox by default, as `:::question` blocks, even if the user never mentioned it. The user may read it away from the terminal, so the message carries its own short explainer and recommendation. Also ask the same question in plain chat at the end of the response, so the user can answer in either place. Don't use a blocking structured question tool alongside it: it holds the turn open, so the Inbox reply can't arrive.
-- In Inbox messages, write issue and pull request references as full links (`[#123](https://github.com/owner/repo/issues/123)`): the Inbox styles a bare `#123` but does not link it.
+- An offer that ends a turn ("Want me to...?", "Shall I...?") is a question the user has to answer, so it goes to the Inbox and chat the same way. If it isn't worth sending, state the next step in prose instead of asking.
 - Ask in chat alone when the user says to, or asked their question in chat expecting a quick answer.
 - Otherwise use the client's structured question capability when available, or ask concisely in chat.
 - Prefer concrete options over open prompts. Put the recommended option first and mark it `(Recommended)`.
