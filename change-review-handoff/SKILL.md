@@ -40,6 +40,11 @@ user has already reviewed this exact diff.
   `submit_guide` through the Plannotator Inbox, or the `plannotator-guide`
   skill when the user wants an exported file. Cover every repository in the
   changeset.
+- After a guided review, once the guide is submitted and the diff review is
+  open, send one Inbox message (`send_message`, no `:::question` block, no
+  reply expected) saying both are ready: the guide to read first, then the
+  diff review for each repository. This keeps the guide and review together
+  in the Inbox, so the user never finds the diff review open on its own.
 - Tell the user in one line what opened, and that a plain approval does not
   reach you: approve with a short note (any text), or say "approved" in chat
   or the Inbox. Then end the turn. Do not poll, rerun, or reopen the review,
