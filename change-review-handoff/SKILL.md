@@ -2,7 +2,7 @@
 name: change-review-handoff
 license: Apache-2.0
 compatibility: Requires Plannotator, through its `plannotator` agent tool or the `plannotator` CLI. Guided reviews use the `plannotator-guide` skill or the Plannotator Inbox; next-step questions follow `asking-questions`.
-description: Hand a finished code change to the user for review in Plannotator, then ask what to do next once they approve. Use when an implementation, fix, refactor, or cleanup is complete and verified, before reporting it done; picks a diff review or a guided review plus diff review by size, and offers commit, push, pull request, or publish steps that fit the context.
+description: Hand a finished code change to the user for review in Plannotator, with a standing next-steps question they answer when they have no notes. Use when an implementation, fix, refactor, or cleanup is complete and verified, before reporting it done; picks a diff review or a guided review plus diff review by size, and offers commit, push, pull request, or publish steps that fit the context.
 ---
 
 # Change Review Handoff
@@ -40,35 +40,40 @@ user has already reviewed this exact diff.
   `submit_guide` through the Plannotator Inbox, or the `plannotator-guide`
   skill when the user wants an exported file. Cover every repository in the
   changeset.
-- After a guided review, once the guide is submitted and the diff review is
-  open, send one Inbox message (`send_message`, no `:::question` block, no
-  reply expected) saying both are ready: the guide to read first, then the
-  diff review for each repository. This keeps the guide and review together
-  in the Inbox, so the user never finds the diff review open on its own.
-- Tell the user in one line what opened, and that a plain approval does not
-  reach you: approve with a short note (any text), or say "approved" in chat
-  or the Inbox. Then end the turn. Do not poll, rerun, or reopen the review,
-  and do not ask about next steps yet: the change may still move.
+- A plain approval with no comments sends nothing back to the session, so
+  once the reviews are open, send one Inbox message with a standing
+  next-steps question: "If you have no notes, what next?", with the options
+  from step 4. After a guided review, the same message says the guide and
+  the diff review for each repository are ready, guide first, so the user
+  never finds the diff review open on its own. Record the message id.
+- Tell the user in one line what opened, and that they can either send notes
+  from the review or answer the next-steps question in the Inbox or chat.
+  Then end the turn. Do not poll, rerun, or reopen the review.
 
 ## 3. Act On What Arrives
 
-- **Feedback** (annotations, or notes that ask for changes): address each
-  point, rerun the relevant checks, and open the review again for the updated
-  diff.
+- **Feedback** (annotations, or notes that ask for changes): replace the
+  standing question first (send into its thread with `supersedes`), so a pick
+  on the old diff is never sent. Address each point, rerun the relevant
+  checks, open the review again for the updated diff, and send a fresh
+  standing question with it.
 - **Approved with notes:** notes are guidance, not change requests. Apply the
-  small, clear ones, say how each was handled, then ask for next steps.
-- **Approval in chat or the Inbox:** ask for next steps.
-- **Closed without a decision, or silence after the review is gone from
-  `list`:** the approval may have been plain and never sent. When the user
-  next writes, ask whether they approved before doing anything else. Do not
-  reopen the review unprompted.
+  small, clear ones and say how each was handled. If that changed the diff or
+  the fitting next steps, replace the standing question with one built from
+  the new state; otherwise leave it for the user to answer.
+- **Answer to the standing question:** treat it as approval with no notes and
+  run the picked steps.
+- **"Approved" in chat or the Inbox without a pick:** point to the standing
+  question, or ask it in chat.
+- **Closed without a decision:** the standing question still covers it. Do
+  not reopen the review unprompted.
 
-## 4. Ask For Next Steps
+## 4. Next-Step Options
 
-Only after approval, ask once, following `asking-questions` (Inbox and chat
-when the Inbox is available), as a multi-choice question so the user can
-combine steps. Build the options from the state at that moment. Offer only the
-steps that fit the context, and put your recommendation first:
+Build the standing question's options from the state when it is sent,
+following `asking-questions` (Inbox and chat when the Inbox is available), as
+a multi-choice question so the user can combine steps. Offer only the steps
+that fit the context, and put your recommendation first:
 
 - Commit (split into coherent commits by the repository's commit workflow).
 - Commit and push.
