@@ -187,7 +187,9 @@ const pullRequestSkillsFiles = Effect.fn("UpdatesAgent.pullRequestSkillsFiles")(
 
     const read = (ref: string) =>
       git(["show", `${ref}:${SKILLS_FILE}`]).pipe(
-        Effect.flatMap(decodeSkillsFile),
+        Effect.flatMap((text) =>
+          decodeSkillsFile(text).pipe(Effect.map((file) => ({ file, text }))),
+        ),
         Effect.mapError(
           (error) =>
             new SkillUpdatesAgentError({
@@ -197,7 +199,15 @@ const pullRequestSkillsFiles = Effect.fn("UpdatesAgent.pullRequestSkillsFiles")(
         ),
       );
 
-    return { before: yield* read(base), after: yield* read(headRefOid) };
+    const before = yield* read(base);
+    const after = yield* read(headRefOid);
+
+    return {
+      before: before.file,
+      after: after.file,
+      head: headRefOid,
+      headText: after.text,
+    };
   },
 );
 
@@ -664,15 +674,63 @@ export const renderUpstreamChanges = (
   ].join("\n");
 };
 
-/** Add the upstream section unless the body already has one, keeping any benchmark section last. */
-export const withUpstreamChanges = (body: string, section: string) => {
-  if (body.includes(UPSTREAM_MARKER)) return body;
+/** Add a marked section unless the body already has it, keeping any benchmark section last. */
+const withSection = (body: string, marker: string, section: string) => {
+  if (body.includes(marker)) return body;
   const index = body.indexOf(BENCHMARK_MARKER);
   const base = (index === -1 ? body : body.slice(0, index)).trimEnd();
   const tail = index === -1 ? "" : `\n\n${body.slice(index).trimEnd()}`;
 
   return `${base ? `${base}\n\n` : ""}${section}${tail}\n`;
 };
+
+/** Add the upstream section unless the body already has one, keeping any benchmark section last. */
+export const withUpstreamChanges = (body: string, section: string) =>
+  withSection(body, UPSTREAM_MARKER, section);
+
+const SKILLS_ENTRY_MARKER = "<!-- skill-updates-agent:skills-entry -->";
+
+/**
+ * Pull request section quoting `skill`'s entry from `text`, the `skills.yml`
+ * at commit `sha`, with a permalink to those lines. Null when it has no entry.
+ */
+export const renderSkillsEntry = (text: string, skill: string, sha: string) => {
+  const lines = text.split("\n");
+
+  const start = lines.findIndex(
+    (line) => line === `  ${skill}:` || line === `  ${skill}: {}`,
+  );
+
+  if (start === -1) return null;
+
+  // The entry runs until the next skill key, or the end of the file.
+  const next = lines.findIndex(
+    (line, index) => index > start && /^ {2}\S/.test(line),
+  );
+
+  const entry = lines
+    .slice(start, next === -1 ? undefined : next)
+    .join("\n")
+    .trimEnd();
+
+  const first = start + 1;
+  const last = first + entry.split("\n").length - 1;
+
+  return [
+    SKILLS_ENTRY_MARKER,
+    `## \`${SKILLS_FILE}\` entry`,
+    "",
+    `[\`${SKILLS_FILE}\` lines ${first}-${last} at \`${sha.slice(0, 7)}\`](https://github.com/${SKILLS_REPOSITORY}/blob/${sha}/${SKILLS_FILE}#L${first}-L${last})`,
+    "",
+    "```yaml",
+    entry,
+    "```",
+  ].join("\n");
+};
+
+/** Add the `skills.yml` entry section unless the body already has one. */
+export const withSkillsEntry = (body: string, section: string) =>
+  withSection(body, SKILLS_ENTRY_MARKER, section);
 
 /** The skill's pinned SHA change and origin, read from a pull request's skills.yml diff. */
 export const upstreamPinChange = (patch: string, skill: string) => {
@@ -838,7 +896,19 @@ const publishCleanUpdate = Effect.fn("UpdatesAgent.publishCleanUpdate")(
 
     const existing = url.length > 0;
 
-    const body = externalUpdateBody(
+    const head = (yield* executor.run("git", ["rev-parse", "HEAD"], {
+      cwd: root,
+    })).trim();
+
+    const entry = renderSkillsEntry(
+      yield* executor.run("git", ["show", `HEAD:${SKILLS_FILE}`], {
+        cwd: root,
+      }),
+      name,
+      head,
+    );
+
+    const update = externalUpdateBody(
       name,
       after.upstreamSha,
       yield* upstreamChangesSection(
@@ -847,6 +917,8 @@ const publishCleanUpdate = Effect.fn("UpdatesAgent.publishCleanUpdate")(
         after.upstreamSha,
       ),
     );
+
+    const body = entry ? withSkillsEntry(update, entry) : update;
 
     if (existing) {
       const { body: previous } = yield* github.read(
@@ -1475,6 +1547,47 @@ const linkUpstreamChanges = Effect.fn("UpdatesAgent.linkUpstreamChanges")(
   },
 );
 
+/** Quote each new skill update pull request's `skills.yml` entry, with a permalink. */
+const quoteSkillsEntries = Effect.fn("UpdatesAgent.quoteSkillsEntries")(
+  function* (root: string, after: number) {
+    const github = yield* GitHub;
+
+    const created = (yield* recentPullRequests()).filter(
+      ({ number }) => number > after,
+    );
+
+    for (const { number } of created) {
+      const { title, body } = yield* github.read(
+        "gh pr view",
+        PullRequest.get({
+          selector: number,
+          repository: SKILLS_REPOSITORY,
+          fields: ["title", "body"],
+        }),
+      );
+
+      const skill = title.match(
+        /^(?:\[(?:SHA|Tag)-only\] Update|Update skill:) ([a-z0-9-]+)$/,
+      )?.[1];
+
+      if (!skill || body.includes(SKILLS_ENTRY_MARKER)) continue;
+
+      const { head, headText } = yield* pullRequestSkillsFiles(root, number);
+      const section = renderSkillsEntry(headText, skill, head);
+
+      if (!section) continue;
+
+      yield* github.write(
+        "gh pr edit",
+        PullRequest.edit(number, {
+          repository: SKILLS_REPOSITORY,
+          body: withSkillsEntry(body, section),
+        }),
+      );
+    }
+  },
+);
+
 const annotatePullRequests = Effect.fn("UpdatesAgent.annotatePullRequests")(
   function* (
     after: number,
@@ -1896,6 +2009,16 @@ const runDevice = Effect.fn("UpdatesAgent.runDevice")(function* (
           Effect.catch((error) =>
             Console.error(
               `Unable to add upstream changes to pull requests: ${describeFailure(error)}`,
+            ),
+          ),
+        );
+
+      // The quoted entry helps review; never fail a published run on it.
+      if (attempts.length > 0)
+        yield* quoteSkillsEntries(primaryRepository, initialPr).pipe(
+          Effect.catch((error) =>
+            Console.error(
+              `Unable to add skills.yml entries to pull requests: ${describeFailure(error)}`,
             ),
           ),
         );

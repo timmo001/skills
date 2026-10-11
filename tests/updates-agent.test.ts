@@ -18,6 +18,7 @@ import {
   latestSuccessfulWorkflowRun,
   pinOnlyChange,
   recoverUpdateBranches,
+  renderSkillsEntry,
   renderSkillUpdatesBenchmark,
   renderUpstreamChanges,
   requireRepositoryState,
@@ -31,6 +32,7 @@ import {
   upstreamPinChange,
   validatePullRequestPolicy,
   withSkillUpdatesBenchmark,
+  withSkillsEntry,
   withUpstreamChanges,
   type SkillUpdatesAgentConfig,
 } from "../src/commands/UpdatesAgent.js";
@@ -590,6 +592,39 @@ describe("updates agent policies", () => {
       for (const [label, after, skill, expected] of cases)
         expect(pinOnlyChange(before, after, skill), label).toBe(expected);
     }),
+  );
+
+  it.effect(
+    "quotes a skill's skills.yml entry with a permalink to its lines",
+    () =>
+      Effect.sync(() => {
+        const text = renderSkillsFile({
+          skills: {
+            alpha: { tools: [{ repo: "org/tool", reviewed: "v1" }] },
+            beta: { import: exampleImport("a".repeat(40)) },
+          },
+        });
+
+        const lines = text.split("\n");
+        const sha = "c".repeat(40);
+        const alpha = renderSkillsEntry(text, "alpha", sha) ?? "";
+        const beta = renderSkillsEntry(text, "beta", sha) ?? "";
+        const alphaStart = lines.indexOf("  alpha:") + 1;
+        const betaStart = lines.indexOf("  beta:") + 1;
+
+        // An entry stops at the next skill key; the last one at the end of the file.
+        expect(alpha).toContain(
+          `blob/${sha}/skills.yml#L${alphaStart}-L${betaStart - 1})`,
+        );
+        expect(beta).toContain(
+          `blob/${sha}/skills.yml#L${betaStart}-L${lines.length - 1})`,
+        );
+        expect(beta).toContain(`      upstreamSha: ${"a".repeat(40)}`);
+        expect(renderSkillsEntry(text, "missing", sha)).toBeNull();
+        expect(withSkillsEntry(withSkillsEntry("Body", beta), beta)).toBe(
+          `Body\n\n${beta}\n`,
+        );
+      }),
   );
 
   it.effect("requires exactly one explicit status line", () =>
