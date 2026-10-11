@@ -67,7 +67,7 @@ skills:
         - "added Ollama's HTTP API as an equal local runtime alongside Ollaya, with its decision models in the cascade"
     tools:
       - repo: ollama/ollama
-        reviewed: "v0.40.0"
+        reviewed: "v0.40.3"
   diagnose:
     import:
       upstreamSha: f3fc5632f401156837ee3872f14fe33ccf1024ea
