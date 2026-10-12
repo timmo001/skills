@@ -42,3 +42,7 @@ mise exec npm:skills -- skills add . --list
 ```
 
 `mise run validate` runs the checks in parallel. For a narrow change, run only the tasks it touches, for example `mise run validate:skills` after editing a skill.
+
+## After Committing
+
+- After every commit to this repository, ask whether to run `dot update` so this machine picks up the change. `dot update` reads `main` from the remote, so if the commit has not been pushed, say it needs a push first.
