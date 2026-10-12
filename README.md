@@ -85,7 +85,7 @@ mise exec npm:skills -- skills add . --list
 
 The local validator checks the portable metadata contract, directory names, relative links, `skills.yml` against its schema and canonical form, `skills.sh.json` / `PORTABILITY.md` coverage, and drift of the generated [`SKILLS.md`](./SKILLS.md#skills-catalogue) catalogue. TypeScript checks use Effect-aware Oxlint rules from `@timmo001/oxlint-rules/configs/recommended-effect`. CI also verifies the independent installer discovery result.
 
-Imports are checked daily and after skill changes merge to `main`. Adapted imports are reported for manual review; unchanged upstream snapshots receive automated update pull requests.
+Imports are checked hourly and after skill changes merge to `main`. Adapted imports are reported for manual review; unchanged upstream snapshots receive automated update pull requests.
 
 The shared update entrypoint runs in either environment:
 
@@ -152,7 +152,7 @@ checker manages reviewed upstream skill revisions separately.
 - Classify each new skill in `skills.sh.json` and `PORTABILITY.md`, then regenerate the human catalogue with `mise run catalogue` (or `./dist/skill-maintenance catalogue`) and commit `SKILLS.md`.
 - Commit imported skills only when this repository contains substantive local edits. Mark unchanged imports `external`; only their origin and pinned SHA are committed.
 - Maintain import provenance, reviewed SHA, licence, local edits, and distribution mode in `skills.yml`, the single maintenance record. [`skills.schema.json`](./skills.schema.json) specifies it; regenerate the schema with `mise run schema` after changing the CLI's schema. Skills themselves carry no provenance comments.
-- List the tools a skill depends on under its `tools` entry in `skills.yml`. `./dist/skill-maintenance skill-reviews` reports skills whose tools have a release newer than the reviewed tag, and the daily dashboard shows the same list under "Skill reviews".
+- List the tools a skill depends on under its `tools` entry in `skills.yml`. `./dist/skill-maintenance skill-reviews` reports skills whose tools have a release newer than the reviewed tag, and the dashboard issue shows the same list under "Skill reviews".
 - Use `./dist/skill-maintenance import <name>` to generate a complete upstream comparison. For an external import it compares the pinned and latest upstream revisions, and `--apply` moves the pin. Adapted changes remain manual. The importer rejects an adapted skill that exactly matches every file in its source; mark it external instead.
 - Keep `skills.sh.json`, `PORTABILITY.md`, and `SKILLS.md` in sync.
 - Prefer repository revisions for installed copies. The scheduled checker reports adapted imports for manual review and opens pull requests for unchanged upstream updates.
