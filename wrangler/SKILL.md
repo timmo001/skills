@@ -1,16 +1,16 @@
 ---
 name: wrangler
-description: Use the project's Wrangler CLI for Cloudflare development, configuration, and deployment. Load before running Wrangler or changing its configuration; retrieve exact flags and binding shapes from current docs and installed schemas.
+description: Use the project's Wrangler CLI for Cloudflare development, configuration, and deployment in projects with a wrangler.jsonc, wrangler.json, or wrangler.toml file. Load before running Wrangler or changing its configuration; retrieve exact flags and binding shapes from current docs and installed schemas. For new projects and projects without a Wrangler configuration file, use the cf CLI instead.
 compatibility: Requires the project's Wrangler dependency and supported Node.js runtime. Remote operations require Cloudflare authentication.
 license: Apache-2.0
 ---
 
 # Wrangler
 
-If the project has a `cloudflare.config.ts` file, or the user has asked you to use the `cf` CLI, do not use this skill. Follow the [Cloudflare CLI documentation](https://developers.cloudflare.com/cf/index.md) instead.
+Use this skill only when the project has `wrangler.jsonc`, `wrangler.json`, or `wrangler.toml` and no `cloudflare.config.ts`, or when the user asks for Wrangler. For a new project, a project with `cloudflare.config.ts`, or a project with no Cloudflare configuration, use the Cloudflare CLI (`cf`) instead: load the `cf-cli` skill if it is installed, or follow [Use cf with coding agents](https://developers.cloudflare.com/cf/agents/index.md). Do not add Wrangler to those projects.
 
 1. Inspect the project's package manifest, lockfile, scripts, and Wrangler configuration. Run its existing task or local binary. A missing global command does not mean the project dependency is absent.
-2. Check the local version and relevant subcommand's `--help`. Do not silently install or upgrade Wrangler during a read, review, or deployment. If installation is needed, follow the repository's package manager and dependency policy.
+2. Check the local version and relevant subcommand's `--help`. Do not silently install or upgrade Wrangler during a read, review, or deployment. If the project has a Wrangler configuration file but no Wrangler dependency, install it locally following the repository's package manager and dependency policy.
 3. Retrieve only the documentation needed for the operation. Prefer Cloudflare's documentation search and use the installed `node_modules/wrangler/config-schema.json` for the project's accepted configuration shape.
 4. Confirm the target config, account, environment, resource, and local-versus-remote mode before a state-changing command. Follow the user's requested scope; listing resources does not authorise mutation or deployment.
 5. Use existing build, type-generation, validation, or dry-run tasks where relevant. A successful dry run verifies packaging, not deployed behaviour. Report the actual result and any remaining verification limit.
