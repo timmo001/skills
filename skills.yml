@@ -21,6 +21,9 @@ skills:
         - "added compatibility metadata for concrete environment requirements"
         - "route the new security-review guidance before local reproductions that execute changed code or start tools/servers"
         - "tests/: omitted (upstream repository guidance contract tests)"
+    tools:
+      - repo: github/gh-aw
+        reviewed: "v0.89.21"
   asking-questions:
     tools:
       - repo: backnotprop/plannotator
@@ -69,6 +72,8 @@ skills:
     tools:
       - repo: ollama/ollama
         reviewed: "v0.40.3"
+      - repo: ollaya-dev/ollaya
+        reviewed: "v0.12.1"
   diagnose:
     import:
       upstreamSha: f3fc5632f401156837ee3872f14fe33ccf1024ea
@@ -126,6 +131,9 @@ skills:
       localEdits:
         - "condensed upstream reference, replaced mutation instructions with local authorisation rules, and summarised distributed-worktree modify behavior; upstream reference files intentionally omitted"
         - "added compatibility metadata for concrete environment requirements"
+    tools:
+      - repo: github/gh-stack
+        reviewed: "v0.2.1"
   grilling:
     import:
       upstreamSha: 95249b0b49782349740fd9b8c6ce32b4e59e497a
