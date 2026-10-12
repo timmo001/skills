@@ -42,8 +42,11 @@ user has already reviewed this exact diff.
   changeset.
 - A plain approval with no comments sends nothing back to the session, so
   once the reviews are open, send one Inbox message with a standing
-  next-steps question: "If you have no notes, what next?", with the options
-  from step 4. After a guided review, send it as a reply to the guide
+  next-steps question with the options from step 4. Word it yourself, varied
+  to fit the change, rather than repeating one fixed phrase, as long as it
+  makes clear the user answers it when they have no notes (for example "All
+  good? Pick what happens next" or "Nothing to change? Choose the next
+  steps"). After a guided review, send it as a reply to the guide
   (`reply_to` set to the `submit_guide` message id), so the guide, its
   comments and the question share one thread, and say the guide and the diff
   review for each repository are ready, guide first, so the user never finds
