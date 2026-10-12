@@ -61,21 +61,26 @@ user has already reviewed this exact diff.
 
 - **Feedback** (diff review annotations, comments on the guide's code, which
   arrive as a reply in the guide's thread, or notes that ask for changes):
-  replace the
-  standing question first (send into its thread with `supersedes`), so a pick
-  on the old diff is never sent. Address each point, rerun the relevant
-  checks, open the review again for the updated diff, and send a fresh
-  standing question with it.
+  if the standing question is still open, replace it first (send into its
+  thread with `supersedes`), so a pick on the old diff is never sent. Address
+  each point, rerun the relevant checks, open the review again for the updated
+  diff, and send a fresh standing question with it.
 - **Approved with notes:** notes are guidance, not change requests. Apply the
   small, clear ones and say how each was handled. If that changed the diff or
   the fitting next steps, replace the standing question with one built from
   the new state; otherwise leave it for the user to answer.
 - **Answer to the standing question:** treat it as approval with no notes and
   run the picked steps.
-- **"Approved" in chat or the Inbox without a pick:** point to the standing
-  question, or ask it in chat.
+- **"Approved" in chat without a pick:** point to the standing question, or
+  ask it in chat.
+- **Standing question skipped:** an Inbox reply that does not pick a next step
+  (an approval or notes in words) skips the question. Once any notes are
+  handled, send a fresh standing question in that thread rather than pointing
+  to the skipped one.
 - **Closed without a decision:** the standing question still covers it. Do
   not reopen the review unprompted.
+- **Set aside with Mark read:** the user has said not to wait on the standing
+  question. Stop there; do not reopen the review or ask again unprompted.
 
 ## 4. Next-Step Options
 
