@@ -48,12 +48,16 @@ user has already reviewed this exact diff.
   comments and the question share one thread, and say the guide and the diff
   review for each repository are ready, guide first, so the user never finds
   the diff review open on its own. Record the message id.
+- Link every open review in that message, one line per repository, using the
+  URL the review action returned (for example
+  `[Diff review: frontend](http://localhost:38113)`), so the user can reach it
+  from the Inbox when the browser tab was missed or closed.
 - Put the changeset in that message above the question, so the user can
   decide from the Inbox: the changed files per repository with their added
   and removed line counts, then a short fenced `diff` preview of the key
   hunks. Keep the preview to a few lines per file, and for a large change
   show only the hunks that matter most and say the rest is in the review.
-- Tell the user in one line what opened, and that they can either send notes
+- Tell the user in one line what opened, with the same review links, and that they can either send notes
   from the review or answer the next-steps question in the Inbox or chat.
   Then end the turn. Do not poll, rerun, or reopen the review.
 
@@ -103,6 +107,32 @@ that fit the context, and put your recommendation first:
 
 For a multi-repository change, make each option say which repositories it
 covers, or ask per repository when they need different steps.
+
+### Release Cycles
+
+When the repository ships through a release cycle, a commit is rarely the end.
+Add the follow-through steps that fit, as separate options so the user can
+combine them, and offer the alternatives rather than one fixed path:
+
+- **Arch package source** (a repository built into the public or private
+  pacman repository, or its `-git` package): "Update the `-git` package when
+  released", "Publish now" through the repository's publication workflow or
+  `/timmo001-private/publish-package`, and "Install from pacman once
+  published" to verify ownership and version.
+- **npm or JSR package:** "Release a new version" through the repository's
+  release workflow, "Bump consumers once published" (pinned exact versions in
+  the repositories that use it), and "Hold for the next release" when the
+  change can ride along with later work.
+- **Dotfiles bump** (a submodule, plugin, skill import or pinned version update
+  in `~/.config/dotfiles`, `~/.config/dotfiles-private` or `~/repos/skills`):
+  recommend "Commit and push", since a bump does nothing until other machines
+  pull it on `dot update`. Offer "Commit only" as the alternative.
+- **Source and consumer together:** offer the chain as one option, for example
+  "Push the source, wait for its release, then bump and push the consumer",
+  alongside doing only the source side now.
+
+Only offer a release step the repository actually supports, and say in the
+option what it waits on (a workflow run, a published version).
 
 The user's choice authorises only the steps they picked, once. Run them
 through the usual workflows (for example the commit skill), report the result,
