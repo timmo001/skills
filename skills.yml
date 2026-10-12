@@ -273,6 +273,13 @@ skills:
         - "draft in chat by default"
         - "adapt output for multiple channels"
         - "require explicit permission before external actions"
+  tooling-drift:
+    import:
+      upstreamSha: 72f5ef6204a6a77b2a8c09e294323e042fb68ec1
+      origin: "https://github.com/timmo001/tooling-drift/tree/main/skills/tooling-drift"
+      license: "Apache-2.0"
+      localEdits: []
+      distribution: external
   workers-best-practices:
     import:
       upstreamSha: 41e0d19858946d18af9ee2c2feebbe2e11d829ff

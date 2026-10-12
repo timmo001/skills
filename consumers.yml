@@ -163,6 +163,7 @@ repositories:
       - skill-prefixes
       - task-runners
       - testing
+      - tooling-drift
       - types-enforce-ts
       - writing-style
   timmo001/effect-herdr:
@@ -174,6 +175,7 @@ repositories:
       - skill-prefixes
       - task-runners
       - testing
+      - tooling-drift
       - types-enforce-ts
       - writing-style
   timmo001/context:
