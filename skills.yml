@@ -146,7 +146,7 @@ skills:
       distribution: external
   herdr:
     import:
-      upstreamSha: 1ab85d31ac59c484a7347a237abfb072fe1cf166
+      upstreamSha: 48292af8e33a08c8030b7f1512c8d0da739f5ab1
       origin: "https://github.com/herdrdev/herdr/tree/master/skills/herdr"
       license: "Apache-2.0"
       localEdits: []
