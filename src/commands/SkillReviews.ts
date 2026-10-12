@@ -1,4 +1,3 @@
-import { Release } from "@timmo001/effect-gh";
 import { Console, Effect, Result, Schema } from "effect";
 import {
   SKILLS_FILE,
@@ -6,6 +5,11 @@ import {
   readSkillsFile,
   writeReviewedTags,
 } from "../imports/metadata.js";
+import {
+  latestReleases,
+  releaseOf,
+  toolRepositories,
+} from "../imports/releases.js";
 import { GitHub } from "../services/GitHub.js";
 
 export const SkillReviewItem = Schema.Struct({
@@ -39,43 +43,17 @@ export class SkillReviewsRequiredError extends Schema.TaggedError<SkillReviewsRe
 /** Compare each skill's reviewed tool releases with the latest, reading each repository once. */
 export const buildSkillReviewReport = Effect.fn("SkillReviews.buildReport")(
   function* (root: string) {
-    const github = yield* GitHub;
     const { file } = yield* readSkillsFile(root);
 
     const entries = Object.entries(file.skills).sort(([a], [b]) =>
       a.localeCompare(b),
     );
 
-    const repos = new Set(
-      entries.flatMap(([, entry]) =>
-        (entry.tools ?? []).map((tool) => tool.repo),
-      ),
-    );
-
-    const latest = new Map<
-      string,
-      Result.Result<{ readonly tagName: string; readonly url: string }, string>
-    >();
-
-    for (const repo of repos) {
-      const release = yield* Effect.result(
-        github.read(
-          "gh release view",
-          Release.view({ repo, fields: ["tagName", "url"] }),
-        ),
-      );
-
-      latest.set(
-        repo,
-        Result.isSuccess(release)
-          ? Result.succeed(release.success)
-          : Result.fail(release.failure.stderr || release.failure.command),
-      );
-    }
+    const latest = yield* latestReleases(toolRepositories(file));
 
     const items = entries.flatMap(([skill, entry]) =>
       (entry.tools ?? []).map((tool): SkillReviewItem => {
-        const release = latest.get(tool.repo);
+        const release = releaseOf(latest, tool.repo);
 
         if (!release || Result.isFailure(release))
           return {

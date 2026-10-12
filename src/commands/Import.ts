@@ -6,6 +6,7 @@ import {
   trackedSkillPath,
   writeReviewedSha,
 } from "../imports/metadata.js";
+import type { LatestReleases } from "../imports/releases.js";
 import {
   applyClean,
   comparison,
@@ -26,8 +27,12 @@ export const importSkill = Effect.fn("ImportSkill.run")(function* (
     readonly apply: boolean;
     readonly metadataOnly: boolean;
     readonly reviewedSha?: string | undefined;
+    /** Imports from these repositories follow their latest release tag. */
+    readonly releases?: LatestReleases;
   },
 ) {
+  const fetch = { releases: options.releases ?? new Map() };
+
   if (options.metadataOnly) yield* formatSkillsFile(root);
 
   let metadata = yield* getImport(root, name);
@@ -42,19 +47,25 @@ export const importSkill = Effect.fn("ImportSkill.run")(function* (
   if (isExternal(metadata)) {
     if (options.metadataOnly) return;
 
-    return yield* withFetched(root, name, metadata, (latest, sha) =>
-      Effect.gen(function* () {
-        if (options.apply) return yield* applyClean(root, name, metadata, sha);
+    return yield* withFetched(
+      root,
+      name,
+      metadata,
+      (latest, sha) =>
+        Effect.gen(function* () {
+          if (options.apply)
+            return yield* applyClean(root, name, metadata, sha);
 
-        yield* withFetched(
-          root,
-          name,
-          metadata,
-          (pinned) =>
-            comparison(pinned, latest).pipe(Effect.flatMap(Console.log)),
-          { pinned: true },
-        );
-      }),
+          yield* withFetched(
+            root,
+            name,
+            metadata,
+            (pinned) =>
+              comparison(pinned, latest).pipe(Effect.flatMap(Console.log)),
+            { pinned: true },
+          );
+        }),
+      fetch,
     );
   }
 
@@ -68,23 +79,28 @@ export const importSkill = Effect.fn("ImportSkill.run")(function* (
     );
   }
 
-  return yield* withFetched(root, name, metadata, (candidate, sha) =>
-    Effect.gen(function* () {
-      if (yield* directoriesMatch(target, candidate)) {
-        yield* Console.error(
-          `${name}: adapted import exactly matches its source; mark it external in skills.yml instead`,
-        );
+  return yield* withFetched(
+    root,
+    name,
+    metadata,
+    (candidate, sha) =>
+      Effect.gen(function* () {
+        if (yield* directoriesMatch(target, candidate)) {
+          yield* Console.error(
+            `${name}: adapted import exactly matches its source; mark it external in skills.yml instead`,
+          );
 
-        return yield* new ImportError({
-          message: `${name}: adapted import exactly matches its source`,
-        });
-      }
+          return yield* new ImportError({
+            message: `${name}: adapted import exactly matches its source`,
+          });
+        }
 
-      if (options.apply) {
-        return yield* applyClean(root, name, metadata, sha);
-      }
+        if (options.apply) {
+          return yield* applyClean(root, name, metadata, sha);
+        }
 
-      yield* Console.log(yield* comparison(target, candidate));
-    }),
+        yield* Console.log(yield* comparison(target, candidate));
+      }),
+    fetch,
   );
 });

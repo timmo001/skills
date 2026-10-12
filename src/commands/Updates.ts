@@ -8,9 +8,18 @@ import {
   readImports,
   trackedSkillPath,
 } from "../imports/metadata.js";
+import {
+  type LatestReleases,
+  importReleases,
+  releaseTag,
+} from "../imports/releases.js";
 import { directoryChanges, withFetched } from "../imports/snapshot.js";
 import {
   DeletedOriginError,
+  type UpstreamDecodeError,
+  type UpstreamStatusError,
+  type UpstreamTransportError,
+  containsCommit,
   latestPathSha,
   originExists,
   parseOrigin,
@@ -43,6 +52,8 @@ export const UpdateReportItem = Schema.Struct({
     }),
   ),
   localEdits: Schema.Array(Schema.String),
+  /** The release tag `upstreamSha` was read at, for imports that follow releases. */
+  release: Schema.optionalKey(Schema.String),
   reason: Schema.optionalKey(Schema.String),
 });
 
@@ -67,27 +78,53 @@ const compareFiles = Effect.fn("Updates.compareFiles")(function* (
   root: string,
   name: string,
   metadata: ImportMetadata,
+  releases: LatestReleases,
 ) {
   const path = yield* Path.Path;
 
   if (isExternal(metadata))
-    return yield* withFetched(root, name, metadata, (latest) =>
-      withFetched(
-        root,
-        name,
-        metadata,
-        (pinned) => directoryChanges(pinned, latest),
-        { pinned: true },
-      ),
+    return yield* withFetched(
+      root,
+      name,
+      metadata,
+      (latest) =>
+        withFetched(
+          root,
+          name,
+          metadata,
+          (pinned) => directoryChanges(pinned, latest),
+          { pinned: true },
+        ),
+      { releases },
     );
 
-  return yield* withFetched(root, name, metadata, (candidate) =>
-    directoryChanges(
-      path.dirname(trackedSkillPath(root, name, path)),
-      candidate,
-    ),
+  return yield* withFetched(
+    root,
+    name,
+    metadata,
+    (candidate) =>
+      directoryChanges(
+        path.dirname(trackedSkillPath(root, name, path)),
+        candidate,
+      ),
+    { releases },
   );
 });
+
+const upstreamFailureReason = (
+  error:
+    | DeletedOriginError
+    | UpstreamDecodeError
+    | UpstreamStatusError
+    | UpstreamTransportError,
+) =>
+  error instanceof DeletedOriginError
+    ? "upstream path no longer exists"
+    : Predicate.isTagged(error, "UpstreamStatusError")
+      ? `GitHub returned HTTP ${error.status}`
+      : Predicate.isTagged(error, "UpstreamTransportError")
+        ? error.stderr
+        : error.message;
 
 export const buildUpdateReport = Effect.fn("Updates.buildReport")(function* (
   root: string,
@@ -106,6 +143,7 @@ export const buildUpdateReport = Effect.fn("Updates.buildReport")(function* (
   }
 
   const skills: UpdateReportItem[] = [];
+  const releases = yield* importReleases(root);
 
   for (const name of names) {
     const metadata = file.imports[name];
@@ -154,7 +192,29 @@ export const buildUpdateReport = Effect.fn("Updates.buildReport")(function* (
       continue;
     }
 
-    const latest = yield* Effect.result(latestPathSha(origin));
+    const release = releaseTag(origin, releases);
+
+    if (Result.isFailure(release)) {
+      skills.push({
+        name,
+        directory: name,
+        state: "error",
+        origin: metadata.origin,
+        storedSha: metadata.upstreamSha,
+        upstreamSha: null,
+        files: [],
+        localEdits: metadata.localEdits,
+        reason: `could not read the latest release of ${release.failure.repo}: ${release.failure.reason}`,
+      });
+      continue;
+    }
+
+    const tag = release.success;
+    const atRelease = tag === null ? {} : { release: tag };
+
+    const latest = yield* Effect.result(
+      latestPathSha(origin, tag ?? undefined),
+    );
 
     if (Result.isFailure(latest)) {
       skills.push({
@@ -169,34 +229,53 @@ export const buildUpdateReport = Effect.fn("Updates.buildReport")(function* (
         upstreamSha: null,
         files: [],
         localEdits: metadata.localEdits,
-        reason:
-          latest.failure instanceof DeletedOriginError
-            ? "upstream path no longer exists"
-            : Predicate.isTagged(latest.failure, "UpstreamStatusError")
-              ? `GitHub returned HTTP ${latest.failure.status}`
-              : Predicate.isTagged(latest.failure, "UpstreamTransportError")
-                ? latest.failure.stderr
-                : latest.failure.message,
+        reason: upstreamFailureReason(latest.failure),
+        ...atRelease,
       });
       continue;
     }
 
-    if (latest.success === metadata.upstreamSha) {
+    // A pin taken from the branch can be ahead of the release; never move it back.
+    const behindPin =
+      tag !== null && latest.success !== metadata.upstreamSha
+        ? yield* Effect.result(
+            containsCommit(origin, latest.success, metadata.upstreamSha),
+          )
+        : Result.succeed(false);
+
+    if (Result.isFailure(behindPin)) {
+      skills.push({
+        name,
+        directory: name,
+        state: "error",
+        origin: metadata.origin,
+        storedSha: metadata.upstreamSha,
+        upstreamSha: latest.success,
+        files: [],
+        localEdits: metadata.localEdits,
+        reason: upstreamFailureReason(behindPin.failure),
+        ...atRelease,
+      });
+      continue;
+    }
+
+    if (latest.success === metadata.upstreamSha || behindPin.success) {
       skills.push({
         name,
         directory: name,
         state: "up-to-date",
         origin: metadata.origin,
         storedSha: metadata.upstreamSha,
-        upstreamSha: latest.success,
+        upstreamSha: metadata.upstreamSha,
         files: [],
         localEdits: metadata.localEdits,
+        ...atRelease,
       });
       continue;
     }
 
     const comparisonResult = yield* Effect.result(
-      compareFiles(root, name, metadata),
+      compareFiles(root, name, metadata, releases),
     );
 
     if (Result.isFailure(comparisonResult)) {
@@ -209,6 +288,7 @@ export const buildUpdateReport = Effect.fn("Updates.buildReport")(function* (
         upstreamSha: latest.success,
         files: [],
         localEdits: metadata.localEdits,
+        ...atRelease,
         reason:
           comparisonResult.failure instanceof Error
             ? comparisonResult.failure.message
@@ -232,6 +312,7 @@ export const buildUpdateReport = Effect.fn("Updates.buildReport")(function* (
       upstreamSha: latest.success,
       files,
       localEdits: metadata.localEdits,
+      ...atRelease,
     });
   }
 
@@ -249,7 +330,7 @@ export const renderUpdateMarkdown = (report: UpdateReport) => {
         ? ["None."]
         : items.map(
             (item) =>
-              `- **${item.name}**: \`${item.storedSha ?? "unknown"}\` -> \`${item.upstreamSha}\`\n  - ${item.origin}`,
+              `- **${item.name}**: \`${item.storedSha ?? "unknown"}\` -> \`${item.upstreamSha}\`${item.release ? ` (release \`${item.release}\`)` : ""}\n  - ${item.origin}`,
           )),
     ];
   };
@@ -327,6 +408,7 @@ export const updates = Effect.fn("Updates.run")(function* (
 
   if (mode !== "check") {
     const imports = yield* readImports(root);
+    const releases = yield* importReleases(root);
     const updatedNames: string[] = [];
     const updatedPaths: string[] = [];
 
@@ -348,6 +430,7 @@ export const updates = Effect.fn("Updates.run")(function* (
         yield* importSkill(root, item.name, {
           apply: true,
           metadataOnly: false,
+          releases,
         });
       }
 
@@ -397,6 +480,7 @@ export const updates = Effect.fn("Updates.run")(function* (
           skill: item.name,
           diffOrigin: true,
           openOpencode: true,
+          releases,
         });
       }
     }

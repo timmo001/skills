@@ -47,6 +47,7 @@ import {
   getImport,
   renderSkillsFile,
 } from "../imports/metadata.js";
+import { type LatestReleases, importReleases } from "../imports/releases.js";
 import {
   originDirectory,
   parseOrigin,
@@ -836,13 +837,17 @@ const validateRepository = Effect.fn("UpdatesAgent.validateRepository")(
 );
 
 const publishCleanUpdate = Effect.fn("UpdatesAgent.publishCleanUpdate")(
-  function* (root: string, name: string) {
+  function* (root: string, name: string, releases: LatestReleases) {
     const executor = yield* CommandExecutor;
     const github = yield* GitHub;
     const branch = `skill-update/${name}`;
     yield* runOrFail("git", ["checkout", "-B", branch, "origin/main"], root);
     const before = yield* getImport(root, name);
-    yield* importSkill(root, name, { apply: true, metadataOnly: false });
+    yield* importSkill(root, name, {
+      apply: true,
+      metadataOnly: false,
+      releases,
+    });
     const after = yield* getImport(root, name);
     yield* writeSkillsCatalogue(root);
     yield* validateRepository(root);
@@ -1037,9 +1042,10 @@ export const runGitHubSkillUpdates = Effect.fn("UpdatesAgent.runGitHub")(
 
     const work = Effect.gen(function* () {
       const report = yield* buildUpdateReport(root);
+      const releases = yield* importReleases(root);
 
       for (const name of cleanSkillUpdateNames(report.skills))
-        yield* publishCleanUpdate(root, name);
+        yield* publishCleanUpdate(root, name, releases);
     });
 
     const result = yield* Effect.exit(work);

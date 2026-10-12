@@ -21,7 +21,11 @@ import {
   type CommandExecutorService,
 } from "../src/services/CommandExecutor.js";
 import type { Mutable } from "effect/Types";
-import type { ImportMetadata } from "../src/imports/metadata.js";
+import {
+  type ImportMetadata,
+  SKILLS_FILE,
+  renderSkillsFile,
+} from "../src/imports/metadata.js";
 import { withSkillsCli } from "./helpers/skills-cli.js";
 import { writeImportsFixture } from "./helpers/skills-file.js";
 import { fakeGitHub, type FakeGitHubHandlers } from "./helpers/fake-github.js";
@@ -354,6 +358,78 @@ describe("versioned update reports", () => {
       }).pipe(
         Effect.scoped,
         Effect.provide(githubLayer({ apiJson: () => Effect.succeed([]) })),
+        Effect.provide(commandLayer()),
+        Effect.provide(NodeServices.layer),
+      ),
+  );
+
+  it.effect(
+    "reads a tool repository's imports at its release without moving the pin back",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+
+        const root = yield* fs.makeTempDirectoryScoped({
+          prefix: "skill-release-test-",
+        });
+
+        yield* fs.writeFileString(
+          path.join(root, SKILLS_FILE),
+          renderSkillsFile({
+            skills: {
+              example: {
+                import: {
+                  origin: originUrl,
+                  upstreamSha: sha("a"),
+                  license: "MIT",
+                  localEdits: [],
+                  distribution: "external",
+                },
+              },
+              reviewer: { tools: [{ repo: "org/repo", reviewed: "v1" }] },
+            },
+          }),
+        );
+
+        const endpoints: string[] = [];
+
+        const report = yield* buildUpdateReport(root).pipe(
+          Effect.provide(
+            githubLayer({
+              run: () =>
+                Effect.succeed(
+                  JSON.stringify({ tagName: "v2", url: "https://release" }),
+                ),
+              apiJson: (endpoint) => {
+                endpoints.push(endpoint);
+
+                return Effect.succeed(
+                  endpoint.includes("/compare/")
+                    ? { status: "ahead" }
+                    : [{ sha: sha("b") }],
+                );
+              },
+            }),
+          ),
+        );
+
+        // The pin is already past the release's latest commit, so it stays.
+        expect(report.skills[0]).toMatchObject({
+          name: "example",
+          state: "up-to-date",
+          storedSha: sha("a"),
+          upstreamSha: sha("a"),
+          release: "v2",
+        });
+        expect(endpoints).toContain(
+          `repos/org/repo/commits?path=example&per_page=1&sha=v2`,
+        );
+        expect(endpoints).toContain(
+          `repos/org/repo/compare/${sha("b")}...${sha("a")}`,
+        );
+      }).pipe(
+        Effect.scoped,
         Effect.provide(commandLayer()),
         Effect.provide(NodeServices.layer),
       ),

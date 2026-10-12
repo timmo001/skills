@@ -1,4 +1,4 @@
-import { Effect, FileSystem, Path, Schema } from "effect";
+import { Effect, FileSystem, Path, Result, Schema } from "effect";
 import { CommandError, CommandExecutor } from "../services/CommandExecutor.js";
 import { SkillsCli } from "../services/SkillsCli.js";
 import {
@@ -6,6 +6,7 @@ import {
   isExternal,
   writeReviewedSha,
 } from "./metadata.js";
+import { type LatestReleases, releaseTag } from "./releases.js";
 import { DeletedOriginError, parseOrigin } from "./upstream.js";
 
 export class SnapshotError extends Schema.TaggedError<SnapshotError>()(
@@ -173,7 +174,11 @@ export const withFetched = Effect.fn("Snapshot.withFetched")(function* <
   name: string,
   metadata: ImportMetadata,
   use: (candidate: string, sha: string) => Effect.Effect<A, E, R>,
-  options: { readonly pinned?: boolean } = {},
+  options: {
+    readonly pinned?: boolean;
+    /** Imports from a repository listed here follow its latest release tag. */
+    readonly releases?: LatestReleases;
+  } = {},
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -189,6 +194,14 @@ export const withFetched = Effect.fn("Snapshot.withFetched")(function* <
         }),
     ),
   );
+
+  const release = releaseTag(origin, options.releases ?? new Map());
+
+  if (Result.isFailure(release))
+    return yield* new SnapshotError({
+      operation: "release",
+      message: `${name}: could not read the latest release of ${release.failure.repo}: ${release.failure.reason}`,
+    });
 
   return yield* Effect.scoped(
     Effect.gen(function* () {
@@ -216,7 +229,11 @@ export const withFetched = Effect.fn("Snapshot.withFetched")(function* <
           checkout,
           "checkout",
           "--quiet",
-          options.pinned ? metadata.upstreamSha : origin.branch,
+          options.pinned
+            ? metadata.upstreamSha
+            : release.success === null
+              ? origin.branch
+              : `refs/tags/${release.success}`,
         ])
         .pipe(snapshotError("git.checkout"));
 

@@ -67,7 +67,7 @@ The scheduled device agent handles these on its own: it reviews each behind skil
 3. Propose the edits the new releases call for, or say that none are needed, and ask before making them.
 4. Once the user agrees, make the edits and run `./dist/skill-maintenance skill-reviews --reviewed <skill>`, which records the latest tags it just read. Commit the tag move with the edits.
 
-Add a `tools` entry when a skill starts depending on a tool's behaviour, and run `skill-reviews --format` after editing `skills.yml` by hand. External imports cannot list tools: their content comes from upstream.
+Add a `tools` entry when a skill starts depending on a tool's behaviour, and run `skill-reviews --format` after editing `skills.yml` by hand. External imports cannot list tools: their content comes from upstream. Listing a repository under `tools` also makes imports from that repository follow its latest release tag instead of its branch.
 
 ## Safety
 

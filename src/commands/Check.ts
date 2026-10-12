@@ -1,5 +1,6 @@
 import { Console, Effect, Path, Schema } from "effect";
 import { readImports, trackedSkillPath } from "../imports/metadata.js";
+import type { LatestReleases } from "../imports/releases.js";
 import {
   comparison,
   directoriesMatch,
@@ -17,6 +18,8 @@ export const check = Effect.fn("Check.run")(function* (
     readonly skill?: string | undefined;
     readonly diffOrigin: boolean;
     readonly openOpencode: boolean;
+    /** Imports from these repositories follow their latest release tag. */
+    readonly releases?: LatestReleases;
   },
 ) {
   const imports = yield* readImports(root);
@@ -49,31 +52,36 @@ export const check = Effect.fn("Check.run")(function* (
     const metadata = imports.imports[name];
 
     if (!metadata) continue;
-    yield* withFetched(root, name, metadata, (candidate) =>
-      Effect.gen(function* () {
-        const target = path.dirname(trackedSkillPath(root, name, path));
+    yield* withFetched(
+      root,
+      name,
+      metadata,
+      (candidate) =>
+        Effect.gen(function* () {
+          const target = path.dirname(trackedSkillPath(root, name, path));
 
-        if (yield* directoriesMatch(target, candidate)) {
-          yield* Console.error(
-            `${name}: adapted import exactly matches upstream; mark it external in skills.yml instead`,
-          );
-          exactMatches.push(name);
+          if (yield* directoriesMatch(target, candidate)) {
+            yield* Console.error(
+              `${name}: adapted import exactly matches upstream; mark it external in skills.yml instead`,
+            );
+            exactMatches.push(name);
 
-          return;
-        }
+            return;
+          }
 
-        const diff = yield* comparison(target, candidate);
+          const diff = yield* comparison(target, candidate);
 
-        if (options.diffOrigin) yield* Console.log(diff);
+          if (options.diffOrigin) yield* Console.log(diff);
 
-        if (options.openOpencode) {
-          yield* executor.inherit(
-            "opencode",
-            ["--prompt", `Review this imported skill diff:\n${diff}`],
-            { cwd: root },
-          );
-        }
-      }),
+          if (options.openOpencode) {
+            yield* executor.inherit(
+              "opencode",
+              ["--prompt", `Review this imported skill diff:\n${diff}`],
+              { cwd: root },
+            );
+          }
+        }),
+      { releases: options.releases ?? new Map() },
     ).pipe(
       Effect.catchTag("DeletedOriginError", () =>
         Console.log(

@@ -78,11 +78,13 @@ export const parseOrigin = (
   });
 };
 
+/** The latest commit touching the origin's path, on its branch or at `tag`. */
 export const latestPathSha = Effect.fn("Upstream.latestPathSha")(function* (
   origin: SkillOrigin,
+  tag?: string,
 ) {
   const github = yield* GitHub;
-  const endpoint = `repos/${origin.owner}/${origin.repo}/commits?path=${encodeURIComponent(origin.path)}&per_page=1&sha=${encodeURIComponent(origin.branch)}`;
+  const endpoint = `repos/${origin.owner}/${origin.repo}/commits?path=${encodeURIComponent(origin.path)}&per_page=1&sha=${encodeURIComponent(tag ?? origin.branch)}`;
 
   const commits = yield* github
     .read(
@@ -117,6 +119,37 @@ export const latestPathSha = Effect.fn("Upstream.latestPathSha")(function* (
   }
 
   return sha;
+});
+
+/** Whether `head` already contains `base`, so moving from `head` to `base` would go back. */
+export const containsCommit = Effect.fn("Upstream.containsCommit")(function* (
+  origin: SkillOrigin,
+  base: string,
+  head: string,
+) {
+  const github = yield* GitHub;
+  const endpoint = `repos/${origin.owner}/${origin.repo}/compare/${base}...${head}`;
+
+  const { status } = yield* github
+    .read(
+      endpoint,
+      Api.json(
+        { endpoint, method: "GET" },
+        Schema.Struct({ status: Schema.String }),
+      ),
+    )
+    .pipe(
+      Effect.mapError((error) =>
+        error.decode
+          ? new UpstreamDecodeError({
+              operation: "compare",
+              message: error.stderr,
+            })
+          : upstreamFailure("compare", error),
+      ),
+    );
+
+  return status === "ahead" || status === "identical";
 });
 
 export const UpstreamFileChange = Schema.Struct({

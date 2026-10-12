@@ -85,7 +85,7 @@ mise exec npm:skills -- skills add . --list
 
 The local validator checks the portable metadata contract, directory names, relative links, `skills.yml` against its schema and canonical form, `skills.sh.json` / `PORTABILITY.md` coverage, and drift of the generated [`SKILLS.md`](./SKILLS.md#skills-catalogue) catalogue. TypeScript checks use Effect-aware Oxlint rules from `@timmo001/oxlint-rules/configs/recommended-effect`. CI also verifies the independent installer discovery result.
 
-Imports are checked hourly and after skill changes merge to `main`. Adapted imports are reported for manual review; unchanged upstream snapshots receive automated update pull requests.
+Imports are checked hourly and after skill changes merge to `main`. Adapted imports are reported for manual review; unchanged upstream snapshots receive automated update pull requests. An import from a repository that some skill lists under `tools` follows that repository's latest release tag instead of its branch, so it moves when the tool is released, and never back to a commit its pin already includes.
 
 The shared update entrypoint runs in either environment:
 

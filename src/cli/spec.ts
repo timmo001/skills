@@ -23,6 +23,7 @@ import {
 } from "../commands/UpdatesAgent.js";
 import { validate } from "../commands/Validate.js";
 import { recoverSkillUpdatesClaim } from "../commands/UpdatesAgentCoordination.js";
+import { type LatestReleases, importReleases } from "../imports/releases.js";
 
 const bool = (name: string, description: string) =>
   Flag.Boolean(name).pipe(
@@ -71,15 +72,21 @@ export const importCommand = Command.make(
     ),
   },
   ({ apply, metadataOnly, name, reviewedSha }) =>
-    resolveSkillsRoot().pipe(
-      Effect.flatMap((root) =>
-        importSkill(root, name, {
-          apply,
-          metadataOnly,
-          reviewedSha: optional(reviewedSha),
-        }),
-      ),
-    ),
+    Effect.gen(function* () {
+      const root = yield* resolveSkillsRoot();
+
+      // Rewriting metadata fetches nothing, so it needs no releases.
+      const releases: LatestReleases = metadataOnly
+        ? new Map()
+        : yield* importReleases(root);
+
+      yield* importSkill(root, name, {
+        apply,
+        metadataOnly,
+        reviewedSha: optional(reviewedSha),
+        releases,
+      });
+    }),
 ).pipe(Command.withDescription("Fetch and compare or apply an imported skill"));
 
 export const installCommand = Command.make(
@@ -175,11 +182,16 @@ export const checkCommand = Command.make(
   ({ diffOrigin, openOpencode, skill }) =>
     resolveSkillsRoot().pipe(
       Effect.flatMap((root) =>
-        check(root, {
-          skill: optional(skill),
-          diffOrigin,
-          openOpencode,
-        }),
+        importReleases(root).pipe(
+          Effect.flatMap((releases) =>
+            check(root, {
+              skill: optional(skill),
+              diffOrigin,
+              openOpencode,
+              releases,
+            }),
+          ),
+        ),
       ),
     ),
 ).pipe(Command.withDescription("Review adapted imports against their origins"));
