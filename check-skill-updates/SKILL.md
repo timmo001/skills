@@ -60,7 +60,7 @@ skills:
         reviewed: "v0.28.14"
 ```
 
-The scheduled device agent handles these on its own: it reviews each behind skill, then opens `[Tag-only] Update <skill>` with auto-merge when only the tag moves, or `Update skill: <skill>` when the skill changes. Use the steps below to run a review by hand.
+The scheduled device agent handles these on its own, one tool release at a time: it moves the release's imports, reviews every behind skill that lists the tool, and opens one pull request for the release, `[Pin-only] Update <owner>/<repo> to <tag>` with auto-merge when only pins and tags move, or `Update <owner>/<repo> to <tag>` when a skill changes. Use the steps below to run a review by hand.
 
 1. Run `./dist/skill-maintenance skill-reviews --json`. The dashboard issue shows the same list under "Skill reviews".
 2. For each `release-available` item, read the release notes from the reviewed tag up to the latest (`gh release view <tag> --repo <repo>` for each tag in between) and compare them with the skill.

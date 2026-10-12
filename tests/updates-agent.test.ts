@@ -18,6 +18,10 @@ import {
   latestSuccessfulWorkflowRun,
   pinOnlyChange,
   recoverUpdateBranches,
+  releaseGroups,
+  releaseGroupsNeedingWork,
+  releaseGroupTitles,
+  releasePinOnlyChange,
   renderSkillsEntry,
   renderSkillUpdatesBenchmark,
   renderUpstreamChanges,
@@ -42,6 +46,7 @@ import {
   renderSkillsFile,
 } from "../src/imports/metadata.js";
 import { parseNameStatus } from "../src/imports/upstream.js";
+import type { Mutable } from "effect/Types";
 import {
   CommandError,
   CommandExecutor,
@@ -592,6 +597,202 @@ describe("updates agent policies", () => {
       for (const [label, after, skill, expected] of cases)
         expect(pinOnlyChange(before, after, skill), label).toBe(expected);
     }),
+  );
+
+  it.effect(
+    "groups each tool release's imports and reviews into one unit",
+    () =>
+      Effect.sync(() => {
+        const item = (
+          name: string,
+          origin: string,
+          release: string | undefined,
+          storedSha: string,
+          upstreamSha: string,
+        ) => {
+          const report: Mutable<Parameters<typeof releaseGroups>[0][number]> = {
+            name,
+            state: "update-available",
+            origin,
+            storedSha,
+            upstreamSha,
+            localEdits: [],
+          };
+
+          if (release) report.release = release;
+
+          return report;
+        };
+
+        const groups = releaseGroups(
+          [
+            item(
+              "core",
+              "https://github.com/Org/Tool/tree/main/core",
+              "v2",
+              "a".repeat(40),
+              "b".repeat(40),
+            ),
+            // Already at the release, so it adds nothing.
+            item(
+              "extra",
+              "https://github.com/org/tool/tree/main/extra",
+              "v2",
+              "c".repeat(40),
+              "c".repeat(40),
+            ),
+            // Follows its branch, so it stays on the per-skill path.
+            item(
+              "other",
+              "https://github.com/org/other/tree/main/other",
+              undefined,
+              "a".repeat(40),
+              "b".repeat(40),
+            ),
+          ],
+          [
+            {
+              skill: "reviewer",
+              repo: "org/tool",
+              state: "release-available",
+              reviewed: "v1",
+              latest: "v2",
+              url: "https://release",
+            },
+            {
+              skill: "current",
+              repo: "org/tool",
+              state: "up-to-date",
+              reviewed: "v2",
+              latest: "v2",
+              url: "https://release",
+            },
+          ],
+        );
+
+        expect(groups).toEqual([
+          {
+            repo: "org/tool",
+            tag: "v2",
+            imports: [
+              { name: "core", upstreamSha: "b".repeat(40), adapted: false },
+            ],
+            reviews: [{ skill: "reviewer", reviewed: "v1" }],
+          },
+        ]);
+
+        const covering = (reviewed: string): SkillsFile => ({
+          skills: {
+            core: { import: exampleImport("b".repeat(40), []) },
+            reviewer: { tools: [{ repo: "org/tool", reviewed }] },
+          },
+        });
+
+        const [content] = releaseGroupTitles("org/tool", "v2");
+
+        expect(
+          releaseGroupsNeedingWork(groups, [
+            { title: content ?? "", after: covering("v2") },
+          ]),
+        ).toEqual([]);
+        // A pull request that leaves a member behind does not cover the release.
+        expect(
+          releaseGroupsNeedingWork(groups, [
+            { title: content ?? "", after: covering("v1") },
+          ]),
+        ).toEqual(groups);
+      }),
+  );
+
+  it.effect(
+    "auto-merges a release group only when its members' pins move",
+    () =>
+      Effect.sync(() => {
+        const file = (
+          sha: string,
+          reviewed: string,
+          otherReviewed = "v1",
+          localEdits: readonly string[] = [],
+        ): SkillsFile => ({
+          skills: {
+            core: { import: exampleImport(sha, localEdits) },
+            reviewer: { tools: [{ repo: "org/tool", reviewed }] },
+            unrelated: {
+              tools: [{ repo: "org/else", reviewed: otherReviewed }],
+            },
+          },
+        });
+
+        const members = ["core", "reviewer"];
+        const before = file("a".repeat(40), "v1");
+
+        const cases: readonly [string, SkillsFile, boolean][] = [
+          ["SHA and tag move", file("b".repeat(40), "v2"), true],
+          ["tag move only", file("a".repeat(40), "v2"), true],
+          ["nothing moved", before, false],
+          [
+            "an unrelated skill changed",
+            file("b".repeat(40), "v2", "v2"),
+            false,
+          ],
+          [
+            "a member's local edits changed",
+            file("b".repeat(40), "v2", "v1", ["adapted"]),
+            false,
+          ],
+        ];
+
+        for (const [label, after, expected] of cases)
+          expect(releasePinOnlyChange(before, after, members), label).toBe(
+            expected,
+          );
+      }),
+  );
+
+  it.effect("accepts a valid pin-only release group pull request", () =>
+    Effect.gen(function* () {
+      yield* validatePullRequestPolicy("/repo", 4);
+    }).pipe(
+      Effect.provide(
+        skillsFilesLayer(
+          {
+            skills: {
+              example: { import: exampleImport("a".repeat(40), []) },
+              reviewer: { tools: [{ repo: "org/repo", reviewed: "v1" }] },
+            },
+          },
+          {
+            skills: {
+              example: { import: exampleImport("b".repeat(40), []) },
+              reviewer: { tools: [{ repo: "org/repo", reviewed: "v2" }] },
+            },
+          },
+        ),
+      ),
+      Effect.provide(
+        githubLayer((args) => {
+          const title = "[Pin-only] Update org/repo to v2";
+
+          if (args[0] === "pr" && args[1] === "diff")
+            return Effect.succeed(shaOnlyPatch("a".repeat(40), "b".repeat(40)));
+
+          if (args[0] === "pr" && args[1] === "view")
+            return Effect.succeed(
+              JSON.stringify({
+                title,
+                headRefOid: "d".repeat(40),
+                state: "OPEN",
+                mergedAt: null,
+                assignees: [{ login: "timmo001" }],
+                autoMergeRequest: { mergeMethod: "SQUASH" },
+                commits: [{ oid: "c".repeat(40), messageHeadline: title }],
+              }),
+            );
+
+          return Effect.succeed('[{"number":5}]');
+        }),
+      ),
+    ),
   );
 
   it.effect(
