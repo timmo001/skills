@@ -370,3 +370,10 @@ repositories:
       - testing
       - types-enforce-ts
       - writing-style
+  timmo001/app-opencode:
+    skills:
+      - effect
+      - effect-service-design
+      - task-runners
+      - types-enforce-ts
+      - writing-style
