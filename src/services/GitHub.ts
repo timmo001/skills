@@ -3,7 +3,6 @@ import {
   Gh,
   Issue,
   RateLimit,
-  Workflow,
   httpStatus,
   isTransient,
   type GhError,
@@ -69,8 +68,7 @@ export interface GitHubService {
 }
 
 /** Failures effect-gh operations can raise, including rejected inputs. */
-export type GhOperationError =
-  GhError | Issue.InvalidInput | Workflow.InvalidOptions;
+export type GhOperationError = GhError | Issue.InvalidInput;
 
 const isNetworkFailure = (error: GitHubError) =>
   error.status === null &&
@@ -89,8 +87,7 @@ export const fromGhError = (
   command: string,
   error: GhOperationError,
 ): GitHubError =>
-  error instanceof Issue.InvalidInput ||
-  error instanceof Workflow.InvalidOptions
+  error instanceof Issue.InvalidInput
     ? new GitHubError({
         command,
         exitCode: 0,
@@ -141,6 +138,14 @@ const fromCommandError = (command: string, error: GhError) =>
           command,
           exitCode: -1,
           stderr: `Command output passed ${error.limitBytes} bytes`,
+          status: null,
+          retryable: false,
+        }),
+      GhInvalidOptionsError: (error) =>
+        new GitHubError({
+          command,
+          exitCode: 0,
+          stderr: String(error.cause),
           status: null,
           retryable: false,
         }),
