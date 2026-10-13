@@ -57,7 +57,7 @@ skills:
       distribution: external
   decision-models:
     import:
-      upstreamSha: 798a9b56477c9d8ab457aa3887a71c5103acedd4
+      upstreamSha: db34aa046e831faf16e5b8da707b40f7acb88164
       origin: "https://github.com/ollaya-dev/ollaya/tree/main/skills/ollaya-decisions"
       sourceName: "ollaya-decisions"
       license: "Apache-2.0"
@@ -73,7 +73,7 @@ skills:
       - repo: ollama/ollama
         reviewed: "v0.40.3"
       - repo: ollaya-dev/ollaya
-        reviewed: "v0.12.1"
+        reviewed: "v0.13.0"
   diagnose:
     import:
       upstreamSha: f3fc5632f401156837ee3872f14fe33ccf1024ea
