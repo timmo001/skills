@@ -21,7 +21,7 @@ Ask only when the answer changes the work, and never ask cold. The user reads th
 - Repository conventions or the user's earlier choices give a safe default and the impact is low.
 - The step is routine and safe; do not ask permission for it.
 - The user has made a clear choice or set a limit; follow it rather than confirming it.
-- The turn's job is to present something: research findings, an explanation, a diagnosis, or a review. Present it and end the turn. Offer next steps in prose, and let the user react before asking anything. Ask in the same turn only if a decision genuinely blocks work you were asked to continue.
+- The turn's job is to present something: research findings, an explanation, a diagnosis, or a review. Present it first and don't open with a question. A closing offer or question is fine, but it still needs an answer, so it follows How to Ask below.
 - The user wants light or full grilling or plan stress-testing; use `grilling` or `/grill`.
 
 ## Divert to Grilling
@@ -48,9 +48,10 @@ Each question must make sense from the chat directly above it. If the thing bein
 ## How to Ask
 
 - Ask the fewest questions that unblock the work, ideally one and at most three in a pass.
-- When the `plannotator_inbox` tool is available, send blocking questions to the Plannotator Inbox by default, as `:::question` blocks, even if the user never mentioned it. The user may read it away from the terminal, so the message carries its own short explainer and recommendation. Also ask the same question in plain chat at the end of the response, so the user can answer in either place. Don't use a blocking structured question tool alongside it: it holds the turn open, so the Inbox reply can't arrive.
-- An offer that ends a turn ("Want me to...?", "Shall I...?") is a question the user has to answer, so it goes to the Inbox and chat the same way. If it isn't worth sending, state the next step in prose instead of asking.
-- Ask in chat alone when the user says to, or asked their question in chat expecting a quick answer.
+- When the `plannotator_inbox` tool is available, send every question that needs an answer to the Plannotator Inbox, as `:::question` blocks, even if the user never mentioned it. This applies whether or not the work has started and whether or not the answer blocks anything. The user may read it away from the terminal, so the message carries its own short explainer and recommendation. Also ask the same question in plain chat at the end of the response, so the user can answer in either place. Don't use a blocking structured question tool alongside it: it holds the turn open, so the Inbox reply can't arrive.
+- An offer that ends a turn ("Want me to...?", "Shall I...?", "Do you want me to fix this now?") is a question the user has to answer, so it goes to the Inbox and chat the same way. If it isn't worth sending, state the next step in prose instead of asking.
+- When the turn also reports an outcome (findings, a result, or where work stopped), put the question in that status update rather than sending a separate message.
+- Ask in chat alone only when the user says to.
 - Otherwise use the client's structured question capability when available, or ask concisely in chat.
 - Prefer concrete options over open prompts. Put the recommended option first and mark it `(Recommended)`.
 - Do not ask the user to reply with numbered text when the client captures structured choices.
