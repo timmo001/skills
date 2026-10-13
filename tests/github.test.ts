@@ -259,6 +259,7 @@ describe("GitHub SDK boundary", () => {
         "PATCH",
         "--input",
         "-",
+        "--allow-escape-sequences",
         "--",
         endpoint,
       ]);
