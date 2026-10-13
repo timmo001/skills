@@ -27,7 +27,7 @@ skills:
   asking-questions:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.18"
+        reviewed: "v0.28.19"
   bro:
     import:
       upstreamSha: cbd1929589267453029859a43d2ecf411c865b54
@@ -40,7 +40,7 @@ skills:
   change-review-handoff:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.18"
+        reviewed: "v0.28.19"
   cloudflare:
     import:
       upstreamSha: c430dd965cea3a8faf0ef035e3b3d73b38518081
