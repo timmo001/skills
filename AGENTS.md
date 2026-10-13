@@ -45,4 +45,4 @@ mise exec npm:skills -- skills add . --list
 
 ## After Committing
 
-- After every commit to this repository, ask whether to run `dot update` so this machine picks up the change. `dot update` reads `main` from the remote, so if the commit has not been pushed, say it needs a push first.
+- Every change here only reaches this machine through `dot update`, so offer "Run `dot update`" in the next-steps question alongside commit and push. `dot update` reads `main` from the remote, so it needs the push first; say so when the user picks it without pushing.
