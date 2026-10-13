@@ -75,4 +75,8 @@ When the user changes a decision after a plan is drafted, perform a contradictio
 
 ## Finish Planning
 
-Keep the output planning-focused and make no implementation edits while planning. When the client's plan mode hands the plan to a review tool on exit, end by leaving plan mode. Otherwise, when the `plannotator_inbox` tool is available, send the plan itself to the Inbox (attached as a file when it's long, never "the plan is in chat") with a `:::question` asking to approve it, change it, or stop, ask the same in chat, and end the turn.
+Keep the output planning-focused and make no implementation edits while planning. Approval goes through a Plannotator review, which has Approve and Send feedback, never an Inbox question:
+
+- When the client's plan mode hands the plan to a review on exit, end by leaving plan mode.
+- Otherwise save the plan to a file and open it with the `plannotator` tool's `annotate` action and `gate: true` (or `plannotator annotate <file> --gate --json` without the tool).
+- When the `plannotator_inbox` tool is available, also send an Inbox status update in the same turn with the plan in short and a link to the open review. End it with a `:::question-text` block whose prompt sends the user to the review (for example "Approve or send feedback in the plan review" with the review URL linked) and a `Stopped:` line, so the thread shows it is waiting. Treat a text answer there as plan feedback; the review stays the place to approve.
