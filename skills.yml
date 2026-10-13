@@ -162,7 +162,7 @@ skills:
   herdr-workflows:
     tools:
       - repo: herdrdev/herdr
-        reviewed: "v0.9.3"
+        reviewed: "v0.9.4"
   home-assistant:
     import:
       upstreamSha: c84d5eac8683c4068b929d31086956700361287e
@@ -241,7 +241,7 @@ skills:
   session-coordination:
     tools:
       - repo: herdrdev/herdr
-        reviewed: "v0.9.3"
+        reviewed: "v0.9.4"
   show-me:
     import:
       upstreamSha: bba9d13ab34f0a87f1cc33df4dd196372393ddfc
@@ -256,7 +256,7 @@ skills:
   task-focus:
     tools:
       - repo: herdrdev/herdr
-        reviewed: "v0.9.3"
+        reviewed: "v0.9.4"
   terminal-control:
     import:
       upstreamSha: b0a4d8b43977e026dc5d5aa07760bce9e677b90d
