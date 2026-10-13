@@ -75,4 +75,4 @@ When the user changes a decision after a plan is drafted, perform a contradictio
 
 ## Finish Planning
 
-Keep the output planning-focused and make no implementation edits while planning. End by stating that execution can continue after approval, then leave plan mode.
+Keep the output planning-focused and make no implementation edits while planning. When the client's plan mode hands the plan to a review tool on exit, end by leaving plan mode. Otherwise, when the `plannotator_inbox` tool is available, send the plan itself to the Inbox (attached as a file when it's long, never "the plan is in chat") with a `:::question` asking to approve it, change it, or stop, ask the same in chat, and end the turn.

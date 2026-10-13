@@ -47,5 +47,5 @@ Research feeds the thinking, it does not replace it. A visible plan is not alway
 - When the findings leave a clear, bounded implementation, offer to continue with an edit-capable agent or mode.
 - Do not treat completed research as permission to edit. Wait for explicit authorisation to continue.
 - Present the findings in chat first. Do not replace or preface them with a question.
-- Send a short summary of the findings to the Plannotator Inbox as a status update when the `plannotator_inbox` tool is available, with any closing offer or question in the same message (see `asking-questions`).
+- Send the findings to the Plannotator Inbox as a status update when the `plannotator_inbox` tool is available: the findings themselves with their citations, not a pointer to chat, and any closing offer or question as a `:::question` block in the same message (see `asking-questions`).
 - If a material unknown remains, stop before implementation. For a bounded choice, ask it through `asking-questions`; recommend the client's planning workflow for broader sequencing, and recommend the grilling workflow for question-led stress-testing.
