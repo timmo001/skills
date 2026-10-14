@@ -62,6 +62,7 @@ Details, reasoning, and trade-offs go in the chat above. The question and its op
 
 - One question, one decision. Write it as a direct, short sentence that names the concrete thing being decided.
 - Option labels name the choice in a few words; option descriptions add only the key consequence in one short sentence.
+- Say who acts only where either of you could plausibly do it, such as adding a device in a UI, and add the role in brackets: "I (the agent) add the laptop" and "You (the user) add it in the UI". A bare "I'll add it" reads as the user's own voice. Where it's obvious who acts, such as the agent committing, pushing or editing, leave it out: "Commit and push both now", "Leave uncommitted".
 - Use the concrete facts: file paths, names, commands, and values, not vague terms like "the approach" or "this change".
 - No filler, hedging, preamble, restated context, jargon, or process terms.
 - Do not repeat the explainer inside the question or its options.
@@ -76,4 +77,5 @@ Details, reasoning, and trade-offs go in the chat above. The question and its op
 - Until a must-have answer arrives, do not edit files or run state-changing commands.
 - If the user says to proceed without answering, state the assumptions in a sentence and continue with the safest defaults.
 - After the answer, restate the resulting requirement in one or two sentences. Carry on only with what the answer actually authorised. Answering a design or clarifying question settles that detail; it is not approval to start implementing. If the work was still at the discussion or proposal stage, present the updated plan and wait for the go-ahead before editing.
+- If the answer leaves who does the work unclear, or the user replies with a remark or observation ("that should have been allowed", "this is missing") rather than an instruction, treat it as information. Ask before changing anything because of it, and say why you're asking: that you read it as information rather than an instruction, and what you would change if it was meant as one.
 - Do not turn clarification into a multi-round interview. If a second round looks needed, divert to grilling as above.
