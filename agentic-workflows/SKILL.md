@@ -31,13 +31,13 @@ compiled to GitHub Actions lock files.
      also read `debug-security-review.md`
    - AWF model or endpoint 400s, silent cross-family sub-agent failures,
      `model: auto` failures, install-step 404s after a version pin, or
-     questions about version fields: go straight to the "Model and engine
-     misconfiguration" section of `debug-agentic-workflow.md` before
-     suggesting model changes
+     questions about version fields: go straight to
+     `debug-model-engine-misconfiguration.md` before suggesting model changes
    - upgrade: `upgrade-agentic-workflows.md`
    - engine setup: `configure-agentic-engine.md`
-   - agent runtime, Docker, gVisor, Docker sbx, ARC DinD, self-hosted
-     runners, or runtime installation: `agent-runtime-instructions.md`
+   - agent runtime, Docker, Cloud Hypervisor, ARC DinD, self-hosted runners,
+     or runtime installation: `agent-runtime-instructions.md` (the gVisor and
+     Docker sbx runtimes have been removed)
    - shared workflows or MCP wrappers: `create-shared-agentic-workflow.md`
    - agentic chat: `agentic-chat.md`
    - evaluations and experiments: `evals.md` and `experiments.md`
