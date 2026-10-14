@@ -147,7 +147,7 @@ skills:
         - "limit the upstream yes-accepts-recommendation rule to yes/no questions"
   ha-bridge-cli:
     import:
-      upstreamSha: 7f56ca1ace8350cfa28e53fd4ea095b2aa055af7
+      upstreamSha: 932bccf7466f397da851ecc159bf51db2f75d5bc
       origin: "https://github.com/timmo001/ha-bridge/tree/main/skills/ha-bridge-cli"
       license: "Apache-2.0"
       localEdits: []
@@ -165,7 +165,7 @@ skills:
         reviewed: "v0.9.4"
   home-assistant:
     import:
-      upstreamSha: c84d5eac8683c4068b929d31086956700361287e
+      upstreamSha: 932bccf7466f397da851ecc159bf51db2f75d5bc
       origin: "https://github.com/timmo001/ha-bridge/tree/main/skills/home-assistant"
       license: "Apache-2.0"
       localEdits: []
