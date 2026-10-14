@@ -144,7 +144,7 @@
         "source": "git-subdir",
         "url": "timmo001/ha-bridge",
         "path": "skills/ha-bridge-cli",
-        "sha": "7f56ca1ace8350cfa28e53fd4ea095b2aa055af7"
+        "sha": "932bccf7466f397da851ecc159bf51db2f75d5bc"
       }
     },
     {
@@ -174,7 +174,7 @@
         "source": "git-subdir",
         "url": "timmo001/ha-bridge",
         "path": "skills/home-assistant",
-        "sha": "c84d5eac8683c4068b929d31086956700361287e"
+        "sha": "932bccf7466f397da851ecc159bf51db2f75d5bc"
       }
     },
     {
