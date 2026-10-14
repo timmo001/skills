@@ -147,7 +147,7 @@ skills:
         - "limit the upstream yes-accepts-recommendation rule to yes/no questions"
   ha-bridge-cli:
     import:
-      upstreamSha: 14ed8221a0009cfdc2244f106dd74bb1dca5ff93
+      upstreamSha: 95ae7fea4cd5e15c075e441416269b7bfd0d1db8
       origin: "https://github.com/timmo001/ha-bridge/tree/main/skills/ha-bridge-cli"
       license: "Apache-2.0"
       localEdits: []
