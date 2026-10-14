@@ -68,8 +68,8 @@ validation, and is the proof the change applied.
 
 - New files: `git -C <dir> add -N <path>` so they show in the diff.
 - Deleted targets: remove the file.
-- Leave the "after" side uncommitted. The working tree against the commits is
-  the diff.
+- Leave the "after" side uncommitted until the user approves it. The working
+  tree against the commits is the diff.
 
 If a read-back differs from what you meant to apply, say so; that is a
 finding, not noise.
@@ -81,9 +81,10 @@ finding, not noise.
 2. Open it for review: the `plannotator` tool's `review` action with `target`
    set to the scratch directory (or `plannotator review` run there). The user
    gets line comments and approval as for code.
-3. Write the whole diff to a patch file beside the scratch directory, `git -C
-   <dir> diff --output=<dir>.diff`. It is the record to refer back to later
-   without the review tool, so write it every time, however small the change.
+3. Write the diff to a patch file beside the scratch directory, numbered per
+   round, `git -C <dir> diff --output=<dir>-<n>.diff`. It is the record to
+   refer back to later without the review tool, so write it every time,
+   however small the change, and don't overwrite an earlier round's file.
 4. Report it, in the Inbox when available and in chat: a link to the review,
    the patch file attached (and its path), the targets changed with line
    counts, a short `diff` block of the main hunks, and anything you could not
@@ -97,11 +98,27 @@ finding, not noise.
      deploy doesn't undo it.
 
 Feedback on the review works as for code: make the change on the live system,
-read it back into the same file, rewrite the patch file, and reopen the review.
+read it back into the same file, rewrite that round's patch file, and reopen
+the review.
+
+## After Approval
+
+Once the user approves a round, or chooses to keep it, commit its "after"
+side so the next round's review shows only the new change:
+
+```bash
+git -C <dir> add -A
+git -C <dir> commit -q -m "After: <what changed>"
+```
+
+The full history stays in the scratch repository. When the user asks for the
+whole task's changes in one diff, combine them: for each target, diff its
+first "Before" commit against the current state, `git -C <dir> diff
+<before-commit> -- <path>`, or concatenate the round patch files.
 
 ## Rolling Back
 
-The "after" side is never committed, so `git -C <dir> show HEAD:<path>`
-prints a target's "before". Apply it through the system's own tool, then read
-the target back again: when the rollback worked, its file drops out of
-`git diff`. A target that was created has no "before"; delete it instead.
+`git -C <dir> show <before-commit>:<path>` prints a target's "before"; for
+a round still awaiting approval that is `HEAD:<path>`. Apply it through the
+system's own tool, then read the target back again and confirm it matches. A
+target that was created has no "before"; delete it instead.
