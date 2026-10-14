@@ -1,7 +1,7 @@
 ---
 name: decision-models
-description: "Make typed, calibrated decisions about text, JSON or images with decision models, locally through Ollaya or Ollama or hosted as Cloudflare Clef on Workers AI: classify (choice), rate (score) or check a yes/no statement (noul), with probabilities you can threshold. Use it to triage tickets and emails, route requests, moderate posts, screen prompts for jailbreaks or injections, or any step where the agent needs a quick judgement it can act on, instead of reasoning it out in text. Also use it whenever the user names a decision model such as laya, winnow, tev1, nimble, clef or clef-flash, which are models, not commands. Works through the Ollaya MCP server (the `decide` tool), the `ollaya` CLI or local HTTP API, Ollama's local HTTP API, or the Cloudflare API MCP server."
-compatibility: Requires a local runtime, either Ollaya (CLI, MCP server or HTTP API) or Ollama 0.35.0 or later (HTTP API), plus nvidia-smi on machines with an NVIDIA GPU, or hosted Cloudflare Clef on Workers AI through the Cloudflare API MCP server or an authenticated API token. Hosted requests are billed per input token beyond the free daily allocation.
+description: "Make typed, calibrated decisions about text, JSON or images with decision models, locally through Ollaya or Ollama or hosted as Cloudflare Clef on Workers AI: classify (choice), rate (score) or check a yes/no statement (noul), with probabilities you can threshold. Use it to triage tickets and emails, route requests, moderate posts, screen prompts for jailbreaks or injections, or any step where the agent needs a quick judgement it can act on, instead of reasoning it out in text. Also use it whenever the user names a decision model such as laya, winnow, tev1, nimble, clef or clef-flash, which are models, not commands. Works through the Ollaya MCP server (the `decide` tool), the `ollaya` CLI or local HTTP API, the `ollama` CLI or Ollama's local HTTP API, or the Cloudflare API MCP server."
+compatibility: Requires a local runtime, either Ollaya (CLI, MCP server or HTTP API) or Ollama 0.35.0 or later (HTTP API, or the CLI from 0.40.4), plus nvidia-smi on machines with an NVIDIA GPU, or hosted Cloudflare Clef on Workers AI through the Cloudflare API MCP server or an authenticated API token. Hosted requests are billed per input token beyond the free daily allocation.
 license: Apache-2.0
 ---
 
@@ -36,8 +36,8 @@ Two local runtimes serve decision models over the same TypeSafe API: Ollaya and 
 is preferred; use whichever is installed. Cloudflare hosts Clef on Workers AI.
 
 Model names such as `laya`, `winnow:e4b` and `clef` are models, not commands (see "Picking a
-model"); there is no `laya` command. Don't search for one. Run them with `ollaya run <model>`, the
-`decide` tool, or either runtime's HTTP API.
+model"); there is no `laya` command. Don't search for one. Run them with `ollaya run <model>`,
+`ollama run <model> --ask`, the `decide` tool, or either runtime's HTTP API.
 
 Check what is available once per session:
 
@@ -118,13 +118,30 @@ enough (see below).
 
 ### Ollama
 
-HTTP only: Ollama's CLI and its Python and JavaScript libraries can't run decision models yet.
-Pull the model first (`ollama pull tev1`), then:
+Pull the model first (`ollama pull tev1`). Ollama's Python and JavaScript libraries can't run
+decision models yet.
 
-```sh
-curl -s http://127.0.0.1:11434/v1/systemone -H 'Content-Type: application/json' \
-  -d '{"model": "tev1", "state": "…", "questions": {…}}'
-```
+1. **CLI** (Ollama 0.40.4 or later): `ollama run <model>` takes the state after the model name or
+   on stdin, text or JSON. Each `--ask` is a yes/no question unless `--choice` labels (a
+   `choice`) or `--level` levels, lowest first (a `score`), follow it:
+
+   ```sh
+   ollama run tev1 --ask "Is a refund being requested?" --format json < ticket.txt
+   ollama run tev1 --ask "Which team should handle this?" \
+     --choice billing="Payments and refunds" --choice technical="Software problems" \
+     --ask "How urgent is this?" --level Routine --level Soon --level Immediate \
+     --format json < ticket.txt
+   ```
+
+   Use `--format json` for the full response with probabilities; without it each answer prints
+   as a rounded summary line. Answers are keyed by the question text; use HTTP when you need
+   your own keys.
+2. **HTTP**:
+
+   ```sh
+   curl -s http://127.0.0.1:11434/v1/systemone -H 'Content-Type: application/json' \
+     -d '{"model": "tev1", "state": "…", "questions": {…}}'
+   ```
 
 Send 1 to 64 questions per request; `choice` and `score` take 2 to 26 options. `clef` and
 `clef-flash` also take base64 PNG, JPEG or WebP images in `images`. Ollama has no presets: copy a

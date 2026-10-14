@@ -68,10 +68,10 @@ skills:
         - "added a cascade that starts on winnow:e4b with an NVIDIA GPU or laya on CPU and escalates unclear answers to local or hosted Clef"
         - "replaced the upstream model advice with a pointer to that cascade"
         - "retained hosted Clef support and the local decision cascade alongside the upstream Arbiter model entry"
-        - "added Ollama's HTTP API as an equal local runtime alongside Ollaya, with its decision models in the cascade"
+        - "added Ollama's CLI and HTTP API as an equal local runtime alongside Ollaya, with its decision models in the cascade"
     tools:
       - repo: ollama/ollama
-        reviewed: "v0.40.3"
+        reviewed: "v0.40.4"
       - repo: ollaya-dev/ollaya
         reviewed: "v0.13.0"
   diagnose:
