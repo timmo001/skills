@@ -57,6 +57,7 @@ These are agent-agnostic in format, but their workflows or specific branches dep
 | `pitchfork-dev-servers` | Project-declared dev-server runtime and tasks; Pitchfork and daemon configuration only for the fallback tier. The hosting standard assumes Pitchfork's HTTPS proxy is set up on the machine (`pitchfork proxy setup`). |
 | `pkexec-root` | Linux with polkit/pkexec; pacman or yay for Arch package operations, sudo as fallback. |
 | `release-oxlint-rules` | Writable central Oxlint rules checkout, mise, Bun, npm, and registry access; authenticated GitHub CLI and release access for publication. |
+| `remote-change-diff` | Git for the scratch repository; Plannotator, through its agent tool or CLI, for the review and the Plannotator Inbox for the report when available; whatever tool reads the target system. |
 | `safe-process-signals` | Linux shell process tools, including pgrep, pkill, killall, and timeout. |
 | `shared-workflows` | Authenticated GitHub access and consumer and owner-selected shared GitHub Actions workflow source, including pinned historical revisions. |
 | `wrangler` | Project-local Wrangler dependency, supported Node.js runtime, and Cloudflare authentication for remote operations. |
