@@ -186,7 +186,7 @@ skills:
       distribution: external
   opentui:
     import:
-      upstreamSha: d31b290903389b203d7b1e17afc32b633e019059
+      upstreamSha: 212eb27da4adf5b907031ad153fc6a5b9f713fbf
       origin: "https://github.com/anomalyco/opentui/tree/main/packages/web/src/content"
       license: "MIT"
       localEdits: []
