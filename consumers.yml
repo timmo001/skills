@@ -377,3 +377,14 @@ repositories:
       - task-runners
       - types-enforce-ts
       - writing-style
+  timmo001/aiolyric:
+    skills:
+      - changeset-scope
+      - code-review
+      - diagnose
+      - effect-principles
+      - maintain-docs
+      - skill-prefixes
+      - task-runners
+      - testing
+      - writing-style
