@@ -779,9 +779,10 @@ export function isShaOnlySkillPatch(patch: string, skill: string): boolean {
   }
 
   const metadata = changes.get(SKILLS_FILE);
+  const marketplace = changes.get(MARKETPLACE_FILE);
 
   if (
-    changes.size !== 1 ||
+    changes.size !== (marketplace ? 2 : 1) ||
     !metadata ||
     metadata.removed.length !== 1 ||
     metadata.added.length !== 1
@@ -791,10 +792,23 @@ export function isShaOnlySkillPatch(patch: string, skill: string): boolean {
   // The file's only changed lines are this skill's old and new pin.
   const pin = skillYamlChanges(patch).get(skill);
 
+  if (
+    pin?.removedSha === undefined ||
+    pin.addedSha === undefined ||
+    pin.removedSha === pin.addedSha
+  )
+    return false;
+
+  // An external import's marketplace entry moves to the same pin.
+  const marketplacePin = (lines: readonly string[]) =>
+    lines.length === 1
+      ? lines[0]?.match(/^\s*"sha": "([0-9a-f]{40})",?$/)?.[1]
+      : undefined;
+
   return (
-    pin?.removedSha !== undefined &&
-    pin.addedSha !== undefined &&
-    pin.removedSha !== pin.addedSha
+    !marketplace ||
+    (marketplacePin(marketplace.removed) === pin.removedSha &&
+      marketplacePin(marketplace.added) === pin.addedSha)
   );
 }
 
@@ -1706,15 +1720,17 @@ export const validatePullRequestPolicy = Effect.fn(
 
     const commitsValid = !!skill && commitMatches;
 
-    // A pin-only change touches only skills.yml, and only the skill's pins.
+    // A pin-only change touches only skills.yml, and only the skill's pins,
+    // plus the marketplace pin when an external import's SHA moves.
     const files = yield* pullRequestSkillsFiles(root, number);
     const kind = skill ? pinOnlyChange(files.before, files.after, skill) : null;
 
     const pinOnly =
       kind !== null &&
-      [...patch.matchAll(/^diff --git a\/(.+) b\/(.+)$/gm)].every(
+      ([...patch.matchAll(/^diff --git a\/(.+) b\/(.+)$/gm)].every(
         ([, from, to]) => from === SKILLS_FILE && to === SKILLS_FILE,
-      );
+      ) ||
+        (kind === "sha" && !!skill && isShaOnlySkillPatch(patch, skill)));
 
     const pinValid =
       !!pinTitle &&

@@ -888,25 +888,41 @@ describe("updates agent policies", () => {
     }),
   );
 
-  it.effect("scopes external pin changes without auto-merging them", () =>
+  it.effect("auto-merges external pin changes with their marketplace pin", () =>
     Effect.sync(() => {
       const oldSha = "a".repeat(40);
       const newSha = "b".repeat(40);
 
-      // An external pin also moves its marketplace pin, so it is never SHA-only.
-      const patch = [
-        ...skillsFileHeader,
-        ...pinHunk("example", oldSha, newSha),
+      const marketplace = (removed: string, added: string) => [
         "diff --git a/.claude-plugin/marketplace.json b/.claude-plugin/marketplace.json",
         "--- a/.claude-plugin/marketplace.json",
         "+++ b/.claude-plugin/marketplace.json",
         "@@ -1 +1 @@",
-        `-        "sha": "${oldSha}"`,
-        `+        "sha": "${newSha}"`,
+        `-        "sha": "${removed}"`,
+        `+        "sha": "${added}"`,
+      ];
+
+      const patch = [
+        ...skillsFileHeader,
+        ...pinHunk("example", oldSha, newSha),
+        ...marketplace(oldSha, newSha),
       ].join("\n");
 
-      expect(isShaOnlySkillPatch(patch, "example")).toBe(false);
+      expect(isShaOnlySkillPatch(patch, "example")).toBe(true);
       expect(isScopedSkillPatch(patch, "example")).toBe(true);
+      expect(skillUpdateSubject(patch, "example")).toBe(
+        "[SHA-only] Update example",
+      );
+      expect(
+        isShaOnlySkillPatch(
+          [
+            ...skillsFileHeader,
+            ...pinHunk("example", oldSha, newSha),
+            ...marketplace(oldSha, "c".repeat(40)),
+          ].join("\n"),
+          "example",
+        ),
+      ).toBe(false);
     }),
   );
 
