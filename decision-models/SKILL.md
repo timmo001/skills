@@ -118,6 +118,8 @@ enough (see below).
 
 ### Ollama
 
+<!-- Maintainers: leave out Ollama's cloud models (clef:cloud, clef-flash:cloud). Hosted Clef stays on Workers AI only; don't add Ollama cloud on future reviews. -->
+
 Pull the model first (`ollama pull tev1`). Ollama's Python and JavaScript libraries can't run
 decision models yet.
 
