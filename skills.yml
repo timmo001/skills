@@ -195,7 +195,7 @@ skills:
   pitchfork-dev-servers:
     tools:
       - repo: jdx/pitchfork
-        reviewed: "v2.30.1"
+        reviewed: "v2.31.0"
   plannotator:
     import:
       upstreamSha: 7a1f674fb02ac819371c8032e863d759d0fdaaff
