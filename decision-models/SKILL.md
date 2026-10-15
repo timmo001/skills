@@ -1,7 +1,7 @@
 ---
 name: decision-models
 description: "Make typed, calibrated decisions about text, JSON or images with decision models, locally through Ollaya or Ollama or hosted as Cloudflare Clef on Workers AI: classify (choice), rate (score) or check a yes/no statement (noul), with probabilities you can threshold. Use it to triage tickets and emails, route requests, moderate posts, screen prompts for jailbreaks or injections, or any step where the agent needs a quick judgement it can act on, instead of reasoning it out in text. Also use it whenever the user names a decision model such as laya, winnow, tev1, nimble, clef or clef-flash, which are models, not commands. Works through the Ollaya MCP server (the `decide` tool), the `ollaya` CLI or local HTTP API, the `ollama` CLI or Ollama's local HTTP API, or the Cloudflare API MCP server."
-compatibility: Requires a local runtime, either Ollaya (CLI, MCP server or HTTP API) or Ollama 0.35.0 or later (HTTP API, or the CLI from 0.40.4), plus nvidia-smi on machines with an NVIDIA GPU, or hosted Cloudflare Clef on Workers AI through the Cloudflare API MCP server or an authenticated API token. Hosted requests are billed per input token beyond the free daily allocation.
+compatibility: Requires a local runtime, either Ollaya (CLI, MCP server or HTTP API) or Ollama 0.35.0 or later (HTTP API, or the CLI from 0.40.4), plus nvidia-smi on machines with an NVIDIA GPU, or hosted Clef, either Cloudflare Clef on Workers AI through the Cloudflare API MCP server or an authenticated API token, or Ollama's cloud through Ollama 0.40.5 or later signed in to ollama.com. Hosted requests are billed per input token (on Workers AI, beyond the free daily allocation).
 license: Apache-2.0
 ---
 
@@ -75,6 +75,8 @@ the lightest model that suits the machine, and escalate only the answers it can'
    - On Workers AI, use `@cf/cloudflare/clef` when the unclear answer came from Clef-Flash (local
      `clef-flash` on Ollama or `clef` on Ollaya), and the default `@cf/cloudflare/clef-flash`
      otherwise. An answer still unclear on Ollaya's `clef` can escalate there too.
+   - With Ollama 0.40.5 or later signed in to ollama.com, `clef-flash:cloud` and `clef:cloud`
+     are a hosted alternative to Workers AI, picked the same way (see "Ollama's cloud").
 4. **Without a local runtime**, use hosted Clef on Workers AI from the start.
 
 - **The user's choice always wins.** If they name a runtime, provider or model
@@ -114,7 +116,7 @@ Ollaya, in this order:
    ```
 
 Hosted: **Cloudflare Clef on Workers AI**, for when no local runtime is available or strong
-enough (see below).
+enough (see below), or Clef on **Ollama's cloud** through a signed-in Ollama server.
 
 ### Ollama
 
@@ -147,6 +149,16 @@ Send 1 to 64 questions per request; `choice` and `score` take 2 to 26 options. `
 `clef-flash` also take base64 PNG, JPEG or WebP images in `images`. Ollama has no presets: copy a
 preset's questions from `ollaya://presets/<name>` when Ollaya is installed, or write your own
 (see "Presets" for what each one asks).
+
+#### Ollama's cloud
+
+From Ollama 0.40.5, `clef:cloud` and `clef-flash:cloud` run Clef and Clef-Flash on ollama.com
+through the local server, with no pull: use them as the model name in `/v1/systemone`. The
+server must be signed in (`ollama signin`), and they fail when cloud is
+disabled (`OLLAMA_NO_CLOUD=1` or `disable_ollama_cloud` in `~/.ollama/server.json`). Requests are
+billed and the state is sent to ollama.com, so prefer a local model for private content. Ollama's
+docs don't cover cloud decision limits or prices yet; check <https://ollama.com/pricing> rather
+than quoting them.
 
 ### Cloudflare Clef on Workers AI
 
@@ -214,7 +226,8 @@ Start with `winnow:e4b` on an NVIDIA GPU or `laya` without one, and escalate unc
 described in "Choose a runtime".
 
 The table lists Ollaya's models. Ollama's decision models are `laya`, `tev1` (4B, or
-`tev1:0.8b`), `nimble` (9B), `clef-flash` (9B) and `clef` (27B); see
+`tev1:0.8b`), `nimble` (9B), `clef-flash` (9B) and `clef` (27B), plus the hosted
+`clef-flash:cloud` and `clef:cloud`; see
 <https://ollama.com/search?c=decision> for the current list.
 
 ## Presets
