@@ -973,6 +973,17 @@ describe("updates agent policies", () => {
           "example",
         ),
       ).toBe(false);
+      expect(
+        isScopedSkillPatch(
+          [
+            "diff --git a/PORTABILITY.md b/PORTABILITY.md",
+            "diff --git a/example/SKILL.md b/example/SKILL.md",
+            "diff --git a/skills.sh.json b/skills.sh.json",
+            "diff --git a/skills.yml b/skills.yml",
+          ].join("\n"),
+          "example",
+        ),
+      ).toBe(true);
       expect(skillUpdateSubject("content changed", "example")).toBe(
         "Update skill: example",
       );

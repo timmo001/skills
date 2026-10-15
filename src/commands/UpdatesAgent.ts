@@ -826,6 +826,10 @@ export function isScopedSkillPatch(
     file === SKILLS_FILE ||
     file === CATALOGUE_FILE ||
     file === MARKETPLACE_FILE ||
+    // Repository guidance requires these when a skill's runtime or tool
+    // assumptions change.
+    file === "PORTABILITY.md" ||
+    file === "skills.sh.json" ||
     skills.some((name) => file.startsWith(`${name}/`));
 
   return (
