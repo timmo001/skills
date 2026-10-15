@@ -172,14 +172,18 @@ with the accounts tool first. Without the MCP, the same body works against
 `POST https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/run` with an API token that has
 Workers AI access. Add images to `input.images` when the decision depends on visual content.
 
-| Model | Use | Price |
-|---|---|---|
-| `@cf/cloudflare/clef-flash` (default) | Fast, cheap, strong on tool and intent decisions | $0.09 per M input tokens |
-| `@cf/cloudflare/clef` | Higher precision on fine-grained intent, out-of-scope detection, long or hallucination-sensitive states | $0.24 per M input tokens |
+| Model | Use |
+|---|---|
+| `@cf/cloudflare/clef-flash` (default) | Fast, the cheapest, strong on tool and intent decisions |
+| `@cf/cloudflare/clef` | Higher precision on fine-grained intent, out-of-scope detection, long or hallucination-sensitive states |
+| `@cf/cloudflare/clef-omni` | Audio and video in the state as well as text and images |
 
-Only input tokens are billed. The free allocation is 10,000 neurons per day: about 1.2M tokens on
-Clef-flash and about 450k on Clef. The response reports `usage.input_tokens`, and answers sit under
-`result.answers`. Workers AI has no presets: copy a preset's questions from
+Prices, context windows and the free daily allocation change, so never quote them from memory:
+look them up on each model's page (`https://developers.cloudflare.com/workers-ai/models/<model>/`)
+and the [Workers AI pricing page](https://developers.cloudflare.com/workers-ai/platform/pricing/)
+before estimating a cost. Only input tokens are billed. The response reports
+`usage.input_tokens`, so measure one real request and multiply rather than guessing. Answers sit
+under `result.answers`. Workers AI has no presets: copy a preset's questions from
 `ollaya://presets/<name>` or write your own. State data is sent to Cloudflare, so prefer a local
 runtime for private content.
 

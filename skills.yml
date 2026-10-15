@@ -69,6 +69,7 @@ skills:
         - "replaced the upstream model advice with a pointer to that cascade"
         - "retained hosted Clef support and the local decision cascade alongside the upstream Arbiter model entry"
         - "added Ollama's CLI and HTTP API as an equal local runtime alongside Ollaya, with its decision models in the cascade"
+        - "listed hosted Clef-omni and replaced the hosted Clef prices with a pointer to Cloudflare's live model and pricing pages"
     tools:
       - repo: ollama/ollama
         reviewed: "v0.40.4"
