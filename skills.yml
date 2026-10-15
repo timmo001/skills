@@ -23,7 +23,7 @@ skills:
         - "tests/: omitted (upstream repository guidance contract tests)"
     tools:
       - repo: github/gh-aw
-        reviewed: "v0.91.12"
+        reviewed: "v0.92.0"
   asking-questions:
     tools:
       - repo: backnotprop/plannotator
