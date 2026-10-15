@@ -298,6 +298,21 @@
       }
     },
     {
+      "name": "timmo-triage-resolve",
+      "description": "External import from timmo001/triage",
+      "license": "Apache-2.0",
+      "metadata": {
+        "skill": "triage-resolve"
+      },
+      "skills": "./",
+      "source": {
+        "source": "git-subdir",
+        "url": "timmo001/triage",
+        "path": "skills/triage-resolve",
+        "sha": "2c7dc6be769ca854b82eb27e6fcee31d7619ba30"
+      }
+    },
+    {
       "name": "timmo-workers-best-practices",
       "description": "External import from cloudflare/skills",
       "license": "Apache-2.0",
