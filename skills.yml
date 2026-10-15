@@ -287,7 +287,7 @@ skills:
       distribution: external
   triage-resolve:
     import:
-      upstreamSha: 2c7dc6be769ca854b82eb27e6fcee31d7619ba30
+      upstreamSha: c36da18bf776aa6fe8729106ff70bd31ac1ea0d6
       origin: "https://github.com/timmo001/triage/tree/main/skills/triage-resolve"
       license: "Apache-2.0"
       localEdits: []
