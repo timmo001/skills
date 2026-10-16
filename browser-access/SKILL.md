@@ -32,7 +32,7 @@ validation, explain:
 - Why the existing access cannot answer it.
 - The smallest browser check needed and its target.
 
-Ask through the question tool when available and wait for agreement before any
+Ask as `asking-questions` describes and wait for agreement before any
 browser tool call. Loading a browser skill or debugging entrypoint does not
 replace this permission step.
 

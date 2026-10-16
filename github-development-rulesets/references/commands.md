@@ -42,7 +42,7 @@ jq --slurpfile baseline "$WORK/development.json" '
 jq '.' "$WORK/policy-comparison.json"
 ```
 
-The comparison excludes required-check identities and ignores rule/bypass ordering. Review any remaining ordering or API-default differences for semantic equivalence. If the policy matches, use `update`. If it differs, show the differences and ask whether to migrate this ID to the bundled policy or create a new ruleset. Use the question tool when available, otherwise ask in chat. Record the answer before continuing.
+The comparison excludes required-check identities and ignores rule/bypass ordering. Review any remaining ordering or API-default differences for semantic equivalence. If the policy matches, use `update`. If it differs, show the differences and ask whether to migrate this ID to the bundled policy or create a new ruleset. Ask as `asking-questions` describes. Record the answer before continuing.
 
 For a selected existing ruleset, set `MODE` to `update` or `migrate`:
 

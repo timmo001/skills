@@ -23,7 +23,7 @@ than maintaining a second session registry in files.
   Name the assignments, repositories or areas, intended panes or workspaces,
   model and effort choices, and proposed concurrency. Task size alone is not
   evidence that a split will help.
-- Ask through the question tool whether to use that Herdr split or continue
+- Ask (see `asking-questions`) whether to use that Herdr split or continue
   directly. Wait for explicit agreement before creating worker sessions or their
   panes. A previous user instruction covering those launches is sufficient;
   selecting a coordinator profile, loading a skill, or expressing a general

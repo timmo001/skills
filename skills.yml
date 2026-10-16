@@ -145,7 +145,7 @@ skills:
       localEdits:
         - "preserve Light/Full intensity and materiality rules, defaulting to Light"
         - "use direct read-only investigation for fact-finding"
-        - "cap question-tool rounds at five questions"
+        - "cap rounds at five questions"
         - "present each round in chat first and keep questions concise via asking-questions"
         - "limit the upstream yes-accepts-recommendation rule to yes/no questions"
   ha-bridge-cli:
