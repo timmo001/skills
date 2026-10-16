@@ -1,7 +1,7 @@
 ---
 name: asking-questions
 license: Apache-2.0
-description: Decide when to ask the user a question and how to present it. Use before any clarifying question, choice, or confirmation, whether through the Plannotator Inbox, a structured question tool or in chat, and to decide whether to hold questions until findings are presented or divert to grilling; do not use to run light or full grilling rounds.
+description: Decide when to ask the user a question and how to present it. Use before any clarifying question, choice, or confirmation, whether through the Plannotator Inbox or in chat, and to decide whether to hold questions until findings are presented or divert to grilling; do not use to run light or full grilling rounds.
 ---
 
 # Asking Questions
@@ -36,7 +36,7 @@ Say why in a sentence and let the user choose. If the user has already asked to 
 
 ## Present Before Asking
 
-Every question follows visible chat in the same response. Thinking, tool input, and progress notes from earlier steps do not count, and a structured question tool shows only labels.
+Every question follows visible chat in the same response. Thinking, tool input, and progress notes from earlier steps do not count.
 
 1. If the user asked something, raised a doubt, or said "check first" or "explain", answer that first.
 2. Give a short summary of what you found that the choice depends on.
@@ -48,13 +48,12 @@ Each question must make sense from the chat directly above it. If the thing bein
 ## How to Ask
 
 - Ask the fewest questions that unblock the work, ideally one and at most three in a pass.
-- When the `plannotator_inbox` tool is available, send every question that needs an answer to the Plannotator Inbox, as `:::question` blocks, even if the user never mentioned it. This applies whether or not the work has started and whether or not the answer blocks anything. The user may read it away from the terminal, so the message carries its own short explainer and recommendation. Also ask the same question in plain chat at the end of the response, so the user can answer in either place. Don't use a blocking structured question tool alongside it: it holds the turn open, so the Inbox reply can't arrive.
+- When the `plannotator_inbox` tool is available, send every question that needs an answer to the Plannotator Inbox, as `:::question` blocks, even if the user never mentioned it. This applies whether or not the work has started and whether or not the answer blocks anything. The user may read it away from the terminal, so the message carries its own short explainer and recommendation. Also ask the same question in plain chat at the end of the response, so the user can answer in either place.
 - An offer that ends a turn ("Want me to...?", "Shall I...?", "Do you want me to fix this now?") is a question the user has to answer, so it goes to the Inbox and chat the same way. If it isn't worth sending, state the next step in prose instead of asking.
 - When the turn also reports an outcome (findings, a plan, a review, a result, or where work stopped), send the report itself in that Inbox message, never a pointer such as "ready in chat", and put the question in the same message. Anything that waits on the user, including "I'll edit once you approve", is a `:::question` block, not prose, so the thread shows it needs a reply. Sign-off on a plan, document or diff is the exception: it goes through a gated Plannotator review, and the Inbox message links to it (see `plan`).
-- Ask in chat alone only when the user says to.
-- Otherwise use the client's structured question capability when available, or ask concisely in chat.
-- Prefer concrete options over open prompts. Put the recommended option first and mark it `(Recommended)`.
-- Do not ask the user to reply with numbered text when the client captures structured choices.
+- Ask in chat alone only when the user says to, or when the Inbox is unavailable.
+- Never use a blocking structured question tool (OpenCode's `question`, Claude Code's `AskUserQuestion`), even if the client offers one: it holds the turn open, so an Inbox reply can't arrive and the session stalls until someone answers at the terminal.
+- Prefer concrete options over open prompts. Put the recommended option first and mark it as recommended.
 
 ## Wording
 

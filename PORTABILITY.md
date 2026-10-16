@@ -10,7 +10,7 @@ These skills use general engineering concepts and ordinary agent capabilities. T
 
 | Skill | Notes |
 | --- | --- |
-| `asking-questions` | Uses structured questions when available and falls back to chat; always explains in chat first. |
+| `asking-questions` | Asks through the Plannotator Inbox when available and in chat, never through a blocking question tool; always explains in chat first. |
 | `bro` | Reusable explicit-invocation response behaviour. |
 | `browser-access` | General evidence and permission workflow; uses the chosen browser driver's skill or documentation for tool mechanics. |
 | `changeset-scope` | No repository-specific dependency. |
