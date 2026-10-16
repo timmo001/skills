@@ -732,7 +732,11 @@ export const skillUpdatesAgentResultStatus = (
     : null;
 };
 
-export function isShaOnlySkillPatch(patch: string, skill: string): boolean {
+/**
+ * Each file's removed and added lines in a unified diff, or `null` when the
+ * diff renames a file, repeats one or has anything a plain edit would not.
+ */
+const patchFileChanges = (patch: string) => {
   const changes = new Map<string, { removed: string[]; added: string[] }>();
   let currentFile: string | undefined;
   let inHunk = false;
@@ -741,7 +745,7 @@ export function isShaOnlySkillPatch(patch: string, skill: string): boolean {
     const file = line.match(/^diff --git a\/(.+) b\/(.+)$/);
 
     if (file) {
-      if (file[1] !== file[2] || !file[1] || changes.has(file[1])) return false;
+      if (file[1] !== file[2] || !file[1] || changes.has(file[1])) return null;
       currentFile = file[1];
       changes.set(currentFile, { removed: [], added: [] });
       inHunk = false;
@@ -749,7 +753,7 @@ export function isShaOnlySkillPatch(patch: string, skill: string): boolean {
     }
 
     if (!currentFile) {
-      if (line) return false;
+      if (line) return null;
       continue;
     }
 
@@ -767,16 +771,28 @@ export function isShaOnlySkillPatch(patch: string, skill: string): boolean {
       )
         continue;
 
-      return false;
+      return null;
     }
 
     const change = changes.get(currentFile);
 
-    if (!change) return false;
+    if (!change) return null;
 
     if (line.startsWith("-")) change.removed.push(line.slice(1));
     else if (line.startsWith("+")) change.added.push(line.slice(1));
   }
+
+  return changes;
+};
+
+/** The pin on a marketplace `"sha"` line, or `undefined` for any other line. */
+const marketplacePin = (line: string | undefined) =>
+  line?.match(/^\s*"sha": "([0-9a-f]{40})",?$/)?.[1];
+
+export function isShaOnlySkillPatch(patch: string, skill: string): boolean {
+  const changes = patchFileChanges(patch);
+
+  if (!changes) return false;
 
   const metadata = changes.get(SKILLS_FILE);
   const marketplace = changes.get(MARKETPLACE_FILE);
@@ -800,17 +816,57 @@ export function isShaOnlySkillPatch(patch: string, skill: string): boolean {
     return false;
 
   // An external import's marketplace entry moves to the same pin.
-  const marketplacePin = (lines: readonly string[]) =>
-    lines.length === 1
-      ? lines[0]?.match(/^\s*"sha": "([0-9a-f]{40})",?$/)?.[1]
-      : undefined;
-
   return (
     !marketplace ||
-    (marketplacePin(marketplace.removed) === pin.removedSha &&
-      marketplacePin(marketplace.added) === pin.addedSha)
+    (marketplace.removed.length === 1 &&
+      marketplace.added.length === 1 &&
+      marketplacePin(marketplace.removed[0]) === pin.removedSha &&
+      marketplacePin(marketplace.added[0]) === pin.addedSha)
   );
 }
+
+/**
+ * Whether a release group's diff touches only `skills.yml`, plus marketplace
+ * pins that move exactly as the members' imports moved in `skills.yml`. An
+ * external import's marketplace entry follows its pin; adapted imports have
+ * none. Pair with `releasePinOnlyChange` for the `skills.yml` contents.
+ */
+export const isReleasePinPatch = (
+  patch: string,
+  before: SkillsFile,
+  after: SkillsFile,
+  members: readonly string[],
+) => {
+  const changes = patchFileChanges(patch);
+
+  if (!changes?.has(SKILLS_FILE)) return false;
+
+  const marketplace = changes.get(MARKETPLACE_FILE);
+
+  if (changes.size !== (marketplace ? 2 : 1)) return false;
+
+  if (!marketplace) return true;
+
+  const moves = new Set(
+    members.flatMap((skill) => {
+      const from = before.skills[skill]?.import?.upstreamSha;
+      const to = after.skills[skill]?.import?.upstreamSha;
+
+      return from && to && from !== to ? [`${from}..${to}`] : [];
+    }),
+  );
+
+  return (
+    marketplace.removed.length > 0 &&
+    marketplace.removed.length === marketplace.added.length &&
+    marketplace.removed.every((line, index) => {
+      const from = marketplacePin(line);
+      const to = marketplacePin(marketplace.added[index]);
+
+      return !!from && !!to && moves.has(`${from}..${to}`);
+    })
+  );
+};
 
 export function isScopedSkillPatch(
   patch: string,
@@ -1689,9 +1745,7 @@ export const validatePullRequestPolicy = Effect.fn(
 
       const pinOnly =
         releasePinOnlyChange(files.before, files.after, members) &&
-        [...patch.matchAll(/^diff --git a\/(.+) b\/(.+)$/gm)].every(
-          ([, from, to]) => from === SKILLS_FILE && to === SKILLS_FILE,
-        );
+        isReleasePinPatch(patch, files.before, files.after, members);
 
       const valid =
         commitMatches &&

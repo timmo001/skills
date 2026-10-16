@@ -14,6 +14,7 @@ import {
   applySkillUpdateAutoMergePolicy,
   cleanSkillUpdateNames,
   isScopedSkillPatch,
+  isReleasePinPatch,
   isShaOnlySkillPatch,
   latestSuccessfulWorkflowRun,
   pinOnlyChange,
@@ -746,6 +747,80 @@ describe("updates agent policies", () => {
           expect(releasePinOnlyChange(before, after, members), label).toBe(
             expected,
           );
+      }),
+  );
+
+  it.effect(
+    "lets a pin-only release move an external import's marketplace pin",
+    () =>
+      Effect.sync(() => {
+        const oldSha = "a".repeat(40);
+        const newSha = "b".repeat(40);
+
+        const file = (sha: string, reviewed: string): SkillsFile => ({
+          skills: {
+            core: { import: exampleImport(sha, []) },
+            reviewer: { tools: [{ repo: "org/repo", reviewed }] },
+          },
+        });
+
+        const members = ["core", "reviewer"];
+        const before = file(oldSha, "v1");
+        const after = file(newSha, "v2");
+
+        const skills = [
+          ...skillsFileHeader,
+          ...pinHunk("core", oldSha, newSha),
+        ];
+
+        const marketplace = (removed: string, added: string) => [
+          "diff --git a/.claude-plugin/marketplace.json b/.claude-plugin/marketplace.json",
+          "--- a/.claude-plugin/marketplace.json",
+          "+++ b/.claude-plugin/marketplace.json",
+          "@@ -1 +1 @@",
+          `-        "sha": "${removed}",`,
+          `+        "sha": "${added}",`,
+        ];
+
+        const cases: readonly [string, string[], SkillsFile, boolean][] = [
+          ["skills.yml only", skills, after, true],
+          [
+            "marketplace pin follows the import",
+            [...skills, ...marketplace(oldSha, newSha)],
+            after,
+            true,
+          ],
+          [
+            "marketplace pin moves elsewhere",
+            [...skills, ...marketplace(oldSha, "c".repeat(40))],
+            after,
+            false,
+          ],
+          [
+            "marketplace pin moves without the import",
+            [...skills, ...marketplace(oldSha, newSha)],
+            file(oldSha, "v2"),
+            false,
+          ],
+          [
+            "another file changes",
+            [
+              ...skills,
+              "diff --git a/core/SKILL.md b/core/SKILL.md",
+              "@@ -1 +1 @@",
+              "-old",
+              "+new",
+            ],
+            after,
+            false,
+          ],
+        ];
+
+        for (const [label, patch, updated, expected] of cases)
+          expect(
+            isReleasePinPatch(patch.join("\n"), before, updated, members),
+            label,
+          ).toBe(expected);
       }),
   );
 
