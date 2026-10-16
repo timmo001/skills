@@ -27,7 +27,7 @@ skills:
   asking-questions:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.21"
+        reviewed: "v0.28.22"
   bro:
     import:
       upstreamSha: cbd1929589267453029859a43d2ecf411c865b54
@@ -40,7 +40,7 @@ skills:
   change-review-handoff:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.21"
+        reviewed: "v0.28.22"
   cloudflare:
     import:
       upstreamSha: be9f5e1e940fcf8567ff723cc03b8a8448c4082f
@@ -200,7 +200,7 @@ skills:
         reviewed: "v2.31.0"
   plannotator:
     import:
-      upstreamSha: 7a1f674fb02ac819371c8032e863d759d0fdaaff
+      upstreamSha: 826a8bc1b7d3b7bca7f6b2d6b5551612c234885b
       origin: "https://github.com/backnotprop/plannotator/tree/main/apps/skills/core/plannotator"
       license: "Apache-2.0"
       localEdits: []
@@ -230,7 +230,7 @@ skills:
   remote-change-diff:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.21"
+        reviewed: "v0.28.22"
   retro:
     import:
       upstreamSha: a7d038f6bf7f01b516408e95e2fb56e0b338fa6f
