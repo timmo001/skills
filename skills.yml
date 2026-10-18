@@ -73,7 +73,7 @@ skills:
         - "added a maintainer comment to leave out Ollama's cloud models"
     tools:
       - repo: ollama/ollama
-        reviewed: "v0.40.5"
+        reviewed: "v0.40.6"
       - repo: ollaya-dev/ollaya
         reviewed: "v0.13.0"
   diagnose:
