@@ -136,8 +136,8 @@ decision models yet.
    ```
 
    Use `--format json` for the full response with probabilities; without it each answer prints
-   as a rounded summary line. Answers are keyed by the question text; use HTTP when you need
-   your own keys.
+   as a rounded summary line. In JSON, answers are keyed `q1`, `q2` and so on in `--ask` order
+   (by the question text before 0.40.6); use HTTP when you need your own keys.
 2. **HTTP**:
 
    ```sh
