@@ -61,9 +61,8 @@ checksum = "sha256:ec53c915c3fdd8786c5685abd25ae3fe9fba0692307f9811d7caaadea1bca
 url = "https://nodejs.org/dist/v26.12.0/node-v26.12.0-linux-arm64.tar.gz"
 
 [tools.node."platforms.linux-arm64-musl"]
-checksum = "sha256:435d4e5b5e12e14819f2598710f0f637f2094b25232fdf0cc304b7c4eadeadbb"
-url = "https://nodejs.org/dist/v26.12.0/node-v26.12.0.tar.gz"
-install = "source"
+checksum = "sha256:2e70b6d5adbae94546c4d7e01de7b64c50bf8d3dbfaad2bb0774942e9da902b8"
+url = "https://unofficial-builds.nodejs.org/download/release/v26.12.0/node-v26.12.0-linux-arm64-musl.tar.gz"
 
 [tools.node."platforms.linux-x64"]
 checksum = "sha256:d9f88af72ad34f7ddf8e67289829f1698f54b6254f7d4f54b7453117ff1a3d2c"
@@ -111,7 +110,7 @@ specifiers = ["1.7.2"]
 version = "1.38.0"
 backend = "pipx:yamllint"
 specifiers = ["1.38.0"]
-uv = { path = ".mise/locks/pipx-yamllint/1.38.0", digest = "sha256:519d9de95a5ed7a36e4c05e604e8359c9223e0be58635f11ec33c1dfee6a8954" }
+uv = { path = ".mise/locks/pipx-yamllint/1.38.0", digest = "sha256:164a05d7100a9b31d6c79c860f9ee3b24bc1b0b1fc3f93d69e3541c974707441" }
 
 [[tools.uv]]
 version = "0.13.1"
