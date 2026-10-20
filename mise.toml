@@ -36,7 +36,7 @@ depends = ["build"]
 run = "vitest run"
 
 [tasks.format]
-description = "Format the CLI source with Prettier"
+description = "Format the CLI source and Markdown with Prettier"
 run = "bun run format"
 
 [tasks."format:check"]
