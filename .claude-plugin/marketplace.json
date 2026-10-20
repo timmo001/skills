@@ -263,8 +263,8 @@
       "source": {
         "source": "git-subdir",
         "url": "plannotator/guides",
-        "path": "skills/plannotator-guide",
-        "sha": "78a476a98fa4791a20eae5580f2a01c5d3303a7c"
+        "path": "skills/guided-review",
+        "sha": "b00ec04d4d0c7ed0f95ca48b252563e7b0b8af9b"
       }
     },
     {
