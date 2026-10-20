@@ -57,7 +57,7 @@ skills:
       distribution: external
   decision-models:
     import:
-      upstreamSha: db34aa046e831faf16e5b8da707b40f7acb88164
+      upstreamSha: ff727a18468467c586f4b3059547a4150ed91779
       origin: "https://github.com/ollaya-dev/ollaya/tree/main/skills/ollaya-decisions"
       sourceName: "ollaya-decisions"
       license: "Apache-2.0"
@@ -71,11 +71,12 @@ skills:
         - "added Ollama's CLI and HTTP API as an equal local runtime alongside Ollaya, with its decision models in the cascade"
         - "listed hosted Clef-omni and replaced the hosted Clef prices with a pointer to Cloudflare's live model and pricing pages"
         - "added a maintainer comment to leave out Ollama's cloud models"
+        - "updated the decima row for Ollaya 0.15.0 (decima:agent 2.3 with 8,192-token states, decima:guard and decima:guard-small) and listed the decima-guard preset"
     tools:
       - repo: ollama/ollama
         reviewed: "v0.40.6"
       - repo: ollaya-dev/ollaya
-        reviewed: "v0.13.0"
+        reviewed: "v0.15.0"
   diagnose:
     import:
       upstreamSha: f3fc5632f401156837ee3872f14fe33ccf1024ea
