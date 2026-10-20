@@ -33,6 +33,7 @@ For induction of an existing GitHub repository, resolve its actual host and owne
   ```
 
   Use the selected key for other licences. Fetch successfully before writing the root `LICENSE` file. Do not bundle internal template copies, reconstruct legal text from memory, or shorten it.
+
 - A licence from a known existing repository is also an acceptable source. Inspect its full text, verify the chosen licence and record the source path and commit. Account for project-specific notices rather than blindly copying another project's owner or year. If the source cannot be verified, report that and leave creation pending.
 - Fill project-specific template fields from the actual copyright holder and year, asking when unclear. Preserve legal terms and instructional examples. For an existing local source, add `LICENSE` locally and keep package licence metadata consistent with the selected SPDX identifier. Leave committing and pushing to explicit authorisation. For remote-only creation, GitHub can generate the file with `gh repo create --license <key>` when its initial commit is authorised; do not initialise a separate remote history for an existing local repository.
 - Verify the final file against the retrieved source, allowing only the intended project-specific substitutions, and report the licence and source URL or repository ref. If the user chose no licence, record that choice without creating a file.

@@ -40,23 +40,23 @@ Apply these rules to all writing covered by this skill. Follow AGENTS.md for cha
 
 Do not use these as fancy substitutes for ordinary words:
 
-| Avoid | Write instead |
-| --- | --- |
-| humanise prose | make writing sound natural |
-| prose | writing or text |
-| register | tone |
-| venue | where the text will appear |
-| artefact / artifact | file, document, or output, whichever you mean |
-| corpus | writing samples or existing work |
-| provenance | source or where it came from |
-| materialise | create or write |
-| canonical | main or source, whichever you mean |
-| scaffolding / ceremony | setup or extra steps, whichever you mean |
-| leverage / utilise | use |
-| delve into | read, check, or investigate |
-| facilitate | help or enable |
-| rationale | reason |
-| calibrate against | compare with or match |
+| Avoid                  | Write instead                                 |
+| ---------------------- | --------------------------------------------- |
+| humanise prose         | make writing sound natural                    |
+| prose                  | writing or text                               |
+| register               | tone                                          |
+| venue                  | where the text will appear                    |
+| artefact / artifact    | file, document, or output, whichever you mean |
+| corpus                 | writing samples or existing work              |
+| provenance             | source or where it came from                  |
+| materialise            | create or write                               |
+| canonical              | main or source, whichever you mean            |
+| scaffolding / ceremony | setup or extra steps, whichever you mean      |
+| leverage / utilise     | use                                           |
+| delve into             | read, check, or investigate                   |
+| facilitate             | help or enable                                |
+| rationale              | reason                                        |
+| calibrate against      | compare with or match                         |
 
 Cut empty praise and padding: "seamlessly", "robust", "powerful", "effortless", "groundbreaking", "pivotal", "comprehensive", "It is worth noting", "In order to", "Furthermore", and "Let's dive in". State the useful fact instead of replacing one buzzword with another.
 

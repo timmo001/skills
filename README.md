@@ -8,8 +8,7 @@ Some skills are broadly portable. Others intentionally depend on a particular to
 
 ## Install
 
-The repository toolchain pins Bun 1.4.0, Effect 4, and the Skills CLI through
-mise. Install dependencies and build the standalone maintenance executable:
+The repository toolchain pins Bun 1.4.0, Effect 4, and the Skills CLI through mise. Install dependencies and build the standalone maintenance executable:
 
 ```bash
 mise install
@@ -143,8 +142,7 @@ Effect generates Bash, Fish, and Zsh completions directly from the command speci
 ./dist/skill-maintenance --completions zsh
 ```
 
-Renovate manages the pinned mise tools and GitHub Actions. The scheduled import
-checker manages reviewed upstream skill revisions separately.
+Renovate manages the pinned mise tools and GitHub Actions. The scheduled import checker manages reviewed upstream skill revisions separately.
 
 ## Maintenance
 
