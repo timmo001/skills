@@ -13,7 +13,7 @@ The user has asked for a **retrospective**. You are suggesting improvements to t
 
 2. Read the primary sources for the sessions the user names. Default to the current session, which is already in context. Done when every named session has been read, or you have said which could not be found.
    - `opencode2 session list` shows top-level sessions for the current directory's project, newest first. Run it with `workdir` set to another project to find that project's sessions; Herdr workers and child sessions need their IDs.
-   - Export with `opencode2 session export <id> > /tmp/opencode/retro-<id>.json`. Skip `--sanitize`: it redacts the message text you need. Exports are large, so query them with `jq` rather than reading them whole:
+   - Export with `opencode2 session export <id> > /tmp/opencode/retro/<id>.json`. Skip `--sanitize`: it redacts the message text you need. Exports are large, so query them with `jq` rather than reading them whole:
      - user messages: `.messages[] | select(.type == "user") | .text`
      - tool calls: `.messages[].content[]? | select(.type == "tool") | {name, status: .state.status, input: .state.input}`
      - skills loaded: the same filter with `select(.name == "skill")`
