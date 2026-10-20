@@ -6,52 +6,36 @@ description: Decide whether browser access is needed and keep authorised checks 
 
 # Browser Access
 
-Browser tools require an explicit user request or agreement to a specific check.
-This includes listing tabs and taking snapshots. A URL, UI bug, named service,
-available tool, or loaded browser skill does not grant permission.
+Browser tools require an explicit user request or agreement to a specific check. This includes listing tabs and taking snapshots. A URL, UI bug, named service, available tool, or loaded browser skill does not grant permission.
 
 ## 1. Gather The Right Evidence
 
-- If the user explicitly requested browser interaction, proceed within that
-  request. Do not ask them to authorise the same action again.
-- For ordinary investigations, start with focused source and configuration reads,
-  logs, existing tests, configured CLI/API access, or existing SSH routes. Choose
-  the tool from the requested action and the evidence needed.
-- A frontend or service mention does not imply opening its web UI. Use the
-  existing non-browser access when it answers the question.
+- If the user explicitly requested browser interaction, proceed within that request. Do not ask them to authorise the same action again.
+- For ordinary investigations, start with focused source and configuration reads, logs, existing tests, configured CLI/API access, or existing SSH routes. Choose the tool from the requested action and the evidence needed.
+- A frontend or service mention does not imply opening its web UI. Use the existing non-browser access when it answers the question.
 - Do not ask to use the browser at the start of an ordinary investigation.
 
 Continue without browser access when the gathered evidence is sufficient.
 
 ## 2. Establish A Specific Need
 
-If non-browser evidence establishes a real blocker or a fix that needs browser
-validation, explain:
+If non-browser evidence establishes a real blocker or a fix that needs browser validation, explain:
 
 - What remains unknown.
 - Why the existing access cannot answer it.
 - The smallest browser check needed and its target.
 
-Ask as `asking-questions` describes and wait for agreement before any
-browser tool call. Loading a browser skill or debugging entrypoint does not
-replace this permission step.
+Ask as `asking-questions` describes and wait for agreement before any browser tool call. Loading a browser skill or debugging entrypoint does not replace this permission step.
+
+When the check would show something the user may want to see or keep, ask it as a `:::question-multi` that offers the check alongside the evidence that fits it: a screenshot, before and after screenshots, a screencast of the interaction, or the console or network output. The user ticks the check plus any captures they want.
 
 ## 3. Run Only The Agreed Check
 
-- Apply the chosen browser driver's skill or current documentation for tool
-  mechanics. Prefer Chrome DevTools for browser diagnostics.
-- The Chrome DevTools MCP is not always loaded. If its tools are unavailable,
-  ask the user to enable it and wait. Do not work around it with another
-  browser driver, a headless browser, or scripted CDP access.
-- Keep work on the agreed task and target. Reuse gathered evidence rather than
-  repeating navigation, snapshots, polling, or broad audits.
-- Gather only the page state, console messages, or network requests needed for
-  the specific issue. When reloading through Chrome DevTools, bypass the cache
-  unless the user explicitly wants cached behaviour.
-- Use Lighthouse or performance traces only when needed for the authorised audit
-  or performance investigation.
-- If a materially different check becomes necessary, explain it and obtain
-  agreement before widening the browser work.
+- Apply the chosen browser driver's skill or current documentation for tool mechanics. Prefer Chrome DevTools for browser diagnostics.
+- The Chrome DevTools MCP is not always loaded. If its tools are unavailable, ask the user to enable it and wait. Do not work around it with another browser driver, a headless browser, or scripted CDP access.
+- Keep work on the agreed task and target. Reuse gathered evidence rather than repeating navigation, snapshots, polling, or broad audits.
+- Gather only the page state, console messages, or network requests needed for the specific issue. When reloading through Chrome DevTools, bypass the cache unless the user explicitly wants cached behaviour.
+- Use Lighthouse or performance traces only when needed for the authorised audit or performance investigation.
+- If a materially different check becomes necessary, explain it and obtain agreement before widening the browser work.
 
-Stop when the required question is answered. Report the result and any remaining
-uncertainty without extending the session into an unrelated audit.
+Stop when the required question is answered. Report the result and any remaining uncertainty without extending the session into an unrelated audit.
