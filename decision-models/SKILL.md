@@ -47,12 +47,14 @@ curl -s http://127.0.0.1:11434/api/version
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader 2>/dev/null
 ```
 
-Ollama needs 0.35.0 or later for decision models, 0.35.1 for Clef and 0.40.0 for Laya. When both
+Ollama needs 0.35.0 or later for decision models, 0.35.1 for Clef, 0.40.0 for Laya and 0.40.7
+for `pplx-decider`. When both
 runtimes are installed, use the one that has the model you need: Ollaya for `winnow`, presets
 and most of its catalogue, Ollama for `tev1` and the 27B Clef.
 
 The same name can mean a different model: Ollaya's `clef` is Clef-Flash (9B), while on Ollama
-`clef` is the 27B Clef and `clef-flash` is the 9B.
+`clef` is the 27B Clef and `clef-flash` is the 9B. Likewise Ollaya's `pplx-decider` is the 4B
+pplx-decider-flash, while Ollama's is Perplexity's 27B.
 
 If the user names a model, runtime or provider, go straight to calling it. Otherwise start with
 the lightest model that suits the machine, and escalate only the answers it can't settle:
@@ -218,7 +220,7 @@ Start with `winnow:e4b` on an NVIDIA GPU or `laya` without one, and escalate unc
 described in "Choose a runtime".
 
 The table lists Ollaya's models. Ollama's decision models are `laya`, `tev1` (4B, or
-`tev1:0.8b`), `nimble` (9B), `clef-flash` (9B) and `clef` (27B); see
+`tev1:0.8b`), `nimble` (9B), `clef-flash` (9B), `clef` (27B) and `pplx-decider` (27B); see
 <https://ollama.com/search?c=decision> for the current list.
 
 ## Presets
