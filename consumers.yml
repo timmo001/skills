@@ -69,7 +69,7 @@ repositories:
       - testing
       - types-enforce-ts
       - writing-style
-  timmo001/ha-weather-forecast-card-feature:
+  timmo001/ha-card-feature-weather-forecast:
     skills:
       - changeset-scope
       - code-review
