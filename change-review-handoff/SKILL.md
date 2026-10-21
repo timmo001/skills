@@ -50,7 +50,7 @@ Recommended: Commit, push and create the pull request
 
 ## 3. Act On What Arrives
 
-- **Feedback** (review comments, guide comments, which arrive as a reply in the guide's thread, or notes asking for changes): if the question is still open, replace it first with `supersedes: ["<old message id>"]` so a tick on the old diff can't be sent. Then make each change, rerun the checks, reopen the review, and send a new question with it.
+- **Feedback** (review comments, guide comments, which arrive as a reply in the guide's thread, comments on the words of the handoff message, such as its `diff` block, or notes asking for changes): if the question is still open, replace it first with `supersedes: ["<old message id>"]` so a tick on the old diff can't be sent. Then make each change, rerun the checks, reopen the review, and send a new question with it.
 - **Approved with notes:** notes are guidance, not change requests. Make the small, clear ones and say how you handled each. Replace the question only if that changed the diff or which steps fit.
 - **Ticked steps:** treat as approval with no notes and run them (step 4).
 - **A reply that ticked nothing,** or a review closed without a decision: the question stays open. Don't ask again or reopen the review; if the user says "approved" without ticking anything, point to the question or ask it in chat.
