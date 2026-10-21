@@ -69,10 +69,11 @@ Details, reasoning, and trade-offs go in the chat above. The question and its op
 ## While Waiting and After
 
 - Finish non-blocked read-only discovery before asking.
-- After sending through the Inbox, end the turn. The reply arrives as a new turn once the session is idle; don't poll with `wait_for_reply` or start a background wait, which keeps the session busy and holds the reply back.
+- After sending through the Inbox, end the turn. The reply arrives as a new turn once the session is idle; don't poll with `wait_for_reply` or start a background wait, which keeps the session busy and holds the reply back. If you carried on with other work, the user can press Send now and the reply lands in the running turn instead: act on it there as if it had started a new turn.
 - Take the first answer from either place. If it came in chat, close the Inbox thread with `resolve_message` so the question doesn't linger there; if it came from the Inbox, don't ask again in chat. A later answer to a question already settled is stale: don't act on it, and mention it only if it conflicts.
 - An Inbox reply can skip questions the user did not answer, and Mark read sends a "Set aside for now" note. Neither is an answer: stop waiting on those questions, and ask again only if one still blocks the work.
 - A reply with only words (no answers) leaves its questions open. Act on the words, don't ask the questions again, and wait for the answers in the Inbox.
+- A reply can carry comments on words the user selected in your message, under "Feedback on your messages". Treat each as a note on that passage, the same as a comment on a file: act on it, and say how in your answer. Like words, comments leave the questions open.
 - A Re-ask note is the exception: the user pressed Re-ask to have the open questions it lists asked again. Send them together in one new message with fresh context, following the note's `Replaces:` lines, or `supersedes` the ones that no longer apply. Picks the note carries are answers.
 - When the work came from an Inbox reply, send follow-up questions back to that thread with `reply_to`, as well as in chat.
 - Until a must-have answer arrives, do not edit files or run state-changing commands.
