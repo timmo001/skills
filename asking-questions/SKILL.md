@@ -73,6 +73,7 @@ Details, reasoning, and trade-offs go in the chat above. The question and its op
 - Take the first answer from either place. If it came in chat, close the Inbox thread with `resolve_message` so the question doesn't linger there; if it came from the Inbox, don't ask again in chat. A later answer to a question already settled is stale: don't act on it, and mention it only if it conflicts.
 - An Inbox reply can skip questions the user did not answer, and Mark read sends a "Set aside for now" note. Neither is an answer: stop waiting on those questions, and ask again only if one still blocks the work.
 - A reply with only words (no answers) leaves its questions open. Act on the words, don't ask the questions again, and wait for the answers in the Inbox.
+- A Re-ask note is the exception: the user pressed Re-ask to have the open questions it lists asked again. Send them together in one new message with fresh context, following the note's `Replaces:` lines, or `supersedes` the ones that no longer apply. Picks the note carries are answers.
 - When the work came from an Inbox reply, send follow-up questions back to that thread with `reply_to`, as well as in chat.
 - Until a must-have answer arrives, do not edit files or run state-changing commands.
 - If the user says to proceed without answering, state the assumptions in a sentence and continue with the safest defaults.
