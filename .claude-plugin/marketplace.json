@@ -133,6 +133,21 @@
       }
     },
     {
+      "name": "timmo-guided-plan",
+      "description": "External import from plannotator/guides",
+      "license": "UNLICENSED",
+      "metadata": {
+        "skill": "guided-plan"
+      },
+      "skills": "./",
+      "source": {
+        "source": "git-subdir",
+        "url": "plannotator/guides",
+        "path": "skills/guided-plan",
+        "sha": "44382b22d1d1b3f85d2707aaf4302e66e5c6a22e"
+      }
+    },
+    {
       "name": "timmo-ha-bridge-cli",
       "description": "External import from timmo001/ha-bridge",
       "license": "Apache-2.0",
