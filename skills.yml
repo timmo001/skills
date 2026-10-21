@@ -76,11 +76,12 @@ skills:
         - "listed hosted Clef-omni and replaced the hosted Clef prices with a pointer to Cloudflare's live model and pricing pages"
         - "added a maintainer comment to leave out Ollama's cloud models"
         - "updated the decima row for Ollaya 0.15.0 (decima:agent 2.3 with 8,192-token states, decima:guard and decima:guard-small) and listed the decima-guard preset"
+        - "noted Ollaya 0.16.0's ROCm pack, which runs winnow:e4b on an AMD GPU on Linux, in the cascade's first pick"
     tools:
       - repo: ollama/ollama
         reviewed: "v0.40.7"
       - repo: ollaya-dev/ollaya
-        reviewed: "v0.15.0"
+        reviewed: "v0.16.0"
   diagnose:
     import:
       upstreamSha: f3fc5632f401156837ee3872f14fe33ccf1024ea

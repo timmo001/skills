@@ -61,7 +61,10 @@ the lightest model that suits the machine, and escalate only the answers it can'
 
 1. **Pick the first model:**
    - Ollaya with an NVIDIA GPU: `winnow:e4b`, the best accuracy for its speed (about 90 ms per
-     decision on a GPU, by Ollaya's figures).
+     decision on a GPU, by Ollaya's figures). From Ollaya 0.16.0 this also holds on Linux with an
+     AMD GPU when Ollaya's ROCm pack is installed (`lib/ollaya/rocm/` under `/usr/local` or
+     `~/.local`, with the ROCm 7 runtime); only GGUF models such as `winnow` use the AMD GPU, and
+     ONNX models such as `laya` stay on the CPU there.
    - Ollama with an NVIDIA GPU: `clef-flash` with 12 GB or more VRAM, otherwise `tev1` (4B, about
      4.5 GB).
    - No GPU, either runtime: `laya`, about 1 s per decision on a CPU. `laya` reads only about 1k
