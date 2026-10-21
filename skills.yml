@@ -79,7 +79,7 @@ skills:
         - "noted Ollaya 0.16.0's ROCm pack, which runs winnow:e4b on an AMD GPU on Linux, in the cascade's first pick"
     tools:
       - repo: ollama/ollama
-        reviewed: "v0.40.7"
+        reviewed: "v0.40.8"
       - repo: ollaya-dev/ollaya
         reviewed: "v0.16.0"
   diagnose:
