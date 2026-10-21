@@ -199,6 +199,11 @@ skills:
       license: "Apache-2.0"
       localEdits: []
       distribution: external
+  opencode-effect:
+    tools:
+      - repo: anomalyco/opencode
+        reviewed: "v2.1.2"
+        tags: "^v2\\."
   opentui:
     import:
       upstreamSha: 212eb27da4adf5b907031ad153fc6a5b9f713fbf
@@ -266,6 +271,10 @@ skills:
         - "routes findings to owning repositories and stops before edits"
         - "added compatibility metadata for concrete environment requirements"
         - "agents/openai.yaml: omitted"
+    tools:
+      - repo: anomalyco/opencode
+        reviewed: "v2.1.2"
+        tags: "^v2\\."
   session-coordination:
     tools:
       - repo: herdrdev/herdr

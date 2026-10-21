@@ -5,11 +5,7 @@ import {
   readSkillsFile,
   writeReviewedTags,
 } from "../imports/metadata.js";
-import {
-  latestReleases,
-  releaseOf,
-  toolRepositories,
-} from "../imports/releases.js";
+import { latestReleases, releaseOf, toolSources } from "../imports/releases.js";
 import { GitHub } from "../services/GitHub.js";
 
 export const SkillReviewItem = Schema.Struct({
@@ -49,11 +45,11 @@ export const buildSkillReviewReport = Effect.fn("SkillReviews.buildReport")(
       a.localeCompare(b),
     );
 
-    const latest = yield* latestReleases(toolRepositories(file));
+    const latest = yield* latestReleases(toolSources(file));
 
     const items = entries.flatMap(([skill, entry]) =>
       (entry.tools ?? []).map((tool): SkillReviewItem => {
-        const release = releaseOf(latest, tool.repo);
+        const release = releaseOf(latest, tool);
 
         if (!release || Result.isFailure(release))
           return {

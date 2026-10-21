@@ -70,6 +70,10 @@
                   "type": "string",
                   "minLength": 1,
                   "description": "Release tag the skill was last reviewed against"
+                },
+                "tags": {
+                  "type": "string",
+                  "minLength": 1
                 }
               },
               "required": [

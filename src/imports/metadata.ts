@@ -44,6 +44,16 @@ export interface ImportMetadata extends Schema.Schema.Type<
   typeof ImportMetadata
 > {}
 
+const isPattern = (pattern: string) => {
+  try {
+    new RegExp(pattern);
+
+    return true;
+  } catch {
+    return false;
+  }
+};
+
 export const ToolReview = Schema.Struct({
   repo: Schema.String.check(Schema.isPattern(/^[\w.-]+\/[\w.-]+$/u)).annotate({
     description: "GitHub repository of the tool, owner/name",
@@ -51,6 +61,16 @@ export const ToolReview = Schema.Struct({
   reviewed: Schema.NonEmptyString.annotate({
     description: "Release tag the skill was last reviewed against",
   }),
+  tags: Schema.optionalKey(
+    Schema.NonEmptyString.check(
+      Schema.makeFilter(
+        (pattern) => isPattern(pattern) || "not a valid pattern",
+      ),
+    ).annotate({
+      description:
+        "Pattern a tag must match to count, read from the repository's tags rather than its latest release; the newest stable x.y.z among them is the one to review",
+    }),
+  ),
 });
 
 export interface ToolReview extends Schema.Schema.Type<typeof ToolReview> {}
@@ -152,6 +172,7 @@ export const renderSkillsFile = (file: SkillsFile) => {
         ...tools.flatMap((tool) => [
           `      - repo: ${tool.repo}`,
           `        reviewed: ${quote(tool.reviewed)}`,
+          ...(tool.tags ? [`        tags: ${quote(tool.tags)}`] : []),
         ]),
       );
   }

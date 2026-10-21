@@ -60,6 +60,8 @@ skills:
         reviewed: "v0.28.14"
 ```
 
+When a tool's GitHub latest release is not the line the skill follows, such as OpenCode v2 being tags only, add a `tags` pattern. The newest stable `x.y.z` among the matching tags is then the version to review against, instead of the latest release.
+
 The scheduled device agent handles these on its own, one tool release at a time: it moves the release's imports, reviews every behind skill that lists the tool, and opens one pull request for the release, `[Pin-only] Update <owner>/<repo> to <tag>` with auto-merge when only pins and tags move, or `Update <owner>/<repo> to <tag>` when a skill changes. Use the steps below to run a review by hand.
 
 1. Run `./dist/skill-maintenance skill-reviews --json`. The dashboard issue shows the same list under "Skill reviews".
