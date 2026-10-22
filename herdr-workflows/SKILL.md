@@ -2,7 +2,7 @@
 name: herdr-workflows
 license: Apache-2.0
 compatibility: Requires Herdr, its CLI environment, Git for worktree transfers, and the separately installed herdr skill.
-description: Apply local safeguards for Herdr session recovery and transferring linked-worktree changes back to a host checkout. Use alongside the herdr skill when diagnosing Herdr socket routing, recovering the default session, or moving, consolidating, or continuing Herdr worktree changes from the main or host checkout. The herdr skill remains authoritative for all Herdr CLI, topology, targeting, lifecycle, and safety behaviour.
+description: Apply local safeguards for Herdr session recovery and transferring linked-worktree changes back to a host checkout. Use alongside the herdr skill when creating a linked worktree under Herdr, diagnosing Herdr socket routing, recovering the default session, or moving, consolidating, or continuing Herdr worktree changes from the main or host checkout. The herdr skill remains authoritative for all Herdr CLI, topology, targeting, lifecycle, and safety behaviour.
 ---
 
 # Herdr Workflows
@@ -16,6 +16,10 @@ Load `herdr` for control and current CLI discovery. This companion covers recove
 - Get optional native session references from Herdr's `agent_session` fields and use the owning runtime's supported history/resume tools. When an agent has reported a resume command, Herdr reopens its exact session after a server restart. Check whether it has already restored before resuming manually.
 - Herdr clears a self-reported agent once its pane returns to an idle shell. A missing reference is not evidence of lost work; read the agent output and current Git state.
 - Pass a short continuation brief directly to the host agent. Use a durable handoff only when the work must survive beyond available session history.
+
+## Create A Linked Worktree
+
+Under Herdr, create worktrees with `herdr worktree create` (a new branch) or `herdr worktree open` (an existing branch), not raw `git worktree add`, so the checkout gets its own Herdr workspace the user can see and switch to. Pass `--no-focus` unless the user asked to switch, and `--path` when the directory name matters, such as a name a dev server derives a URL from. Read the new workspace and path from the JSON response, then continue in that path. Creating a worktree still needs the user's agreement.
 
 ## Transfer A Linked Worktree
 
