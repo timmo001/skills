@@ -156,7 +156,7 @@ skills:
         - "limit the upstream yes-accepts-recommendation rule to yes/no questions"
   guided-plan:
     import:
-      upstreamSha: 44382b22d1d1b3f85d2707aaf4302e66e5c6a22e
+      upstreamSha: cf83febdb307f45a4f811fc324bab752b6f0757f
       origin: "https://github.com/plannotator/guides/tree/main/skills/guided-plan"
       license: "UNLICENSED"
       localEdits: []
