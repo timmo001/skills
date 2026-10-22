@@ -69,9 +69,10 @@ Details, reasoning, and trade-offs go in the chat above. The question and its op
 ## While Waiting and After
 
 - Finish non-blocked read-only discovery before asking.
-- After sending through the Inbox, end the turn. The reply arrives as a new turn once the session is idle; don't poll with `wait_for_reply` or start a background wait, which keeps the session busy and holds the reply back. If you carried on with other work, the user can press Send now and the reply lands in the running turn instead: act on it there as if it had started a new turn.
+- After sending through the Inbox, end the turn. The reply arrives as a new turn once the session is idle; don't poll with `wait_for_reply` or start a background wait, which keeps the session busy and holds the reply back. If you carried on with other work, the reply can land in the running turn instead, when the user presses Send now or by itself after it has waited 5 minutes: act on it there as if it had started a new turn.
 - Take the first answer from either place. If it came in chat, close the Inbox thread with `resolve_message` so the question doesn't linger there; if it came from the Inbox, don't ask again in chat. A later answer to a question already settled is stale: don't act on it, and mention it only if it conflicts.
-- An Inbox reply can skip questions the user did not answer, and Mark read sends a "Set aside for now" note. Neither is an answer: stop waiting on those questions, and ask again only if one still blocks the work.
+- An Inbox reply skips only the questions the user chose to skip, and Mark read sends a "Set aside for now" note. Neither is an answer: stop waiting on those questions, and ask again only if one still blocks the work. A note the user left on a skipped question still counts as a note on it.
+- A reply that answers some questions leaves the others open. Act on the answers, don't ask the open ones again, and wait for them in the Inbox.
 - A 👍 Looks good note means the user read your message and has nothing to add. Send nothing back, not even a status update; end the turn, or carry on with work it doesn't change.
 - A reply with only words (no answers) leaves its questions open. Act on the words, don't ask the questions again, and wait for the answers in the Inbox.
 - A reply can carry comments on words the user selected in your message, under "Feedback on your messages". Treat each as a note on that passage, the same as a comment on a file: act on it, and say how in your answer. Like words, comments leave the questions open.
