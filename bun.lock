@@ -11,7 +11,7 @@
       },
       "devDependencies": {
         "@effect/tsgo": "0.56.0",
-        "@effect/vitest": "4.0.5",
+        "@effect/vitest": "4.0.6",
         "@oxlint/plugins": "1.89.0",
         "@timmo001/oxlint-rules": "0.6.3",
         "@types/bun": "1.4.3",
@@ -44,7 +44,7 @@
 
     "@effect/tsgo-win32-x64": ["@effect/tsgo-win32-x64@0.56.0", "", { "os": "win32", "cpu": "x64" }, "sha512-Cf6SDixFTkp7Aoeg2eRwJps/2BG9lvx2m+iVRjUzxdqkTbCCNKmmOAIyDslNZm2sMwaDUw/iN/BPGqxx7xMxww=="],
 
-    "@effect/vitest": ["@effect/vitest@4.0.5", "", { "peerDependencies": { "effect": "^4.0.5", "vitest": ">=5.0.0 <6.0.0" } }, "sha512-q64paZ/i4V2NiRhTyqCmT2KiDbFjlxc2EZrZca8GGt+Nf8844946HyJM5bPk/q+YeRkFSxIrlCs+J+LSfky/wA=="],
+    "@effect/vitest": ["@effect/vitest@4.0.6", "", { "peerDependencies": { "effect": "^4.0.6", "vitest": ">=5.0.0 <6.0.0" } }, "sha512-oKNbtyUHK5+0o730CXwojULEu7f3+c235pYFD4U5T//o+hHrJbYbZU4bRkcv936tPr5IOnmujeyQiC/LuJJjHw=="],
 
     "@jridgewell/resolve-uri": ["@jridgewell/resolve-uri@3.1.2", "", {}, "sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw=="],
 
