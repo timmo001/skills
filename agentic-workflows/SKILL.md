@@ -29,6 +29,9 @@ compiled to GitHub Actions lock files.
      triage and live gates): `debug-agentic-workflow.md`; before executing
      changed code or starting tools/servers for a local reproduction or dry run,
      also read `debug-security-review.md`
+   - analyse existing runs, logs, or recurring failures: `analyzing-runs.md`;
+     start general repository-wide debugging or optimisation requests here with
+     failure clustering before choosing a workflow
    - AWF model or endpoint 400s, silent cross-family sub-agent failures,
      `model: auto` failures, install-step 404s after a version pin, or
      questions about version fields: go straight to
@@ -66,6 +69,13 @@ compiled to GitHub Actions lock files.
    `tools.work-queue`, also load the official `work-queue.md` guidance after the
    primary prompt. Load deployment guidance, operator references or
    specifications only when the task needs them.
+
+   If a GitHub API, `gh api`, or GitHub MCP download returns HTTP 403 (for
+   example a token SAML-authorised for a different organisation), do not retry
+   with the same token. Fetch the public file without authentication from
+   `https://raw.githubusercontent.com/github/gh-aw/main/<path>`, keeping its
+   repository-relative path, and never send a token to that URL. If that also
+   fails, report the error rather than continuing without the guidance.
 
 4. Edit the Markdown source, not the generated lock file. Compile with the
    repository's documented command and review the generated diff.
