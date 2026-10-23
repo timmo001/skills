@@ -29,6 +29,9 @@ compiled to GitHub Actions lock files.
      triage and live gates): `debug-agentic-workflow.md`; before executing
      changed code or starting tools/servers for a local reproduction or dry run,
      also read `debug-security-review.md`
+   - analyse existing runs, logs, or recurring failures: `analyzing-runs.md`;
+     start general repository-wide debugging or optimisation requests here with
+     failure clustering before choosing a workflow
    - AWF model or endpoint 400s, silent cross-family sub-agent failures,
      `model: auto` failures, install-step 404s after a version pin, or
      questions about version fields: go straight to
@@ -57,15 +60,37 @@ compiled to GitHub Actions lock files.
    - workflow architecture and patterns: `patterns.md`
    - Design, deploy, inspect or recover a Git-backed work queue: `work-queue.md`
    - token usage and cost optimisation: `token-optimization.md`
+   - advanced cost controls without native settings (custom AIC allowances by
+     server size or shared organisation budget policies): the admission
+     section of the [cost management reference](https://github.github.com/gh-aw/reference/cost-management/#configure-advanced-cost-controls-with-admission);
+     explain the external authority it needs and its cooperative limits, and
+     don't invent frontmatter fields or promise hard caps, reservations or
+     mid-run cancellation
    - long-running multi-agent research: `multi-agent-research.md`
    - OpenTelemetry queries and analysis: `skills/otel-queries/SKILL.md`
    - permissions and output controls: `safe-outputs.md` and
      `workflow-constraints.md`
 
+   Debugging, incident, health and failure-related optimisation requests go
+   through the debugging routes before the generic update, upgrade or optimise
+   ones, even when the CLI is installed. When a debugging session needs CLI
+   setup or scoping to a run URL, load `debug-bootstrap.md` first. Its intent
+   index, `debug-scenarios.md`, picks one specialised debugging guide: load
+   only that one, and reuse guides already loaded. When the user supplies a
+   guidance repository or ref, keep using it for every debugging link and raw
+   fallback instead of `main`.
+
    When creating, updating, diagnosing or upgrading a workflow that uses
    `tools.work-queue`, also load the official `work-queue.md` guidance after the
    primary prompt. Load deployment guidance, operator references or
    specifications only when the task needs them.
+
+   If a GitHub API, `gh api`, or GitHub MCP download returns HTTP 403 (for
+   example a token SAML-authorised for a different organisation), do not retry
+   with the same token. Fetch the public file without authentication from
+   `https://raw.githubusercontent.com/github/gh-aw/main/<path>`, keeping its
+   repository-relative path, and never send a token to that URL. If that also
+   fails, report the error rather than continuing without the guidance.
 
 4. Edit the Markdown source, not the generated lock file. Compile with the
    repository's documented command and review the generated diff.
