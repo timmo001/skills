@@ -2,7 +2,7 @@
 name: herdr-workflows
 license: Apache-2.0
 compatibility: Requires Herdr, its CLI environment, Git for worktree transfers, and the separately installed herdr skill.
-description: Apply local safeguards for Herdr session recovery and transferring linked-worktree changes back to a host checkout. Use alongside the herdr skill when creating a linked worktree under Herdr, diagnosing Herdr socket routing, recovering the default session, or moving, consolidating, or continuing Herdr worktree changes from the main or host checkout. The herdr skill remains authoritative for all Herdr CLI, topology, targeting, lifecycle, and safety behaviour.
+description: Apply local safeguards for Herdr session recovery, cleaning up review worktrees and transferring linked-worktree changes back to a host checkout. Use alongside the herdr skill when creating a linked worktree under Herdr, finishing a review or check done in one, diagnosing Herdr socket routing, recovering the default session, or moving, consolidating, or continuing Herdr worktree changes from the main or host checkout. The herdr skill remains authoritative for all Herdr CLI, topology, targeting, lifecycle, and safety behaviour.
 ---
 
 # Herdr Workflows
@@ -20,6 +20,16 @@ Load `herdr` for control and current CLI discovery. This companion covers recove
 ## Create A Linked Worktree
 
 Under Herdr, create worktrees with `herdr worktree create` (a new branch) or `herdr worktree open` (an existing branch), not raw `git worktree add`, so the checkout gets its own Herdr workspace the user can see and switch to. Pass `--no-focus` unless the user asked to switch, and `--path` when the directory name matters, such as a name a dev server derives a URL from. Read the new workspace and path from the JSON response, then continue in that path. Creating a worktree still needs the user's agreement.
+
+## Clean Up A Review Worktree
+
+When a review or check done in a linked worktree is finished (the findings are reported, and posted if that was asked for), clean it up without asking. The user won't want it back.
+
+1. Stop the worktree's own dev servers and daemons from inside it, such as `dot ha stop` in a Home Assistant frontend worktree. Leave the host checkout's servers alone.
+2. Check `git status` in the worktree. If it has changes or commits that exist nowhere else, stop and ask instead of removing it.
+3. Remove it with `herdr worktree remove --workspace <id>`, then confirm Herdr and Git no longer list it.
+4. Delete its local branch with `git branch -D` from the host, unless the branch is the user's own: their pull request, a branch they created, or one with commits that aren't on any remote.
+5. Leave scratch files such as screenshots and drafts where they are, and report what was removed.
 
 ## Transfer A Linked Worktree
 
