@@ -200,6 +200,7 @@ runtime for private content.
 |---|---|---|
 | `winnow:e4b` (recommended with an NVIDIA GPU) | The best accuracy for its speed: 0.722 on typed decisions (Jev: 0.738); calibrated | ~90 ms GPU, ~5 s CPU |
 | `laya` (default when `model` is omitted) | English and 100+ languages, routed automatically; calibrated; the fastest | ~10 ms GPU, ~0.2–0.4 s CPU |
+| `coba` | Ollaya's own: laya's network on Ettin encoders, distilled from `pplx-decider`; English only, states up to 512 tokens; calibrated. `coba:400m` (default) 0.591 on typed decisions, `coba:1b` 0.608; the `-ternary` tags (68m to 400m) also run in a browser | `coba:400m` ~25 ms GPU, ~0.9 s CPU |
 | `kev` | Qwen3.5 decoder with a pointer head, 0.8b to 9b (`kev:9b` 0.722); calibrated | `kev:4b` ~0.35 s GPU |
 | `decider` | Qwen3.5 decoders, 0.8b to 4b (`decider:4b` 0.680) | ~0.2–0.5 s GPU, ~1 s CPU |
 | `decider:2b-vision` | Questions about an image as well as the state: one PNG in `images` (base64) on `/api/decide`, `--image` in the CLI | ~0.2 s GPU for a small image |
