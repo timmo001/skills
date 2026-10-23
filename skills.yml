@@ -215,7 +215,7 @@ skills:
   pitchfork-dev-servers:
     tools:
       - repo: jdx/pitchfork
-        reviewed: "v2.32.1"
+        reviewed: "v2.32.2"
   plan:
     tools:
       - repo: backnotprop/plannotator
