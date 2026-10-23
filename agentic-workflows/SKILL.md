@@ -60,10 +60,25 @@ compiled to GitHub Actions lock files.
    - workflow architecture and patterns: `patterns.md`
    - Design, deploy, inspect or recover a Git-backed work queue: `work-queue.md`
    - token usage and cost optimisation: `token-optimization.md`
+   - advanced cost controls without native settings (custom AIC allowances by
+     server size or shared organisation budget policies): the admission
+     section of the [cost management reference](https://github.github.com/gh-aw/reference/cost-management/#configure-advanced-cost-controls-with-admission);
+     explain the external authority it needs and its cooperative limits, and
+     don't invent frontmatter fields or promise hard caps, reservations or
+     mid-run cancellation
    - long-running multi-agent research: `multi-agent-research.md`
    - OpenTelemetry queries and analysis: `skills/otel-queries/SKILL.md`
    - permissions and output controls: `safe-outputs.md` and
      `workflow-constraints.md`
+
+   Debugging, incident, health and failure-related optimisation requests go
+   through the debugging routes before the generic update, upgrade or optimise
+   ones, even when the CLI is installed. When a debugging session needs CLI
+   setup or scoping to a run URL, load `debug-bootstrap.md` first. Its intent
+   index, `debug-scenarios.md`, picks one specialised debugging guide: load
+   only that one, and reuse guides already loaded. When the user supplies a
+   guidance repository or ref, keep using it for every debugging link and raw
+   fallback instead of `main`.
 
    When creating, updating, diagnosing or upgrading a workflow that uses
    `tools.work-queue`, also load the official `work-queue.md` guidance after the

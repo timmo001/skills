@@ -13,7 +13,7 @@ skills:
       distribution: external
   agentic-workflows:
     import:
-      upstreamSha: 1f9fdfdb2fe3592183e217782ad265ddad983cd8
+      upstreamSha: 6dd0cbfd44bd5b75a8368b48f14b0e97ae628a6f
       origin: "https://github.com/github/gh-aw/tree/main/.github/skills/agentic-workflows"
       license: "MIT"
       localEdits:
@@ -23,7 +23,7 @@ skills:
         - "tests/: omitted (upstream repository guidance contract tests)"
     tools:
       - repo: github/gh-aw
-        reviewed: "v0.93.0"
+        reviewed: "v0.93.2"
   asking-questions:
     tools:
       - repo: backnotprop/plannotator
