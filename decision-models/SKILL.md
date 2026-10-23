@@ -47,8 +47,8 @@ curl -s http://127.0.0.1:11434/api/version
 nvidia-smi --query-gpu=name,memory.total --format=csv,noheader 2>/dev/null
 ```
 
-Ollama needs 0.35.0 or later for decision models, 0.35.1 for Clef, 0.40.0 for Laya and 0.40.7
-for `pplx-decider`. When both
+Ollama needs 0.35.0 or later for decision models, 0.35.1 for Clef, 0.40.0 for Laya, 0.40.7
+for `pplx-decider` and 0.40.9 for `d3`. When both
 runtimes are installed, use the one that has the model you need: Ollaya for `winnow`, presets
 and most of its catalogue, Ollama for `tev1` and the 27B Clef.
 
@@ -150,8 +150,8 @@ decision models yet.
      -d '{"model": "tev1", "state": "…", "questions": {…}}'
    ```
 
-Send 1 to 64 questions per request; `choice` and `score` take 2 to 26 options. `clef` and
-`clef-flash` also take base64 PNG, JPEG or WebP images in `images`. Ollama has no presets: copy a
+Send 1 to 64 questions per request; `choice` and `score` take 2 to 26 options. `clef`,
+`clef-flash` and `d3` also take base64 PNG, JPEG or WebP images in `images`. Ollama has no presets: copy a
 preset's questions from `ollaya://presets/<name>` when Ollaya is installed, or write your own
 (see "Presets" for what each one asks).
 
@@ -224,7 +224,8 @@ Start with `winnow:e4b` on an NVIDIA GPU or `laya` without one, and escalate unc
 described in "Choose a runtime".
 
 The table lists Ollaya's models. Ollama's decision models are `laya`, `tev1` (4B, or
-`tev1:0.8b`), `nimble` (9B), `clef-flash` (9B), `clef` (27B) and `pplx-decider` (27B); see
+`tev1:0.8b`), `nimble` (9B), `clef-flash` (9B), `clef` (27B), `pplx-decider` (27B) and `d3`
+(vLLM Semantic Router's, in 2B, 4B, 9B and 27B sizes); see
 <https://ollama.com/search?c=decision> for the current list.
 
 ## Presets
