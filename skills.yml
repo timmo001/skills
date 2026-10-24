@@ -27,7 +27,7 @@ skills:
   asking-questions:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.29"
+        reviewed: "v0.28.30"
   bro:
     import:
       upstreamSha: cbd1929589267453029859a43d2ecf411c865b54
@@ -40,11 +40,11 @@ skills:
   browser-access:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.29"
+        reviewed: "v0.28.30"
   change-review-handoff:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.29"
+        reviewed: "v0.28.30"
   cloudflare:
     import:
       upstreamSha: be9f5e1e940fcf8567ff723cc03b8a8448c4082f
@@ -220,7 +220,7 @@ skills:
   plan:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.29"
+        reviewed: "v0.28.30"
   plannotator:
     import:
       upstreamSha: b86f250e1c9d4db5ac71e0c22444e20265c5e194
@@ -254,11 +254,11 @@ skills:
   remote-change-diff:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.29"
+        reviewed: "v0.28.30"
   research:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.29"
+        reviewed: "v0.28.30"
   retro:
     import:
       upstreamSha: a7d038f6bf7f01b516408e95e2fb56e0b338fa6f
@@ -306,7 +306,7 @@ skills:
   testing:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.29"
+        reviewed: "v0.28.30"
   to-questionnaire:
     import:
       upstreamSha: 321658273cb1d20b76026717d027d505790106d4
