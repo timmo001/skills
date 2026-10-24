@@ -93,7 +93,9 @@ compiled to GitHub Actions lock files.
    fails, report the error rather than continuing without the guidance.
 
 4. Edit the Markdown source, not the generated lock file. Compile with the
-   repository's documented command and review the generated diff.
+   repository's documented command and review the generated diff. Compilation
+   lints workflows by default and lint errors fail it; fix findings in the
+   Markdown source rather than reaching for `--skip-lint`.
 5. Run the narrowest available validation or audit command for the workflow.
 
 ## Safety

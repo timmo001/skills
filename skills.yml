@@ -20,10 +20,11 @@ skills:
         - "made the upstream router self-contained and replaced unavailable repository-relative prompt loading with official source lookup"
         - "added compatibility metadata for concrete environment requirements"
         - "route the new security-review guidance before local reproductions that execute changed code or start tools/servers"
+        - "note that compilation lints by default and lint errors are fixed in the Markdown source rather than skipped"
         - "tests/: omitted (upstream repository guidance contract tests)"
     tools:
       - repo: github/gh-aw
-        reviewed: "v0.93.2"
+        reviewed: "v0.93.3"
   asking-questions:
     tools:
       - repo: backnotprop/plannotator
