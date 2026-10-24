@@ -80,7 +80,7 @@ skills:
         - "listed Ollaya 0.17.0's coba models in the model table"
     tools:
       - repo: ollama/ollama
-        reviewed: "v0.40.10"
+        reviewed: "v0.40.11"
       - repo: ollaya-dev/ollaya
         reviewed: "v0.17.0"
   diagnose:
