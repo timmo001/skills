@@ -321,7 +321,7 @@ skills:
         - "require explicit permission before external actions"
   tooling-drift:
     import:
-      upstreamSha: f1d575da91e3d7a7a47a64ae2d2207843119f6e1
+      upstreamSha: a6643400e4620c134fe3b6beaacd6b29ddc3c52a
       origin: "https://github.com/timmo001/tooling-drift/tree/main/skills/tooling-drift"
       license: "Apache-2.0"
       localEdits: []
