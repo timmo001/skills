@@ -22,6 +22,8 @@ const allowedFields = new Set([
   "compatibility",
   "metadata",
   "allowed-tools",
+  // Not in the Agent Skills spec; Claude Code and OpenCode use it to keep a skill command-only.
+  "disable-model-invocation",
 ]);
 
 export const validate = Effect.fn("Validate.run")(function* (root: string) {
