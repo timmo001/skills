@@ -1,7 +1,7 @@
 ---
 name: evidence-first
 license: Apache-2.0
-description: Check uncertain claims against the source that owns them before answering, while following clear user choices and limits. Use when the user's statement is tentative or possibly wrong (I think, I remember, I don't think, is this correct), when giving advice or a recommendation, or when the user sets a firm preference such as I don't want this, reduce the scope, or this is going too far. Load once per conversation; it stays in effect.
+description: Check uncertain claims against their source before answering, while following the user's firm choices and limits. Use when the user is tentative or possibly wrong, when giving advice, or when they set a firm preference or scope limit. Load once per conversation.
 ---
 
 # Evidence First

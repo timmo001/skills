@@ -2,7 +2,7 @@
 name: change-review-handoff
 license: Apache-2.0
 compatibility: Requires Plannotator, through its `plannotator` agent tool or the `plannotator` CLI. Guided reviews use the Plannotator Inbox or the `plannotator-guide` skill; the next-steps question follows `asking-questions`.
-description: Hand a finished code change to the user for review in Plannotator, with a next-steps question they answer when they have no notes. Use when an implementation, fix, refactor, or cleanup is complete and verified, before reporting it done; always opens a diff review, offers a guided review as well for large changes, and offers commit, push, pull request, or publish steps that fit the context.
+description: Hand a finished, verified code change to the user as a Plannotator review with a next-steps question. Use before reporting an implementation, fix, refactor or cleanup done.
 ---
 
 # Change Review Handoff

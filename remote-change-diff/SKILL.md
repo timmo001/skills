@@ -2,7 +2,7 @@
 name: remote-change-diff
 license: Apache-2.0
 compatibility: Requires Git for the scratch repository. Uses Plannotator, through its `plannotator` agent tool or CLI, for the diff review and the Plannotator Inbox for the report when available; works with whatever reads the target system (an API CLI such as ha-bridge, SSH, a web API, a database client).
-description: Record and report a before-and-after diff of changes made to live systems outside a Git checkout, such as Home Assistant through ha-bridge, a server over SSH, a router, a container, a database or a cloud API. Use before changing configuration, settings or state on a remote or live system, and when the user asks to see what was changed there; snapshots each target before changing it, reads it back afterwards, and hands over a reviewable diff with a rollback path.
+description: Snapshot and diff changes to live systems outside Git, such as Home Assistant, servers over SSH, containers, databases or cloud APIs. Use before changing remote config or state, and when asked what was changed there.
 ---
 
 # Remote Change Diff

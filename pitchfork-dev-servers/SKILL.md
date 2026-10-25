@@ -2,7 +2,7 @@
 name: pitchfork-dev-servers
 license: Apache-2.0
 compatibility: Requires Pitchfork CLI or MCP access and repository daemon configuration. Repositories without pitchfork may fall back to a framework-native background mode.
-description: Manage long-running local dev servers by precedence - the project's own AGENTS.md workflow first, pitchfork next, then a framework-native background mode where a repo has no pitchfork config - and set them up to a standard with stable https://<daemon>.<project>.localhost addresses. Use when starting, stopping, restarting, checking, or tailing development servers, background servers, pitchfork MCP tools, or local AGENTS/mise tasks that mention pitchfork; when adding or changing a `pitchfork.toml`; or when a dev server's port clashes or its proxy URL doesn't resolve.
+description: Start, stop, check and tail local dev servers through the project's workflow, pitchfork or a framework background mode, and set up `pitchfork.toml` with stable .localhost addresses. Use for dev or background servers, pitchfork tasks, port clashes or unresolved proxy URLs.
 ---
 
 # Pitchfork Dev Servers
