@@ -2,6 +2,7 @@
 name: bro
 description: Re-pitch the immediately preceding response with enough context to follow, using plain, concise, unambiguous language. Use ONLY when the user explicitly invokes /bro or says the previous response did not land.
 license: MIT
+disable-model-invocation: true
 ---
 
 # Bro

@@ -36,6 +36,7 @@ skills:
       license: "MIT"
       localEdits:
         - "replaced framework-specific invocation gating with an explicit-only description"
+        - "hidden from automatic selection with disable-model-invocation"
         - "preserve concrete facts, paths, commands, citations, decisions, and next actions"
         - "add context and ASD-STE100-inspired clarity without claiming strict compliance"
   browser-access:
@@ -267,6 +268,7 @@ skills:
       license: "MIT"
       localEdits:
         - "explicit-only description replaces upstream invocation gating"
+        - "hidden from automatic selection with disable-model-invocation"
         - "writing-dot-skills replaces writing-for-agents"
         - "reads other sessions through opencode2 session export and jq"
         - "added a Skills category for selection, adherence, conflicts, and gaps"
