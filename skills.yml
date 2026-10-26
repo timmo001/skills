@@ -137,15 +137,16 @@ skills:
       distribution: external
   gh-stack:
     import:
-      upstreamSha: 7cb154450f413291a51ba0b9c69e064edde56a98
+      upstreamSha: 2a49e6751238633db504655d8a8eba3e433e827d
       origin: "https://github.com/github/gh-stack/tree/main/skills/gh-stack"
       license: "MIT"
       localEdits:
         - "condensed upstream reference, replaced mutation instructions with local authorisation rules, and summarised distributed-worktree modify behavior; upstream reference files intentionally omitted"
         - "added compatibility metadata for concrete environment requirements"
+        - "summarised gh-stack 0.3.0 atomic pushes, base retarget repair and partial unstacking, keeping --no-atomic and --accept-base-change behind explicit approval"
     tools:
       - repo: github/gh-stack
-        reviewed: "v0.2.1"
+        reviewed: "v0.3.0"
   grilling:
     import:
       upstreamSha: 95249b0b49782349740fd9b8c6ce32b4e59e497a

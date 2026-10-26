@@ -35,6 +35,11 @@ after the user explicitly requests a commit or push.
   tree; do not stash, discard, or absorb user changes without permission.
 - Never use plain force push. Stack pushes use per-branch
   `--force-with-lease`; stop if a lease is rejected.
+- Do not pass `--no-atomic` or set `GH_STACK_NO_ATOMIC` unless the user asks
+  for partial branch updates.
+- `sync --accept-base-change` and accepting a base change prompt can drop
+  unmerged commits from an old base. Treat them as history rewrites that need
+  explicit approval.
 
 ## Agent-Safe Operation
 
@@ -161,6 +166,12 @@ gh stack rebase --abort
 Follow `git-context` for conflict resolution. Do not use raw interactive rebase
 continuation or editor workarounds when the extension owns the operation.
 
+When GitHub retargets a stack after its base branch is deleted, `view --json`
+reports the new base and marks the bottom branch `needsRebase`; `push` and
+`submit` refuse until `sync` or `rebase` replays the stack onto it. If the old
+base did not merge into the new one, the repair stops for confirmation; report
+the commits it would drop rather than passing `--accept-base-change`.
+
 If local and remote stack composition diverge, stop and present the actual
 local/remote chains. Do not automatically choose the remote, delete the remote
 stack, or unstack. Those choices can discard tracking decisions.
@@ -190,6 +201,9 @@ removed:
 1. Show the current `view --json` state and the proposed final branch order.
 2. Obtain explicit approval for local/remote unstacking and history rewrites.
 3. Use `gh stack unstack` (or `--local` when preserving GitHub grouping).
+   Merged or queued PRs stay stacked on GitHub, but a successful unstack still
+   removes local tracking. If every PR is locked, GitHub rejects it and local
+   tracking stays.
 4. Recreate local tracking with explicit ordered branches:
 
    ```bash
@@ -236,7 +250,9 @@ queue chooses the merge method.
 - Branch arguments to `link` may be pushed automatically.
 - `submit` generates PR titles and descriptions; edit them only with separate,
   specific user consent.
-- `push` and `submit` are not atomic across every branch. Inspect partial
-  success before retrying.
+- `push`, `submit`, `sync`, and `link` push branches atomically by default:
+  all branch updates land or none do, and a failed push is not retried
+  non-atomically. PR and stack API operations after the push are not atomic, so
+  inspect partial PR updates before retrying `submit`.
 - GitHub's server-side rebase can create unsigned commits. Use the local
   extension workflow when signed commits are required.
