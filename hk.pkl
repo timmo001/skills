@@ -1,0 +1,27 @@
+// Pre-push checks: the shared base from timmo001/workflows, plus the full
+// validate suite that catches catalogue and schema drift. Run them by hand with
+// `hk check`.
+amends "package://github.com/timmo001/workflows/releases/download/20261027.0/hk-base@20261027.0.0#/base.pkl"
+
+hooks {
+  ["pre-push"] {
+    steps {
+      // CI runs ShellCheck at warning severity here.
+      ["shellcheck"] {
+        check = "shellcheck --severity=warning {{files}}"
+        check_diff = "shellcheck --severity=warning --format=diff {{files}}"
+      }
+      ["validate"] {
+        check = "mise run validate"
+      }
+    }
+  }
+  ["check"] {
+    steps {
+      ["shellcheck"] {
+        check = "shellcheck --severity=warning {{files}}"
+        check_diff = "shellcheck --severity=warning --format=diff {{files}}"
+      }
+    }
+  }
+}

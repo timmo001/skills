@@ -43,6 +43,8 @@ mise exec npm:skills -- skills add . --list
 
 `mise run validate` runs the checks in parallel. For a narrow change, run only the tasks it touches, for example `mise run validate:skills` after editing a skill.
 
+`hk.pkl` runs the shared lint from `timmo001/workflows` (Oxlint, markdownlint, yamllint, actionlint, ShellCheck) on the files a push changes, then `mise run validate`, before every push. Run them by hand with `hk check`.
+
 ## After Committing
 
 - Every change here only reaches this machine through `dot update`, so offer "Run `dot update`" in the next-steps question alongside commit and push. `dot update` reads `main` from the remote, so it needs the push first; say so when the user picks it without pushing.
