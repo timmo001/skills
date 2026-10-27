@@ -40,7 +40,7 @@ General engineering and writing skills that work across Agent Skills clients.
 | [`to-questionnaire`](./to-questionnaire/) | Turn a decision the user cannot answer alone into a channel-aware questionnaire draft for one other person. Use when missing knowledge belongs to a colleague, maintainer, or domain expert and the user needs questions for GitHub, Slack, Discord, or a document. |
 | [`types-enforce-ts`](./types-enforce-ts/) | TypeScript type-safety guidance. Use when editing or reviewing `.ts`, `.tsx`, `.mts`, or `.cts` files. |
 | [`writing-dot-skills`](./writing-dot-skills/) | Craft for authoring Agent Skills that select reliably and stay lean. Use when creating or revising a skill's description, workflow, references, scripts, or structure. |
-| [`writing-style`](./writing-style/) | Write commits, PR and issue text, docs, code comments and user-facing strings in the owner's concise, human UK English voice. Use when writing, editing or reviewing these, making text sound natural, or attaching images or videos to a PR or issue. |
+| [`writing-style`](./writing-style/) | Write commits, PR and issue text, docs, code comments and user-facing strings in the owner's concise, human UK English voice. Use when writing, editing or reviewing these, drafting or creating issues, making text sound natural, or attaching images or videos to a PR or issue. |
 
 ## Environment-bound
 
