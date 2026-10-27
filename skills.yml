@@ -84,7 +84,7 @@ skills:
       - repo: ollama/ollama
         reviewed: "v0.40.11"
       - repo: ollaya-dev/ollaya
-        reviewed: "v0.17.0"
+        reviewed: "v0.18.0"
   diagnose:
     import:
       upstreamSha: f3fc5632f401156837ee3872f14fe33ccf1024ea

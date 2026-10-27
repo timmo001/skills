@@ -202,7 +202,7 @@ runtime for private content.
 | `laya` (default when `model` is omitted) | English and 100+ languages, routed automatically; calibrated; the fastest | ~10 ms GPU, ~0.2–0.4 s CPU |
 | `coba` | Ollaya's own: laya's network on Ettin encoders, distilled from `pplx-decider`; English only, states up to 512 tokens; calibrated. `coba:400m` (default) 0.591 on typed decisions, `coba:1b` 0.608; the `-ternary` tags (68m to 400m) also run in a browser | `coba:400m` ~25 ms GPU, ~0.9 s CPU |
 | `kev` | Qwen3.5 decoder with a pointer head, 0.8b to 9b (`kev:9b` 0.722); calibrated | `kev:4b` ~0.35 s GPU |
-| `decider` | Qwen3.5 decoders, 0.8b to 4b (`decider:4b` 0.680) | ~0.2–0.5 s GPU, ~1 s CPU |
+| `decider` | Qwen3.5 decoders, 0.8b to 4b (`decider:4b` 0.680). From Ollaya 0.18.0 `decider:2b` and `decider:4b` answer yes/no at temperature 0.05, so `noul` answers are sharp and rarely land between 0.2 and 0.8 | ~0.2–0.5 s GPU, ~1 s CPU |
 | `decider:2b-vision` | Questions about an image as well as the state: one PNG in `images` (base64) on `/api/decide`, `--image` in the CLI | ~0.2 s GPU for a small image |
 | `clm` | Contrastive: embeds the state and each option (Qwen3-8B); questions and options are cached; for agent, game and tool-calling states | ~0.15 s GPU with cached questions |
 | `nli` | Zero-shot, good at yes/no with clear statements | ~20 ms GPU |
@@ -215,7 +215,8 @@ runtime for private content.
 | `nimble` | Bespoke Labs' Nimble (LoRA on Qwen3.5-9B): reads the whole request as a schema; calibrated; up to 255 options; needs a 24 GB GPU | ~2.3 s GPU |
 | `strands-decider` | Strands Agents' Strands Decider (LoRA and pointer head on Qwen3.5-2B base): one row per question, options scored at their own lines; calibrated per type; up to 255 options; about 8 GB | ~0.35 s GPU |
 | `pplx-decider` | Perplexity's pplx-decider-flash (Qwen3.5-4B): every question in one sequence, read at a marker after each; calibrated; up to 255 options; about 9 GB | ~0.29 s GPU |
-| `jeeves` | PostHog's Jeeves-9B (no thinking): Qwen3.5-9B with a pointer head; calibrated; needs a 24 GB GPU | ~0.84 s GPU |
+| `jeeves` | PostHog's Jeeves-9B v2 (no thinking): Qwen3.5-9B with a pointer head; 0.790 on typed decisions but underconfident there at the authors' temperature (top probabilities run low), so lower `choice` thresholds or check answers against a second model; needs a 24 GB GPU | ~0.84 s GPU |
+| `d3` | Decision 3.0 from the vLLM Semantic Router contributors: Qwen3.5 fine-tunes, `d3:edge`, `lite`, `nano`, `mini` (default, 4B) and `flash` (9B), one pass per question; `d3:mini` 0.737 on typed decisions. Text only on Ollaya: images are not served | `d3:mini` ~0.2 s GPU, ~9.6 s CPU |
 | `clef` | Cloudflare's Clef-Flash: Qwen3.5-9B with a joint schema head, all questions in one pass; well calibrated without a temperature; needs a 24 GB GPU | ~0.53 s GPU |
 | `jeb` | Jebadiah (Qwen3.5 4b/9b, Qwen3.8 27b) on llama.cpp; per-type calibration | `jeb:9b` ~0.12 s GPU |
 | `cygnet` | Frozen Gemma 4 12B IT with Cygnet's letter prompt; 0.683 on typed decisions; calibrated; up to 20 options | ~0.2 s GPU |
@@ -242,6 +243,9 @@ Built-in question sets, usable as `preset` (MCP), `--preset` (CLI):
   agent is about to run. State: the user's `request` and the `command`.
 - `decima-guard`: injection, harmful, toxic, owasp (which OWASP LLM Top 10 risk, or none). Decima's
   own guard questions, for `decima:guard`. State: plain text.
+- `decima-guard-web`: attack (benign, suspicious, attack), attack_class (none, SQL injection,
+  XSS, command injection and other web attacks, as an ordinal choice). For Decima models only.
+  State: an HTTP request or other web input as plain text.
 
 A preset's instructions refer to a field (`message`, `body`, `prompt`, `post`, `request`, or
 `request` and `command`). Pass the
@@ -278,7 +282,9 @@ Questions are an object keyed by an id you choose:
 Rules that make answers better:
 
 - **choice**: give every option a short description in `criteria`, make the options mutually
-  exclusive, and include a catch-all (`other`). Up to a few dozen options work.
+  exclusive, and include a catch-all (`other`). Up to a few dozen options work. On Ollaya's
+  `decima` models a choice whose labels are in order (none, low, high) can add
+  `"ordinal": true` (2 to 10 labels); every other model rejects the request with a 422.
 - **score**: 3–5 levels, lowest first, each described concretely. The answer is the expected level
   (it can fall between levels), with a `legend`.
 - **noul**: phrase one statement that is true or false ("Does the customer ask for a refund?").
