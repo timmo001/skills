@@ -294,6 +294,9 @@ repositories:
       - effect
       - effect-principles
       - effect-service-design
+      - home-assistant-frontend
+      - home-assistant-lit-rendering
+      - lit-rendering
       - skill-prefixes
       - task-runners
       - testing
