@@ -1,7 +1,7 @@
 ---
 name: browser-access
 license: Apache-2.0
-description: Decide whether browser access is needed and keep authorised checks narrow. Use for frontend or UI diagnosis, before proposing or using Chrome DevTools or other browser automation, and when the user explicitly requests browser interaction.
+description: Decide whether browser access is needed and keep authorised checks narrow. Use for frontend or UI diagnosis, before proposing or using Playwright, Chrome DevTools or other browser automation, and when the user explicitly requests browser interaction.
 ---
 
 # Browser Access
@@ -31,10 +31,10 @@ When the check would show something the user may want to see or keep, ask it as 
 
 ## 3. Run Only The Agreed Check
 
-- Apply the chosen browser driver's skill or current documentation for tool mechanics. Prefer Chrome DevTools for browser diagnostics.
-- The Chrome DevTools MCP is not always loaded. If its tools are unavailable, ask the user to enable it and wait. Do not work around it with another browser driver, a headless browser, or scripted CDP access.
+- Use whichever browser MCP is loaded, such as Playwright or Chrome DevTools, and apply its skill or current documentation for tool mechanics. Neither is preferred, so don't stop to ask for the other one. Use the one the user names when they name one.
+- If no browser MCP is loaded, ask the user to enable one and wait. Do not work around it with a hand-written headless browser or scripted CDP access.
 - Keep work on the agreed task and target. Reuse gathered evidence rather than repeating navigation, snapshots, polling, or broad audits.
-- Gather only the page state, console messages, or network requests needed for the specific issue. When reloading through Chrome DevTools, bypass the cache unless the user explicitly wants cached behaviour.
+- Gather only the page state, console messages, or network requests needed for the specific issue. When reloading, bypass the cache unless the user explicitly wants cached behaviour.
 - Use Lighthouse or performance traces only when needed for the authorised audit or performance investigation.
 - If a materially different check becomes necessary, explain it and obtain agreement before widening the browser work.
 
