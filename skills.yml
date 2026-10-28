@@ -56,7 +56,7 @@ skills:
       distribution: external
   context-cli:
     import:
-      upstreamSha: 69aa410180bfc5c3001bc3b5774f51a110303b6c
+      upstreamSha: 5f44e240688afd3a4099d12a2c0fe927d7328905
       origin: "https://github.com/timmo001/context/tree/main/.agents/skills/context-cli"
       license: "Apache-2.0"
       localEdits: []
