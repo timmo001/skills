@@ -339,7 +339,7 @@
         "source": "git-subdir",
         "url": "cloudflare/skills",
         "path": "skills/workers-best-practices",
-        "sha": "cf56dd4c544917ca6692a475b65a181f2845d557"
+        "sha": "49a31e0b3229ccdffe4944be9c61bc7481d1d432"
       }
     }
   ]

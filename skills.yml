@@ -336,7 +336,7 @@ skills:
       distribution: external
   workers-best-practices:
     import:
-      upstreamSha: cf56dd4c544917ca6692a475b65a181f2845d557
+      upstreamSha: 49a31e0b3229ccdffe4944be9c61bc7481d1d432
       origin: "https://github.com/cloudflare/skills/tree/main/skills/workers-best-practices"
       license: "Apache-2.0"
       localEdits: []
