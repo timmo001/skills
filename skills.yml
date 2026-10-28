@@ -343,8 +343,9 @@ skills:
       distribution: external
   wrangler:
     import:
-      upstreamSha: cf56dd4c544917ca6692a475b65a181f2845d557
+      upstreamSha: 29de2b2f187f5ddbcbac048d1a480298e76d619a
       origin: "https://github.com/cloudflare/skills/tree/main/skills/wrangler"
       license: "Apache-2.0"
       localEdits:
         - "replaced the bundled CLI manual with project-local version, source lookup, and scoped verification guidance"
+        - "references/skill-feedback.md and its Skill feedback section: omitted (they file issues on cloudflare/skills, which does not own this adapted text)"
