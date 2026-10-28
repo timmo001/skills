@@ -116,7 +116,7 @@ skills:
       distribution: external
   effect-gh:
     import:
-      upstreamSha: e28dea0935278bccad666d1611ba4beceef69b50
+      upstreamSha: c01c125f461a5d4c4d2e9634a00879d450e9b0b6
       origin: "https://github.com/timmo001/effect-gh/tree/main/skills/effect-gh"
       license: "Apache-2.0"
       localEdits: []
