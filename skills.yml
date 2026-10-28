@@ -199,7 +199,7 @@ skills:
       distribution: external
   notes-cli:
     import:
-      upstreamSha: 095e3b9ece988cc3b61f3846b914f55e6c4272dd
+      upstreamSha: cddc638be365bb06776d5f61585ad44c898f9a7c
       origin: "https://github.com/timmo001/notes/tree/main/.agents/skills/notes-cli"
       license: "Apache-2.0"
       localEdits: []
