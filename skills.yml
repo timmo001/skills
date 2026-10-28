@@ -49,7 +49,7 @@ skills:
         reviewed: "v0.28.33"
   cloudflare:
     import:
-      upstreamSha: be9f5e1e940fcf8567ff723cc03b8a8448c4082f
+      upstreamSha: 49a31e0b3229ccdffe4944be9c61bc7481d1d432
       origin: "https://github.com/cloudflare/skills/tree/main/skills/cloudflare"
       license: "Apache-2.0"
       localEdits: []
