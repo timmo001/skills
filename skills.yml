@@ -56,7 +56,7 @@ skills:
       distribution: external
   context-cli:
     import:
-      upstreamSha: 69aa410180bfc5c3001bc3b5774f51a110303b6c
+      upstreamSha: 5f44e240688afd3a4099d12a2c0fe927d7328905
       origin: "https://github.com/timmo001/context/tree/main/.agents/skills/context-cli"
       license: "Apache-2.0"
       localEdits: []
@@ -167,7 +167,7 @@ skills:
       distribution: external
   ha-bridge-cli:
     import:
-      upstreamSha: f68e013e6cc4b790744c045d540bc1f2e2d770b9
+      upstreamSha: d9a1ace8a7e803d9bc2179d61c8c8e0ac7053720
       origin: "https://github.com/timmo001/ha-bridge/tree/main/skills/ha-bridge-cli"
       license: "Apache-2.0"
       localEdits: []
@@ -185,7 +185,7 @@ skills:
         reviewed: "v0.9.5"
   home-assistant:
     import:
-      upstreamSha: f68e013e6cc4b790744c045d540bc1f2e2d770b9
+      upstreamSha: d9a1ace8a7e803d9bc2179d61c8c8e0ac7053720
       origin: "https://github.com/timmo001/ha-bridge/tree/main/skills/home-assistant"
       license: "Apache-2.0"
       localEdits: []
@@ -199,7 +199,7 @@ skills:
       distribution: external
   notes-cli:
     import:
-      upstreamSha: 095e3b9ece988cc3b61f3846b914f55e6c4272dd
+      upstreamSha: cddc638be365bb06776d5f61585ad44c898f9a7c
       origin: "https://github.com/timmo001/notes/tree/main/.agents/skills/notes-cli"
       license: "Apache-2.0"
       localEdits: []
@@ -329,7 +329,7 @@ skills:
       distribution: external
   triage-resolve:
     import:
-      upstreamSha: 494fafdc285c92eab1fae228b519c3dcfff4f744
+      upstreamSha: 43e4d55dc8e1d1c843e03d3a9b3735693e162247
       origin: "https://github.com/timmo001/triage/tree/main/skills/triage-resolve"
       license: "Apache-2.0"
       localEdits: []
