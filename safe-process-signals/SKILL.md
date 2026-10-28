@@ -14,7 +14,7 @@ Prevent agent self-termination, unrelated process kills, and indefinite waits. F
 
 Prefer the service manager or tool that owns the process. Use its stop/restart operation and inspect its resulting state. This preserves process-group cleanup and restart policy instead of fighting an automatic supervisor.
 
-For an Omarchy-managed app, use its lifecycle command:
+For an Omarchy-managed app, use its lifecycle operation: the `omarchy` Code Mode namespace's restart tool when the agent has it, otherwise the command:
 
 ```bash
 omarchy restart terminal

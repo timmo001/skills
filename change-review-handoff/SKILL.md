@@ -62,7 +62,7 @@ Offer only the steps that fit when the question is sent. Run the ticked ones in 
 
 - **Commit**, split into sensible commits as the repository's workflow says.
 - **Push**.
-- **Pull request**, when the repository uses them or the branch is a feature branch: **Create the pull request** (`gh pr create`), **Create it as a draft** (`--draft`), or **Link me to create it** (a prefilled link, below). Write the title and body as `writing-style` says, inside the repository's pull request template, ticking only the checkboxes the change meets. If the user reviews the pull request text and ticks boxes or says which to tick, their choices win. Add labels, assignees, a milestone or a project where the repository uses them. Give the user the pull request's URL, or the link.
+- **Pull request**, when the repository uses them or the branch is a feature branch: **Create the pull request** (the `gh` Code Mode tools' PR create, or `gh pr create`), **Create it as a draft** (`--draft` on the CLI), or **Link me to create it** (a prefilled link, below). Write the title and body as `writing-style` says, inside the repository's pull request template, ticking only the checkboxes the change meets. If the user reviews the pull request text and ticks boxes or says which to tick, their choices win. Add labels, assignees, a milestone or a project where the repository uses them. Give the user the pull request's URL, or the link.
 - **Push to the existing pull request**, when the branch has one.
 - **Release**, when the change needs one (see Releases below).
 - **Update a dependent repository** (a submodule pin, plugin bump, or a repository that uses this one), when another checkout uses this change.

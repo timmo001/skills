@@ -69,8 +69,8 @@ These encode the current OpenCode, dotfiles, notes, or maintainer workflow. Comp
 | Skill | Portability work needed |
 | --- | --- |
 | `check-skill-updates` | Consumer updates use mise and the Skills CLI; repository reviews depend on the built skill-maintenance CLI, skills.yml, Git, and authenticated GitHub CLI. |
-| `git-context` | Uses the `context-cli` skill for repository snapshots and dotfiles Git helpers. |
-| `handoff` | Uses `notes-cli` for repository-note storage and cleanup. |
+| `git-context` | Uses Context for repository snapshots (its Code Mode namespace, or the `context-cli` skill) and dotfiles Git helpers. |
+| `handoff` | Uses Notes for repository-note storage and cleanup (its Code Mode namespace, or the `notes-cli` skill). |
 | `import-external-skill` | Depends on this repository's skills.yml and built skill-maintenance CLI, Git, mise, Skills CLI, authenticated GitHub CLI, and upstream access. |
 | `retro` | Reads other sessions through the OpenCode 2 CLI and routes findings to the dot-managed skills, dotfiles, and private overlay repositories. |
 | `session-coordination` | Herdr-managed sessions or explicitly requested native child sessions; uses host background completion notifications when available. |

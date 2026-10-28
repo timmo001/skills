@@ -1,13 +1,13 @@
 ---
 name: pitchfork-dev-servers
 license: Apache-2.0
-compatibility: Requires Pitchfork CLI or MCP access and repository daemon configuration. Repositories without pitchfork may fall back to a framework-native background mode.
+compatibility: Requires Pitchfork through its CLI, its MCP server or a `pitchfork` Code Mode namespace, and repository daemon configuration. Repositories without pitchfork may fall back to a framework-native background mode.
 description: Start, stop, check and tail local dev servers through the project's workflow, pitchfork or a framework background mode, and set up `pitchfork.toml` with stable .localhost addresses. Use for dev or background servers, pitchfork tasks, port clashes or unresolved proxy URLs.
 ---
 
 # Pitchfork Dev Servers
 
-Use this skill when a task involves starting or managing a long-running local server and the repo provides `pitchfork.toml`, local tasks, MCP tooling, or AGENTS guidance mentioning pitchfork. When adding or changing a repo's `pitchfork.toml`, its `serve:*` tasks, or its AGENTS dev-server section, read [references/hosting-standard.md](references/hosting-standard.md) first.
+Use this skill when a task involves starting or managing a long-running local server and the repo provides `pitchfork.toml`, local tasks, pitchfork tools, or AGENTS guidance mentioning pitchfork. When adding or changing a repo's `pitchfork.toml`, its `serve:*` tasks, or its AGENTS dev-server section, read [references/hosting-standard.md](references/hosting-standard.md) first.
 
 Follow the project's own declared workflow first, then pitchfork, then a framework-native background mode when the repo has no pitchfork config, then foreground for explicit debugging.
 
@@ -15,7 +15,7 @@ Follow the project's own declared workflow first, then pitchfork, then a framewo
 
 1. Read local `AGENTS.md` first, especially a `## Background Dev Servers` section. Local repo guidance wins over this global skill.
 2. Check for repo-provided pitchfork wrappers: `mise tasks`, `pitchfork.toml`, or project-specific task names such as `serve:*`, `dev:*`, `background:*`, or aliases documented locally.
-3. Check whether pitchfork MCP tools are available for observation and control: `pitchfork_status`, `pitchfork_logs`, `pitchfork_stop`, `pitchfork_restart`, `pitchfork_start`.
+3. Check whether pitchfork tools are available for observation and control: the `pitchfork` Code Mode namespace (list, logs, start, stop, restart), or pitchfork's MCP tools (`pitchfork_status`, `pitchfork_logs`, `pitchfork_stop`, `pitchfork_restart`, `pitchfork_start`).
 4. Check whether the `pitchfork` CLI is installed before falling back to raw foreground server commands.
 5. Only when the repo has no pitchfork config, check for a framework-native background mode (for example Astro 7+, which self-detaches `astro dev` under an agent).
 
@@ -25,8 +25,8 @@ Follow the project's own declared workflow first, then pitchfork, then a framewo
 2. Use pitchfork when the repo ships `pitchfork.toml` or pitchfork-backed tasks. Prefer `serve:*` tasks over foreground `run:*`, `dev`, or raw server commands.
 3. Use a framework-native background mode only in repos without pitchfork config. It has no stable proxy address, so suggest moving the server onto pitchfork when the address matters.
 4. Use foreground commands only for explicit foreground debugging, one-shot checks, or when the declared workflow is unavailable.
-5. Do not assume MCP `pitchfork_start` can start per-repo daemons from any cwd. If start fails with no matching daemon, run the repo's local pitchfork-backed task from that repo directory.
-6. Use pitchfork MCP status, logs, restart, and stop tools when available once a daemon exists. Otherwise use the matching CLI commands.
+5. Do not assume a tool's start (Code Mode or MCP `pitchfork_start`) can start per-repo daemons from any cwd. If start fails with no matching daemon, run the repo's local pitchfork-backed task from that repo directory.
+6. Use the pitchfork tools for status, logs, restart and stop when available once a daemon exists. Otherwise use the matching CLI commands.
 7. When wrappers stop production resource owners, avoid replacing them with broad process kills. Prefer resource-targeted commands like `fuser <port>/tcp` or `fuser <socket>`.
 8. OpenCode's `pitchfork-dev-server-guard` plugin enforces the pitchfork tier: in repos that declare `pitchfork.toml` it redirects known foreground dev-server commands, including `astro dev`, `blume dev` and `mise run <name>:dev`, to `serve:*` or `pitchfork start` and notes the change.
 

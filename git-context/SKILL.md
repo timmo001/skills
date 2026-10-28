@@ -1,7 +1,7 @@
 ---
 name: git-context
 license: Apache-2.0
-compatibility: Requires Git, the context-cli skill for repository snapshots, dotfiles Git helpers, and GitHub CLI for their workflows. Amendments use dot git commit.
+compatibility: Requires Git, Context for repository snapshots (its `context` Code Mode namespace, or the CLI through the context-cli skill), dotfiles Git helpers, and GitHub CLI for their workflows. Amendments use dot git commit.
 description: Patterns for working with git branches, remotes, diffs against the default branch, and rebases. Use when resolving rebase conflicts, continuing interactive rebases, amending commits, or any git operation that would open an interactive editor.
 ---
 
@@ -11,7 +11,7 @@ Use this skill when working with branches, remotes, or comparing changes.
 
 ## Repository context
 
-For branch, working-tree, commit, diff and pull request context, including PR checks, reviews and comments, load `context-cli` and use `context git`. That skill owns the options and output handling. Use `--branch-diff` for the diff against the default branch; the commits section lists the branch's commits.
+For branch, working-tree, commit, diff and pull request context, including PR checks, reviews and comments, take a Context git snapshot: the `context` Code Mode namespace's `git` tool when the agent has it, otherwise load `context-cli` and run `context git`. That skill owns the options and output handling. For the diff against the default branch, use the CLI's `--branch-diff` when the tool has no diff option; the commits section lists the branch's commits.
 
 `context` reads the local `<remote>/HEAD` without fetching. When the comparison must reflect the current remote, run `git-default-ref` first: it verifies and fetches the default branch.
 
