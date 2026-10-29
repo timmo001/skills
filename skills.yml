@@ -207,7 +207,7 @@ skills:
   opencode-effect:
     tools:
       - repo: anomalyco/opencode
-        reviewed: "v2.2.1"
+        reviewed: "v2.2.2"
         tags: "^v2\\."
   opentui:
     import:
@@ -279,7 +279,7 @@ skills:
         - "agents/openai.yaml: omitted"
     tools:
       - repo: anomalyco/opencode
-        reviewed: "v2.2.1"
+        reviewed: "v2.2.2"
         tags: "^v2\\."
   session-coordination:
     tools:
