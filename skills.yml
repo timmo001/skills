@@ -211,7 +211,7 @@ skills:
         tags: "^v2\\."
   opentui:
     import:
-      upstreamSha: 1823930bcbb2c55b71aa8de6a237316ff65ae051
+      upstreamSha: 9b7d5fb7ebc844b5ccbc3569518e20058657d4a9
       origin: "https://github.com/anomalyco/opentui/tree/main/packages/web/src/content"
       license: "MIT"
       localEdits: []
