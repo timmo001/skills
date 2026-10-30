@@ -1,4 +1,12 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>timmo001/renovate-config"]
+  "extends": ["github>timmo001/renovate-config"],
+  "packageRules": [
+    {
+      "description": "yamllint's PyYAML has no wheels for Python 3.15 yet, and mise won't build it from source.",
+      "matchDepNames": ["python"],
+      "matchFileNames": ["mise.toml"],
+      "allowedVersions": "<3.15"
+    }
+  ]
 }
