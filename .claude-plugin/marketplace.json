@@ -249,7 +249,7 @@
         "source": "git-subdir",
         "url": "backnotprop/plannotator",
         "path": "apps/skills/core/plannotator",
-        "sha": "62e9952766ad8df11d057d2f5519925c00d71fbd"
+        "sha": "80523fb4d41e516a18a4f3c93fab2896ebb5b427"
       }
     },
     {
@@ -264,7 +264,7 @@
         "source": "git-subdir",
         "url": "backnotprop/plannotator",
         "path": "apps/skills/extra/plannotator-compound",
-        "sha": "26ca4e02750062ac8245509a60755e55bc67a5cd"
+        "sha": "80523fb4d41e516a18a4f3c93fab2896ebb5b427"
       }
     },
     {
