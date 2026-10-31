@@ -103,7 +103,7 @@ skills:
   docs-kit:
     import:
       upstreamSha: ab99a7c73c7531c674ee8ab4b9045f44ec3f9190
-      origin: "https://github.com/timmo001/docs-kit/tree/main/skills/docs-kit"
+      origin: "https://github.com/timmo001/groundwork/tree/main/skills/docs-kit"
       license: "Apache-2.0"
       localEdits: []
       distribution: external

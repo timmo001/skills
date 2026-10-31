@@ -59,7 +59,7 @@
     },
     {
       "name": "timmo-docs-kit",
-      "description": "External import from timmo001/docs-kit",
+      "description": "External import from timmo001/groundwork",
       "license": "Apache-2.0",
       "metadata": {
         "skill": "docs-kit"
@@ -67,7 +67,7 @@
       "skills": "./",
       "source": {
         "source": "git-subdir",
-        "url": "timmo001/docs-kit",
+        "url": "timmo001/groundwork",
         "path": "skills/docs-kit",
         "sha": "ab99a7c73c7531c674ee8ab4b9045f44ec3f9190"
       }
