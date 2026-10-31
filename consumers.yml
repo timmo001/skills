@@ -343,7 +343,9 @@ repositories:
     skills:
       - changeset-scope
       - code-review
+      - effect
       - effect-principles
+      - effect-service-design
       - skill-prefixes
       - task-runners
       - testing
