@@ -228,18 +228,6 @@ repositories:
       - testing
       - types-enforce-ts
       - writing-style
-  timmo001/home-assistant-tui:
-    skills:
-      - changeset-scope
-      - code-review
-      - effect
-      - effect-service-design
-      - opentui
-      - skill-prefixes
-      - task-runners
-      - testing
-      - types-enforce-ts
-      - writing-style
   timmo001/music-assistant-tui:
     skills:
       - changeset-scope
