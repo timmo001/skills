@@ -133,6 +133,21 @@
       }
     },
     {
+      "name": "timmo-groundwork-conventions",
+      "description": "External import from timmo001/groundwork",
+      "license": "Apache-2.0",
+      "metadata": {
+        "skill": "groundwork-conventions"
+      },
+      "skills": "./",
+      "source": {
+        "source": "git-subdir",
+        "url": "timmo001/groundwork",
+        "path": "skills/groundwork-conventions",
+        "sha": "f1f0e4f3d7b90f4f4bc6b460204907883293f788"
+      }
+    },
+    {
       "name": "timmo-guided-plan",
       "description": "External import from plannotator/guides",
       "license": "UNLICENSED",
