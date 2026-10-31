@@ -27,6 +27,8 @@ Approving with no comments sends nothing back, so once the reviews are open, sen
 3. The next steps as a `:::question-multi` block, so the user can tick several (options in step 4). Word the question to fit the change and make clear it is for when they have no notes.
 4. For a large change (several repositories, many files or hundreds of changed lines, or parts that need explaining in order), a separate `:::question` offering a guided review as well, recommended when the change spans repositories or needs explaining in order. Sizes are a judgement call, not a threshold.
 
+Put any question of the thread this change settles, such as the plan review question, in `supersedes`. When the work has a Board card, move it to `your_review` with `you:` naming the tick and `thread_id` this thread.
+
 When the user wants a guided review, send it into the same thread (`get_guide_brief`, then `submit_guide` with `reply_to` set to this message, covering every repository), or use the `plannotator-guide` skill when they want an exported file. The diff review stays open alongside it, and the next-steps question still stands.
 
 An option can be one step or several at once ("Commit, push and create the pull request"), and can say briefly what it does or why after a spaced hyphen. Write them for the change rather than repeating the same list every time.
@@ -70,7 +72,7 @@ Offer only the steps that fit when the question is sent. Run the ticked ones in 
 
 For several repositories, say which repositories each option covers, or ask per repository when they need different steps.
 
-A tick allows those steps once, not later changes. Run them through the usual workflows (for example the commit skill) and report the result.
+A tick allows those steps once, not later changes. Run them through the usual workflows (for example the commit skill), and reply in the thread as each lands (the commit, the push, the pull request, the release, a check they asked for), not once at the end. Steps that finish together share one reply; a step that found something they need to know (a bug, a failed check) gets its own. Move the card with them: link the pull request, `ship` when merged or released.
 
 ### Releases
 
