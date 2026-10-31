@@ -102,7 +102,7 @@ skills:
         - "point fixed unit, crash, OOM and journal failures to triage-resolve"
   docs-kit:
     import:
-      upstreamSha: ab99a7c73c7531c674ee8ab4b9045f44ec3f9190
+      upstreamSha: ecc08f6b046d9d657f899967579512fac0833e1d
       origin: "https://github.com/timmo001/groundwork/tree/main/skills/docs-kit"
       license: "Apache-2.0"
       localEdits: []
