@@ -38,6 +38,10 @@ For induction of an existing GitHub repository, resolve its actual host and owne
 - Fill project-specific template fields from the actual copyright holder and year, asking when unclear. Preserve legal terms and instructional examples. For an existing local source, add `LICENSE` locally and keep package licence metadata consistent with the selected SPDX identifier. Leave committing and pushing to explicit authorisation. For remote-only creation, GitHub can generate the file with `gh repo create --license <key>` when its initial commit is authorised; do not initialise a separate remote history for an existing local repository.
 - Verify the final file against the retrieved source, allowing only the intended project-specific substitutions, and report the licence and source URL or repository ref. If the user chose no licence, record that choice without creating a file.
 
+## Kind And Labels
+
+Every personal repository has a kind and takes its labels from the Groundwork manifest. During creation or induction, apply `groundwork-conventions`: add the repository's file with the kind Personal unless the user chooses another, then create its labels from the manifest in place of GitHub's defaults. Organisation repositories and forks keep their owner's labels.
+
 ## Watch The Repository
 
 Watching is part of creation and induction by default. Resolve the authenticated user on the selected `HOST`; the subscription belongs to that account, not the repository owner. Enable watching with notifications unignored, then read the subscription back:
@@ -60,7 +64,7 @@ These are the requested baseline, so do not ask the user to reconfirm each switc
 | --- | --- |
 | Wikis | Disabled |
 | Projects | Disabled |
-| Discussions | Disabled |
+| Discussions | Disabled, unless the repository's conventions file sets `discussions: true` |
 | Allow merge commits | Disabled |
 | Allow rebase merging | Disabled |
 | Allow squash merging | Enabled |
@@ -69,13 +73,13 @@ These are the requested baseline, so do not ask the user to reconfirm each switc
 | Allow auto-merge | Enabled, supporting the selected automerge workflows |
 | Automatically delete head branches | Enabled |
 
-Apply to the explicitly resolved repository URL (`REPO_URL`):
+Apply to the explicitly resolved repository URL (`REPO_URL`), with `DISCUSSIONS` set to `true` only when the repository's conventions file says so and `false` otherwise:
 
 ```bash
 gh repo edit "$REPO_URL" \
   --enable-wiki=false \
   --enable-projects=false \
-  --enable-discussions=false \
+  --enable-discussions="$DISCUSSIONS" \
   --enable-merge-commit=false \
   --enable-rebase-merge=false \
   --enable-squash-merge \
