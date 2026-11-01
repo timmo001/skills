@@ -197,6 +197,10 @@ skills:
       license: "Apache-2.0"
       localEdits: []
       distribution: external
+  inbox-reporting:
+    tools:
+      - repo: backnotprop/plannotator
+        reviewed: "v0.28.42"
   install-timmo-oxlint-rules:
     import:
       upstreamSha: 21b0d5bfcfa0cc4e5f69dfee5dfa30122e463cc1
@@ -288,6 +292,10 @@ skills:
       - repo: anomalyco/opencode
         reviewed: "v2.2.5"
         tags: "^v2\\."
+  review-stages:
+    tools:
+      - repo: backnotprop/plannotator
+        reviewed: "v0.28.42"
   session-coordination:
     tools:
       - repo: herdrdev/herdr

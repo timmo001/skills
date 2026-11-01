@@ -51,6 +51,8 @@ These are agent-agnostic in format, but their workflows or specific branches dep
 | `github-development-rulesets` | Authenticated GitHub CLI, jq, Bash, and ruleset write access for mutations. Includes the Development JSON baseline for creation. |
 | `github-repository-setup` | Authenticated GitHub CLI, Git, jq, and repository creation/settings write access. Encodes preferred personal repository defaults, discovers workflow examples from the authenticated account, and uses the owner-selected shared source, including `timmo001/workflows` for the personal Renovate caller. Delegates reusable workflows and post-push rulesets to `shared-workflows` and `github-development-rulesets`. |
 | `herdr-workflows` | Herdr, its CLI environment, and the external `herdr` skill. |
+| `inbox-reporting` | Plannotator Inbox and review tools; designed for OpenCode 2 `/goal` alongside a loop skill. |
+| `issue-loop` | Git, authenticated GitHub CLI; designed for OpenCode 2 `/goal` with background shells; the Plannotator Board when available. |
 | `home-assistant-frontend` | Home Assistant frontend checkout, or a custom card or dashboard repository with the frontend's `ha-frontend-*` skills linked from a submodule. |
 | `home-assistant-lit-rendering` | Home Assistant frontend checkout, or a custom card or dashboard repository, with Lit. |
 | `npm-jsr-first-publish` | npm 11.15 or later, jq, curl, Git, npm and JSR accounts, and a GitHub Actions release workflow that publishes with OIDC. The bundled script needs an interactive terminal for npm and JSR sign-in. |
@@ -59,6 +61,8 @@ These are agent-agnostic in format, but their workflows or specific branches dep
 | `pkexec-root` | Linux with polkit/pkexec; pacman or yay for Arch package operations, sudo as fallback. |
 | `release-oxlint-rules` | Writable central Oxlint rules checkout, mise, Bun, npm, and registry access; authenticated GitHub CLI and release access for publication. |
 | `remote-change-diff` | Git for the scratch repository; Plannotator, through its agent tool or CLI, for the review and the Plannotator Inbox for the report when available; whatever tool reads the target system. |
+| `review-stages` | Plannotator review tools and Git; designed for OpenCode 2 `/goal` alongside a loop skill; the Plannotator Inbox when available. |
+| `review-steering` | Designed for OpenCode 2 `/goal` alongside a loop skill, for work whose design is already settled; the Plannotator Inbox when available. |
 | `safe-process-signals` | Linux shell process tools, including pgrep, pkill, killall, and timeout. |
 | `shared-workflows` | Authenticated GitHub access and consumer and owner-selected shared GitHub Actions workflow source, including pinned historical revisions. |
 | `wrangler` | Project-local Wrangler dependency, supported Node.js runtime, and Cloudflare authentication for remote operations. |
