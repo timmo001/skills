@@ -55,7 +55,7 @@ Each question must make sense from the chat directly above it. If the thing bein
 - When the turn also reports an outcome (findings, a plan, a review, a result, or where work stopped), send the report itself in that Inbox message, never a pointer such as "ready in chat", and put the question in the same message. Anything that waits on the user, including "I'll edit once you approve", is a `:::question` block, not prose, so the thread shows it needs a reply. Sign-off on a plan, document or diff is the exception: it goes through a gated Plannotator review, and the Inbox message links to it (see `plan`).
 - Ask in chat alone only when the user says to, or when the Inbox is unavailable.
 - Never use a blocking structured question tool (OpenCode's `question`, Claude Code's `AskUserQuestion`), even if the client offers one: it holds the turn open, so an Inbox reply can't arrive and the session stalls until someone answers at the terminal.
-- Prefer concrete options over open prompts. Put the recommended option first and mark it as recommended.
+- Prefer concrete options over open prompts. Keep them in their natural order and mark the recommended one, never moving it first; in a `:::question` block only the `Recommended:` line marks it.
 
 ## Wording
 

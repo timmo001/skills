@@ -39,16 +39,16 @@ Nothing to change? Tick what happens next.
 
 Stopped: waiting on your review
 
+- [ ] Commit only - keeps it local for now
 - [ ] Commit, push and create the pull request - ready for review as it is
 - [ ] Commit, push and open a draft pull request - CI runs before anyone looks
 - [ ] Commit and push, then link me to create it - prefilled form, you press create
-- [ ] Commit only - keeps it local for now
 
 Recommended: Commit, push and create the pull request
 :::
 ```
 
-`Recommended:` names the option you recommend, or several separated by `;`. Never use `- [x]`: it marks a question as already answered. Note the message id and ask the same question in chat as `asking-questions` says. In chat, say in one line what opened, with the same review links, and that the user can send notes from the review or answer in the Inbox or chat. Then end the turn. Don't poll, rerun or reopen the review.
+`Recommended:` names the option you recommend, or several separated by `;`. Keep the options in their natural order rather than moving the recommended one first. Never use `- [x]`: it marks a question as already answered. Note the message id and ask the same question in chat as `asking-questions` says. In chat, say in one line what opened, with the same review links, and that the user can send notes from the review or answer in the Inbox or chat. Then end the turn. Don't poll, rerun or reopen the review.
 
 ## 3. Act On What Arrives
 
