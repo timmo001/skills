@@ -28,7 +28,7 @@ skills:
   asking-questions:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.42"
+        reviewed: "v0.28.44"
   bro:
     import:
       upstreamSha: cbd1929589267453029859a43d2ecf411c865b54
@@ -42,11 +42,11 @@ skills:
   browser-access:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.42"
+        reviewed: "v0.28.44"
   change-review-handoff:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.42"
+        reviewed: "v0.28.44"
   cloudflare:
     import:
       upstreamSha: 5611bbb34c1343d4dd8f68b86a0300bfbd753b05
@@ -200,7 +200,7 @@ skills:
   inbox-reporting:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.42"
+        reviewed: "v0.28.44"
   install-timmo-oxlint-rules:
     import:
       upstreamSha: 21b0d5bfcfa0cc4e5f69dfee5dfa30122e463cc1
@@ -234,10 +234,10 @@ skills:
   plan:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.42"
+        reviewed: "v0.28.44"
   plannotator:
     import:
-      upstreamSha: 80523fb4d41e516a18a4f3c93fab2896ebb5b427
+      upstreamSha: 6d610e9078938f09bb637033e0a88b4cc255ef2a
       origin: "https://github.com/backnotprop/plannotator/tree/main/apps/skills/core/plannotator"
       license: "Apache-2.0"
       localEdits: []
@@ -268,11 +268,11 @@ skills:
   remote-change-diff:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.42"
+        reviewed: "v0.28.44"
   research:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.42"
+        reviewed: "v0.28.44"
   retro:
     import:
       upstreamSha: a7d038f6bf7f01b516408e95e2fb56e0b338fa6f
@@ -295,7 +295,7 @@ skills:
   review-stages:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.42"
+        reviewed: "v0.28.44"
   session-coordination:
     tools:
       - repo: herdrdev/herdr
@@ -325,7 +325,7 @@ skills:
   testing:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.42"
+        reviewed: "v0.28.44"
   to-questionnaire:
     import:
       upstreamSha: 321658273cb1d20b76026717d027d505790106d4
