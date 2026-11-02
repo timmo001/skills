@@ -18,6 +18,8 @@ Use one Inbox thread for the goal, named after the work, and keep every update, 
 
 Send a short update after every step, straight away rather than batched: an item started, a commit, a push, an issue ticked or closed, a CI result, a steer picked up, a blocker. Each says what happened, links the commit, issue or run, and says what comes next. Keep them to a few lines.
 
+Write every issue and pull request as `owner/repo#123` or its full URL, never a bare `#123`, in updates, questions, choices and card lines alike: the Inbox resolves a bare number against the checkout's `origin`, which may be a fork.
+
 ## Directions and questions
 
 The loaded review mode can narrow this: under `review-steering` nothing is put up for sign-off and design questions aren't asked.
