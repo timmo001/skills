@@ -369,3 +369,14 @@ repositories:
       - task-runners
       - testing
       - writing-style
+  timmo001/upkeep:
+    skills:
+      - changeset-scope
+      - code-review
+      - docs-kit
+      - effect
+      - effect-service-design
+      - task-runners
+      - testing
+      - types-enforce-ts
+      - writing-style
