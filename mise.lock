@@ -187,6 +187,7 @@ specifiers = ["1.7.5"]
 version = "1.38.0"
 backend = "pipx:yamllint"
 specifiers = ["1.38.0"]
+uv = { path = ".mise/locks/pipx-yamllint/1.38.0", digest = "sha256:53e36a0441fbed6e82a43c9319ff58a6158f20a619cd55ce07a334f0e7cacc56" }
 
 [[tools.python]]
 version = "3.14.10"
