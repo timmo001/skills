@@ -181,7 +181,7 @@ skills:
       distribution: external
   ha-bridge-cli:
     import:
-      upstreamSha: d9a1ace8a7e803d9bc2179d61c8c8e0ac7053720
+      upstreamSha: b4f24cce9c1b148f5a4c0b32a892cdb2643f741d
       origin: "https://github.com/timmo001/ha-bridge/tree/main/skills/ha-bridge-cli"
       license: "Apache-2.0"
       localEdits: []
