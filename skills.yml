@@ -165,6 +165,13 @@ skills:
       license: "Apache-2.0"
       localEdits: []
       distribution: external
+  groundwork-setup:
+    import:
+      upstreamSha: 65c9cd3993cc0d58cffe4a652709357942d78180
+      origin: "https://github.com/timmo001/groundwork/tree/main/skills/groundwork-setup"
+      license: "Apache-2.0"
+      localEdits: []
+      distribution: external
   guided-plan:
     import:
       upstreamSha: cf83febdb307f45a4f811fc324bab752b6f0757f

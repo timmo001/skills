@@ -148,6 +148,21 @@
       }
     },
     {
+      "name": "timmo-groundwork-setup",
+      "description": "External import from timmo001/groundwork",
+      "license": "Apache-2.0",
+      "metadata": {
+        "skill": "groundwork-setup"
+      },
+      "skills": "./",
+      "source": {
+        "source": "git-subdir",
+        "url": "timmo001/groundwork",
+        "path": "skills/groundwork-setup",
+        "sha": "65c9cd3993cc0d58cffe4a652709357942d78180"
+      }
+    },
+    {
       "name": "timmo-guided-plan",
       "description": "External import from plannotator/guides",
       "license": "UNLICENSED",
