@@ -173,7 +173,7 @@ url = "https://nodejs.org/dist/v26.13.0/node-v26.13.0-win-x64.zip"
 
 [[tools."npm:markdownlint-cli2"]]
 version = "0.24.0"
-aube = { path = ".mise/locks/npm-markdownlint-cli2/0.24.0", digest = "sha256:d76beb6e3aac6ad55a254433b35509683547147e7a20f0217eda5a784f0c2e34" }
+aube = { path = ".mise/locks/npm-markdownlint-cli2/0.24.0", digest = "sha256:b38be5102270e6a898ac4ecc1dbe772e511f6dd4f1000dc6c6df8a992cecc761" }
 backend = "npm:markdownlint-cli2"
 specifiers = ["0.24.0"]
 
@@ -187,7 +187,6 @@ specifiers = ["1.7.5"]
 version = "1.38.0"
 backend = "pipx:yamllint"
 specifiers = ["1.38.0"]
-uv = { path = ".mise/locks/pipx-yamllint/1.38.0", digest = "sha256:b0e430952d073a738f05718eb11fca50d9fdfe3e2245a4350a72266ce0574b3b" }
 
 [[tools.python]]
 version = "3.14.10"
