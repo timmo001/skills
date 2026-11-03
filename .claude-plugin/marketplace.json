@@ -328,21 +328,6 @@
       }
     },
     {
-      "name": "timmo-tooling-drift",
-      "description": "External import from timmo001/tooling-drift",
-      "license": "Apache-2.0",
-      "metadata": {
-        "skill": "tooling-drift"
-      },
-      "skills": "./",
-      "source": {
-        "source": "git-subdir",
-        "url": "timmo001/tooling-drift",
-        "path": "skills/tooling-drift",
-        "sha": "a203913d2a362c57fe8d6560a48e02a71be294d8"
-      }
-    },
-    {
       "name": "timmo-triage-resolve",
       "description": "External import from timmo001/triage",
       "license": "Apache-2.0",
