@@ -266,7 +266,7 @@ skills:
       distribution: external
   release-oxlint-rules:
     import:
-      upstreamSha: 05c84299d080e5e0dde79a7b0e5cff9a20cc7408
+      upstreamSha: 3957285b12d63766f1f4f67ba83ad6c28c6df368
       origin: "https://github.com/timmo001/oxlint-rules/tree/main/skills/release-oxlint-rules"
       license: "Apache-2.0"
       localEdits:
