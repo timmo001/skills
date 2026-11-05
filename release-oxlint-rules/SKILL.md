@@ -20,10 +20,13 @@ license: Apache-2.0
    minor, patch, or exact version. Ask only when the release level is missing.
    Do not add a `v` prefix when the repository's existing tags omit it.
 3. Verify official npm `latest` metadata for `oxlint`, `@oxlint/plugins`, and
-   `oxlint-tsgolint`. Keep Oxlint and its plugins on the same exact latest
-   version, and use the latest tsgolint satisfying Oxlint's peer requirement.
-   Regenerate `bun.lock`. Resolve compatibility failures without widening peer
-   ranges, disabling rules, or forcing transitive dependency upgrades.
+   `oxlint-tsgolint`. Keep Oxlint and its plugins on the same latest version,
+   pinned exactly in development dependencies, and use the latest tsgolint
+   satisfying Oxlint's peer requirement. Declare the peers as a caret range
+   (`^1.91.0`) so consumers can move to newer Oxlint releases without waiting
+   for a release here; raise its floor only when the rules need a newer Oxlint.
+   Regenerate `bun.lock`. Resolve compatibility failures without disabling
+   rules or forcing transitive dependency upgrades.
 4. Update the version in `package.json` and `jsr.json` only when a version bump
    is requested. Before committing, run `mise run check`, `mise run build`,
    `mise run test:package`, `npm pack --dry-run`, and
