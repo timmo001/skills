@@ -55,7 +55,7 @@ Each question must make sense from the chat directly above it. If the thing bein
 - When the turn also reports an outcome (findings, a plan, a review, a result, or where work stopped), send the report itself in that Inbox message, never a pointer such as "ready in chat", and put the question in the same message. Anything that waits on the user, including "I'll edit once you approve", is a `:::question` block, not prose, so the thread shows it needs a reply. Sign-off on a plan, document or diff is the exception: it goes through a gated Plannotator review, and the Inbox message links to it (see `plan`).
 - Ask in chat alone only when the user says to, or when the Inbox is unavailable.
 - Never use a blocking structured question tool (OpenCode's `question`, Claude Code's `AskUserQuestion`), even if the client offers one: it holds the turn open, so an Inbox reply can't arrive and the session stalls until someone answers at the terminal.
-- Prefer concrete options over open prompts. Put the recommended option first and mark it as recommended.
+- Prefer concrete options over open prompts. Keep them in their natural order and mark the recommended one, never moving it first; in a `:::question` block only the `Recommended:` line marks it.
 
 ## Wording
 
@@ -71,7 +71,7 @@ Details, reasoning, and trade-offs go in the chat above. The question and its op
 ## While Waiting and After
 
 - Finish non-blocked read-only discovery before asking.
-- After sending through the Inbox, end the turn. The reply arrives as a new turn once the session is idle; don't poll with `wait_for_reply` or start a background wait, which keeps the session busy and holds the reply back. If you carried on with other work, the reply can land in the running turn instead, when the user presses Send now or by itself after it has waited 5 minutes: act on it there as if it had started a new turn.
+- After sending through the Inbox, end the turn. The reply arrives as a new turn once the session is idle; don't poll the thread or start a background wait, which keeps the session busy and holds the reply back. If you carried on with other work, the reply can land in the running turn instead, when the user presses Send now or by itself after it has waited 5 minutes: act on it there as if it had started a new turn.
 - Take the first answer from either place. If it came in chat, withdraw it in the Inbox at once, before acting on it: a one-line reply into the thread with the answer and the question in `supersedes`, so it stops waiting there; resolve the thread only when the work stream is done. if it came from the Inbox, don't ask again in chat. A later answer to a question already settled is stale: don't act on it, and mention it only if it conflicts.
 - An Inbox reply skips only the questions the user chose to skip, and Mark read sends a "Set aside for now" note. Neither is an answer: stop waiting on those questions, and ask again only if one still blocks the work. A note the user left on a skipped question still counts as a note on it.
 - A reply that answers some questions leaves the others open. Act on the answers, don't ask the open ones again, and wait for them in the Inbox.
