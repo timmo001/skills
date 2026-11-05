@@ -27,7 +27,7 @@ Approving with no comments sends nothing back, so once the reviews are open, sen
 3. The next steps as a `:::question-multi` block, so the user can tick several (options in step 4). Word the question to fit the change and make clear it is for when they have no notes.
 4. For a large change (several repositories, many files or hundreds of changed lines, or parts that need explaining in order), a separate `:::question` offering a guided review as well, recommended when the change spans repositories or needs explaining in order. Sizes are a judgement call, not a threshold.
 
-Put any question of the thread this change settles, such as the plan review question, in `supersedes`. When the work has a Board card, move it to `your_review` with `you:` naming the tick and `thread_id` this thread.
+Put any question of the thread this change settles, such as the plan review question, in `supersedes`. When the work has a Board card, move it to `in_review` with `you:` naming the tick and `thread_id` this thread.
 
 When the user wants a guided review, send it into the same thread (`get_guide_brief`, then `submit_guide` with `reply_to` set to this message, covering every repository), or use the `plannotator-guide` skill when they want an exported file. The diff review stays open alongside it, and the next-steps question still stands.
 
@@ -39,16 +39,16 @@ Nothing to change? Tick what happens next.
 
 Stopped: waiting on your review
 
+- [ ] Commit only - keeps it local for now
 - [ ] Commit, push and create the pull request - ready for review as it is
 - [ ] Commit, push and open a draft pull request - CI runs before anyone looks
 - [ ] Commit and push, then link me to create it - prefilled form, you press create
-- [ ] Commit only - keeps it local for now
 
 Recommended: Commit, push and create the pull request
 :::
 ```
 
-`Recommended:` names the option you recommend, or several separated by `;`. Never use `- [x]`: it marks a question as already answered. Note the message id and ask the same question in chat as `asking-questions` says. In chat, say in one line what opened, with the same review links, and that the user can send notes from the review or answer in the Inbox or chat. Then end the turn. Don't poll, rerun or reopen the review.
+`Recommended:` names the option you recommend, or several separated by `;`. Keep the options in their natural order rather than moving the recommended one first. Never use `- [x]`: it marks a question as already answered. Note the message id and ask the same question in chat as `asking-questions` says. In chat, say in one line what opened, with the same review links, and that the user can send notes from the review or answer in the Inbox or chat. Then end the turn. Don't poll, rerun or reopen the review.
 
 ## 3. Act On What Arrives
 
