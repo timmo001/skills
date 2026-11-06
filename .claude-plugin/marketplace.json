@@ -133,6 +133,21 @@
       }
     },
     {
+      "name": "timmo-gh-stack",
+      "description": "External import from github/gh-stack",
+      "license": "MIT",
+      "metadata": {
+        "skill": "gh-stack"
+      },
+      "skills": "./",
+      "source": {
+        "source": "git-subdir",
+        "url": "github/gh-stack",
+        "path": "skills/gh-stack",
+        "sha": "2a49e6751238633db504655d8a8eba3e433e827d"
+      }
+    },
+    {
       "name": "timmo-groundwork-conventions",
       "description": "External import from timmo001/groundwork",
       "license": "Apache-2.0",

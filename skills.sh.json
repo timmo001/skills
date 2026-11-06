@@ -42,7 +42,6 @@
         "change-review-handoff",
         "ci-loop",
         "decision-models",
-        "gh-stack",
         "github-development-rulesets",
         "github-repository-setup",
         "herdr-workflows",
