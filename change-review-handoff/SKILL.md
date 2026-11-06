@@ -80,7 +80,7 @@ When the repository ships releases, a commit is rarely the end. Offer only relea
 
 - **Arch package source** (built into the public or private pacman repository, or its `-git` package): update the `-git` package when released, publish now through the repository's workflow or `/timmo001-private/publish-package`, and install from pacman once published to check the owner and version.
 - **npm or JSR package:** release a new version through the repository's release workflow, bump the exact pinned versions in the repositories that use it once published, or hold for the next release when the change can wait for later work.
-- **Dotfiles bump** (a submodule, plugin, skill import or pinned version in `~/.config/dotfiles`, `~/.config/dotfiles-private` or `~/repos/skills`): recommend commit and push, since a bump does nothing until other machines pull it on `dot update`. Offer commit only as the alternative.
+- **Dotfiles bump** (a submodule, plugin, skill import or pinned version in `~/.config/dotfiles`, `~/.config/dotfiles-private` or `~/repos/skills`): recommend commit and push, since a bump does nothing until machines pull it (`dot up dotfiles` or `dot up skills`, which Upkeep also runs in the background). After a push, run the matching stage on this machine yourself rather than offering it. Offer commit only as the alternative.
 - **Source and the repository using it together:** offer the chain as one option ("Push the source, wait for its release, then bump and push the repository using it"), alongside doing only the source side now.
 
 ### Prefilled Pull Request Links

@@ -3,7 +3,7 @@
 ## Scope
 
 - `<name>/` at the repository root holds authored skills and distributed imported snapshots. Authored skills are edited here; imported skills are edited in their owning repositories. This preserves direct stow consumers that use the repository root as `~/.agents/skills`.
-- dotfiles has no submodule pin. `dot update` fetches `main` into its own checkout and links it into `~/.agents/skills`, so a push to `main` reaches every machine on its next `dot update`. Only push skills that are ready to use.
+- dotfiles has no submodule pin. `dot up skills` fetches `main` into its own checkout and links it into `~/.agents/skills`, so a push to `main` reaches every machine on its next `dot up` (or Upkeep's background run). Only push skills that are ready to use.
 - Preserve imported history, provenance records in `skills.yml`, and upstream licence material.
 - Do not create checked-in copies under `.agents/`, `.claude/`, `.cursor/`, or `.opencode/`.
 - Keep agent-specific packaging as metadata around the canonical skills, not forks of their content.
@@ -13,7 +13,7 @@
 - `timmo001/context` owns `.agents/skills/context-cli/` and `.agents/skills/context-mcp/`; `timmo001/notes` owns `.agents/skills/notes-cli/` and `.agents/skills/notes-mcp/`.
 - Import only `context-cli` and `notes-cli` here, as `external` imports with no local content edits. Do not import either MCP skill. `git-context` and `handoff` own the surrounding Git and handoff workflows and route CLI operations to those imports.
 - `skills.yml` records each origin and reviewed source commit; imported `SKILL.md` files carry no provenance comments.
-- Update order: source repository commit and push -> `./dist/skill-maintenance import <name> --apply` here -> catalogue regeneration and validation -> skills commit and push. Machines pick up the new `main` on their next `dot update`.
+- Update order: source repository commit and push -> `./dist/skill-maintenance import <name> --apply` here -> catalogue regeneration and validation -> skills commit and push. Machines pick up the new `main` on their next `dot up skills`.
 - New imports need a published source revision containing the skill. Do not invent a revision or point at a commit that predates the skill. Commit and push steps require explicit user authorisation.
 
 ## Skill Changes
@@ -24,7 +24,7 @@
 - Keep supporting files within the skill and link to them relatively from `SKILL.md`.
 - Update `PORTABILITY.md` and `skills.sh.json` when a skill is added, removed, or changes runtime, tool, repository, or machine assumptions.
 - Regenerate `SKILLS.md` and `.claude-plugin/marketplace.json` with `mise run catalogue` (or `./dist/skill-maintenance catalogue`) after skill, grouping or import changes; validate fails on drift.
-- Commit imported skills only when they contain documented local edits. Mark unchanged imports `external` in `skills.yml`; never commit their content. `skill-maintenance install` installs them at the pinned SHA, and `dot update` runs it.
+- Commit imported skills only when they contain documented local edits. Mark unchanged imports `external` in `skills.yml`; never commit their content. `skill-maintenance install` installs them at the pinned SHA, and `dot up skills` runs it.
 - Keep adapted imports as top-level reviewed snapshots. `skills.yml` is the single maintenance record: it owns origin, reviewed SHA, licence, local-edit metadata, and distribution mode. `skills.schema.json` specifies it and is generated from the CLI's schema with `mise run schema`; `validate` fails when either is stale or `skills.yml` is not in canonical form. Skills keep only Agent Skills frontmatter, with the local `name` and `license` written in by the CLI.
 - Build `dist/skill-maintenance`, then run `./dist/skill-maintenance import <name> --metadata-only` after editing `skills.yml` by hand: it rewrites the file in canonical form and writes the name and licence into `SKILL.md`. Compare upstream changes with `import <name>`.
 - A `skills.yml` entry's `tools` list records the tool releases a skill was last reviewed against. `skill-maintenance skill-reviews` reports skills whose tools have a newer release, `--reviewed <skill>` records the latest tags after a review, and `--format` rewrites a hand-edited file in canonical form. `check-skill-updates` owns the review workflow.
@@ -47,4 +47,4 @@ mise exec npm:skills -- skills add . --list
 
 ## After Committing
 
-- Every change here only reaches this machine through `dot update`, so offer "Run `dot update`" in the next-steps question alongside commit and push. `dot update` reads `main` from the remote, so it needs the push first; say so when the user picks it without pushing.
+- Every change here reaches this machine through `dot up skills`, which reads `main` from the remote. After a push the user asked for, run `dot up skills` yourself without offering it: it is headless and only moves the checkout, rebuilds `skill-maintenance` and relinks. Without a push it has nothing to pick up, so don't run it.
