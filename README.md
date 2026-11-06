@@ -84,55 +84,7 @@ mise exec npm:skills -- skills add . --list
 
 The local validator checks the portable metadata contract, directory names, relative links, `skills.yml` against its schema and canonical form, `skills.sh.json` / `PORTABILITY.md` coverage, and drift of the generated [`SKILLS.md`](./SKILLS.md#skills-catalogue) catalogue. TypeScript checks use Effect-aware Oxlint rules from `@timmo001/oxlint-rules/configs/recommended-effect`. CI also verifies the independent installer discovery result.
 
-Imports are checked hourly and after skill changes merge to `main`. Adapted imports are reported for manual review; unchanged upstream snapshots receive automated update pull requests. An import from a repository that some skill lists under `tools` follows that repository's latest release tag instead of its branch, so it moves when the tool is released, and never back to a commit its pin already includes.
-
-The shared update entrypoint runs in either environment:
-
-```bash
-./dist/skill-maintenance updates-agent github --skills-dir /path/to/skills
-./dist/skill-maintenance updates-agent device --config /path/to/skill-updates-agent.yml
-./dist/skill-maintenance updates-agent device --config /path/to/skill-updates-agent.yml --run-id 123456
-```
-
-GitHub Actions builds this repository's executable and uses its `github` mode for scheduled checks, clean update pull requests, validation dispatches, and dashboard refreshes. A local device uses `device` mode to invoke its configured OpenCode processor.
-
-### Cross-device coordination
-
-Device runners share `refs/heads/automation/skill-update-state` in `timmo001/skills`, using the existing `gh` authentication with Contents write access. The first call creates this branch through the Git API. Its commit messages hold versioned JSON containing an opaque claim token, run ID, start time and all completed run IDs. No machine paths, hostnames or private configuration are stored there.
-
-Each state change creates a commit whose only parent is the observed state head, then requests a [fast-forward-only ref update](https://docs.github.com/en/rest/git/refs#update-a-reference). Concurrent candidates are siblings, so only one can win. A single claim covers all device runs, including different workflow IDs. Success records the completed run and clears its claim in the same atomic transition, after repository, PR policy and dashboard checks. Older completed runs stay recorded when newer runs finish.
-
-Failed ref writes are reconciled against the candidate SHA before retrying. Transient failures get at most three attempts with the same candidate; uncertain ownership stops processing. Shared state read failures also stop processing. Local `flock` still serialises a device, and `stateFile` remains a local completion cache; it cannot bypass shared coordination. Old local markers are not automatically imported into shared history.
-
-The runner releases a claim for retry when it can show the run published nothing: preparation failed before any model ran, or every model attempt failed, each session was interrupted and waited for, the repositories are clean on their default branches and no pull request was opened. Any other failure, interruption or crash retains the claim because the OpenCode session or partially published changes may survive the CLI.
-
-A retained claim goes stale 50 minutes after it started, longer than a scheduled device run can last and shorter than the hourly schedule. The next device run replaces a stale claim with its own in the same non-forced transition, leaving the old run unprocessed so it is retried; updates that already have an open pull request are skipped, so published work is not repeated. While a claim is still fresh, other device runs defer with status 2 instead of failing.
-
-The claim token is printed on acquisition and in busy messages. To release a claim before it goes stale:
-
-1. Stop the owning device runner and its OpenCode session. Confirm neither can resume, then inspect partial changes, PRs and repository cleanup.
-2. Use `retry` to allow another attempt, or `processed` only after confirming the run's work and cleanup are complete:
-
-   ```bash
-   ./dist/skill-maintenance updates-agent recover --claim <token> --outcome retry --confirm-stopped
-   ./dist/skill-maintenance updates-agent recover --claim <token> --outcome processed --confirm-stopped
-   ```
-
-Recovery requires the current token and uses the same non-forced transition. A stale release cannot clear a replacement claim. Never delete, reset, force-update or merge the state branch: its history is the coordination record. Update all device runners together before resuming automation; older binaries do not participate in this protocol. Review previously completed local runs when first adopting shared history. No new external service or private configuration field is required.
-
-Device configuration requires `opencodePermissions`, a non-empty array of OpenCode V2 `{ action, resource, effect }` rules using `allow` or `deny`. Keep machine-specific paths and command selections in that configuration. The runner prepends default-deny, then appends the selected agent's resolved explicit denials so job allowances cannot override them. Use `~/` for home-relative read, edit and external-directory resources; shell patterns are literal command text.
-
-If a configured checkout has uncommitted changes or is off its default branch, the runner defers before claiming the workflow run and exits with status 2, which service monitors can treat as a warning. The next run tries again.
-
-The runner also defers with status 2 when another local run holds the lock, or when GitHub stays unreachable for about a minute, which covers runs started at resume before Wi-Fi reconnects.
-
-Before starting a model, the runner fast-forwards the primary repository and builds the update report. If every pending update already has an open pull request whose `skills.yml` change sets the current upstream SHA, it skips the model and records the run as processed. Skills whose upstream no longer exists count as nothing to do; errors and invalid origins still start the model. A tool release is also work: the runner groups the imports it moves and the skills listing it under `tools` that are behind it, and the model handles each release in one commit and one pull request on `skill-update/<owner>-<repo>`. A release already covered by an open pull request that sets every member is skipped. When only pins and reviewed tags move, the pull request is `[Pin-only] Update <owner>/<repo> to <tag>` and auto-merges like `[SHA-only]`; otherwise it is `Update <owner>/<repo> to <tag>` for review. The policy check compares `skills.yml` at the pull request's merge base and head to confirm only the release's members changed, and only in their pins for `[Pin-only]`.
-
-After a model run passes the pull request policy, the runner appends an "Agent run" section to each pull request that run opened. It lists every attempt's model and variant (without the provider), result, time, cost and token counts from the OpenCode session, so models can be compared. Failing to add it is logged and does not fail the run.
-
-Each model attempt checks `service status` and requires the default OpenCode V2 server to be running. All subsequent CLI commands pin that address with `--server`: resolve the agent at the repository location, create a fresh session through `api post /api/session`, read back its ordered permissions and location, then use `run --session <id> --auto`. No standalone server is started. This uses OpenCode 2.0.3's session permission contract through the CLI, without an SDK or direct HTTP client. Missing or changed permissions stop the attempt before prompting. Configured command wrappers apply to setup calls as well as the model run. Shell allowlists are not a filesystem sandbox, and MCP rules cannot restrict arguments or call counts. See the [V2 permissions reference](https://opencode.ai/v2/docs/permissions/).
-
-The runner obtains the existing server password with `service get password` and passes it through `OPENCODE_PASSWORD`, not command arguments. The password stays redacted in the Effect workflow.
+[Upkeep](https://github.com/timmo001/upkeep) checks the imports every hour with its `skill-updates` job. An import from a repository that some skill lists under `tools` follows that repository's latest release tag instead of its branch, so it moves when the tool is released, and never back to a commit its pin already includes. Imports with no local edits, and changes that only move pins, are applied with `updates --update`, validated and pushed straight to `main`. Work that needs an agent, such as merging upstream changes into an adapted import or reviewing a skill against a new tool release, is held on Upkeep's Skills page for approval, which also takes requests for changes to any skill.
 
 Effect generates Bash, Fish, and Zsh completions directly from the command specification:
 
@@ -142,7 +94,7 @@ Effect generates Bash, Fish, and Zsh completions directly from the command speci
 ./dist/skill-maintenance --completions zsh
 ```
 
-Renovate manages the pinned mise tools and GitHub Actions. The scheduled import checker manages reviewed upstream skill revisions separately.
+Renovate manages the pinned mise tools and GitHub Actions. Upkeep manages reviewed upstream skill revisions separately.
 
 ## Maintenance
 
@@ -150,10 +102,10 @@ Renovate manages the pinned mise tools and GitHub Actions. The scheduled import 
 - Classify each new skill in `skills.sh.json` and `PORTABILITY.md`, then regenerate the human catalogue with `mise run catalogue` (or `./dist/skill-maintenance catalogue`) and commit `SKILLS.md`.
 - Commit imported skills only when this repository contains substantive local edits. Mark unchanged imports `external`; only their origin and pinned SHA are committed.
 - Maintain import provenance, reviewed SHA, licence, local edits, and distribution mode in `skills.yml`, the single maintenance record. [`skills.schema.json`](./skills.schema.json) specifies it; regenerate the schema with `mise run schema` after changing the CLI's schema. Skills themselves carry no provenance comments.
-- List the tools a skill depends on under its `tools` entry in `skills.yml`. `./dist/skill-maintenance skill-reviews` reports skills whose tools have a release newer than the reviewed tag, and the dashboard issue shows the same list under "Skill reviews".
+- List the tools a skill depends on under its `tools` entry in `skills.yml`. `./dist/skill-maintenance skill-reviews` reports skills whose tools have a release newer than the reviewed tag, and Upkeep's Skills page shows the same.
 - Use `./dist/skill-maintenance import <name>` to generate a complete upstream comparison. For an external import it compares the pinned and latest upstream revisions, and `--apply` moves the pin. Adapted changes remain manual. The importer rejects an adapted skill that exactly matches every file in its source; mark it external instead.
 - Keep `skills.sh.json`, `PORTABILITY.md`, and `SKILLS.md` in sync.
-- Prefer repository revisions for installed copies. The scheduled checker reports adapted imports for manual review and opens pull requests for unchanged upstream updates.
+- Prefer repository revisions for installed copies. Upkeep pushes unchanged upstream updates and holds adapted imports for review.
 - Do not duplicate canonical skills into checked-in agent-specific directories.
 
 The current portability backlog is intentionally documented rather than mechanically rewriting all existing skills in one migration.

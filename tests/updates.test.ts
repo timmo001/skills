@@ -1,11 +1,7 @@
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect, it } from "@effect/vitest";
 import { Effect, FileSystem, Layer, Path, Stream } from "effect";
-import {
-  buildUpdateReport,
-  renderUpdateMarkdown,
-  updates,
-} from "../src/commands/Updates.js";
+import { buildUpdateReport, updates } from "../src/commands/Updates.js";
 import {
   DeletedOriginError,
   latestPathSha,
@@ -572,44 +568,21 @@ describe("versioned update reports", () => {
     ),
   );
 
-  it.effect(
-    "marks adapted changes for review and renders report sections",
-    () =>
-      Effect.gen(function* () {
-        const root = yield* makeRepository("Old body", ["Keep local wording"]);
-        const report = yield* buildUpdateReport(root);
-        expect(report.skills[0]?.state).toBe("manual-review");
-
-        const markdown = renderUpdateMarkdown({
-          version: 1,
-          skills: [
-            ...(report.skills[0] ? [report.skills[0]] : []),
-            {
-              name: "broken",
-              directory: "broken",
-              state: "error",
-              origin: originUrl,
-              storedSha: sha("a"),
-              upstreamSha: null,
-              files: [],
-              localEdits: [],
-              reason: "failed",
-            },
-          ],
-        });
-
-        expect(markdown).toContain("## Manual review\n\n- **example**");
-        expect(markdown).toContain("**broken**: failed");
-      }).pipe(
-        Effect.scoped,
-        Effect.provide(
-          snapshotLayer(
-            "---\nname: upstream\ndescription: Example\n---\nNew body\n",
-          ),
+  it.effect("marks adapted changes for review", () =>
+    Effect.gen(function* () {
+      const root = yield* makeRepository("Old body", ["Keep local wording"]);
+      const report = yield* buildUpdateReport(root);
+      expect(report.skills[0]?.state).toBe("manual-review");
+    }).pipe(
+      Effect.scoped,
+      Effect.provide(
+        snapshotLayer(
+          "---\nname: upstream\ndescription: Example\n---\nNew body\n",
         ),
-        Effect.provide(githubLayer()),
-        Effect.provide(NodeServices.layer),
       ),
+      Effect.provide(githubLayer()),
+      Effect.provide(NodeServices.layer),
+    ),
   );
 
   it.effect("pins external SHA changes without committing content", () =>

@@ -17,12 +17,7 @@ import { importSkill } from "../commands/Import.js";
 import { install } from "../commands/Install.js";
 import { skillReviews } from "../commands/SkillReviews.js";
 import { updates } from "../commands/Updates.js";
-import {
-  runDeviceSkillUpdates,
-  runGitHubSkillUpdates,
-} from "../commands/UpdatesAgent.js";
 import { validate } from "../commands/Validate.js";
-import { recoverSkillUpdatesClaim } from "../commands/UpdatesAgentCoordination.js";
 import { type LatestReleases, importReleases } from "../imports/releases.js";
 
 const bool = (name: string, description: string) =>
@@ -196,68 +191,6 @@ export const checkCommand = Command.make(
     ),
 ).pipe(Command.withDescription("Review adapted imports against their origins"));
 
-export const githubAgentCommand = Command.make(
-  "github",
-  {
-    skillsDir: Flag.Path("skills-dir", { pathType: "directory" }).pipe(
-      Flag.optional,
-      Flag.withDescription("Use this Skills checkout"),
-    ),
-  },
-  ({ skillsDir }) =>
-    Option.match(skillsDir, {
-      onNone: () => resolveSkillsRoot(),
-      onSome: Effect.succeed,
-    }).pipe(Effect.flatMap(runGitHubSkillUpdates)),
-).pipe(
-  Command.withDescription("Publish clean import updates from GitHub Actions"),
-);
-
-export const deviceAgentCommand = Command.make(
-  "device",
-  {
-    config: Flag.Path("config", { pathType: "file" }).pipe(
-      Flag.withDescription("Use this YAML config"),
-    ),
-    runId: Flag.String("run-id").pipe(
-      Flag.optional,
-      Flag.withDescription("Wait for this workflow run"),
-    ),
-  },
-  ({ config, runId }) => runDeviceSkillUpdates(config, optional(runId)),
-).pipe(
-  Command.withDescription("Process one completed update workflow locally"),
-);
-
-export const recoverAgentCommand = Command.make(
-  "recover",
-  {
-    claim: Flag.String("claim").pipe(
-      Flag.withDescription("Exact abandoned claim token"),
-    ),
-    outcome: Flag.Literals("outcome", ["retry", "processed"]),
-    confirmStopped: bool(
-      "confirm-stopped",
-      "Confirm the owning runner and its OpenCode session have stopped",
-    ),
-  },
-  ({ claim, outcome, confirmStopped }) =>
-    recoverSkillUpdatesClaim(claim, outcome, confirmStopped),
-).pipe(
-  Command.withDescription(
-    "Recover an abandoned device claim after inspecting partial work",
-  ),
-);
-
-export const updatesAgentCommand = Command.make("updates-agent").pipe(
-  Command.withSubcommands([
-    githubAgentCommand,
-    deviceAgentCommand,
-    recoverAgentCommand,
-  ]),
-  Command.withDescription("Run scheduled skill update automation"),
-);
-
 const consumerRepoFlag = Flag.String("repo").pipe(
   Flag.optional,
   Flag.withDescription(
@@ -340,7 +273,6 @@ export const skillMaintenanceCommand = Command.make("skill-maintenance").pipe(
     updatesCommand,
     skillReviewsCommand,
     checkCommand,
-    updatesAgentCommand,
     consumersCommand,
   ]),
   Command.withDescription("Maintain the Agent Skills repository"),

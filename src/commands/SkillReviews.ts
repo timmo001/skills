@@ -80,39 +80,6 @@ export const buildSkillReviewReport = Effect.fn("SkillReviews.buildReport")(
   },
 );
 
-/** The dashboard section listing skills whose tools have a newer release. */
-export const renderSkillReviewMarkdown = (report: SkillReviewReport) => {
-  const behind = report.items.filter(
-    ({ state }) => state === "release-available",
-  );
-
-  const problems = report.items.filter(({ state }) => state === "error");
-
-  return [
-    "## Skill reviews",
-    "",
-    ...(behind.length === 0
-      ? ["None."]
-      : behind.map(
-          (item) =>
-            `- **${item.skill}**: ${item.repo} \`${item.reviewed}\` -> [\`${item.latest}\`](${item.url})`,
-        )),
-    ...(problems.length === 0
-      ? []
-      : [
-          "",
-          "### Problems",
-          "",
-          ...problems.map(
-            (item) => `- **${item.skill}**: ${item.repo}: ${item.reason}`,
-          ),
-        ]),
-    "",
-    `Checked ${report.items.length} tool reviews; ${behind.length} need a review.`,
-    "",
-  ].join("\n");
-};
-
 export const skillReviews = Effect.fn("SkillReviews.run")(function* (
   root: string,
   options: {

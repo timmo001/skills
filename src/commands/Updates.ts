@@ -319,48 +319,6 @@ export const buildUpdateReport = Effect.fn("Updates.buildReport")(function* (
   return { version: 1, skills } satisfies UpdateReport;
 });
 
-export const renderUpdateMarkdown = (report: UpdateReport) => {
-  const section = (title: string, state: UpdateReportItem["state"]) => {
-    const items = report.skills.filter((item) => item.state === state);
-
-    return [
-      `## ${title}`,
-      "",
-      ...(items.length === 0
-        ? ["None."]
-        : items.map(
-            (item) =>
-              `- **${item.name}**: \`${item.storedSha ?? "unknown"}\` -> \`${item.upstreamSha}\`${item.release ? ` (release \`${item.release}\`)` : ""}\n  - ${item.origin}`,
-          )),
-    ];
-  };
-
-  const problems = report.skills.filter((item) =>
-    ["error", "invalid-origin", "origin-gone"].includes(item.state),
-  );
-
-  const attention = report.skills.filter((item) => item.state !== "up-to-date");
-
-  return [
-    "<!-- adapted-skill-updates -->",
-    "",
-    "Tracked skills whose upstream source needs attention.",
-    "",
-    ...section("Manual review", "manual-review"),
-    "",
-    ...section("Upstream updates", "update-available"),
-    "",
-    "## Problems",
-    "",
-    ...(problems.length === 0
-      ? ["None."]
-      : problems.map((item) => `- **${item.name}**: ${item.reason}`)),
-    "",
-    `Checked ${report.skills.length} imports; ${attention.length} need attention.`,
-    "",
-  ].join("\n");
-};
-
 export const updates = Effect.fn("Updates.run")(function* (
   root: string,
   options: {

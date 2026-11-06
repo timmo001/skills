@@ -4,10 +4,6 @@ import { layer as ghLayer } from "@timmo001/effect-gh";
 import { Effect, Layer } from "effect";
 import { CliConfig, CliError, Command } from "effect/cli";
 import { skillMaintenanceCommand } from "./cli/spec.js";
-import {
-  SKILL_UPDATES_DEFERRED_EXIT_CODE,
-  SkillUpdatesDeferredError,
-} from "./commands/UpdatesAgent.js";
 import { CommandExecutor } from "./services/CommandExecutor.js";
 import {
   GitHub,
@@ -56,11 +52,8 @@ const program = Command.runWith(skillMaintenanceCommand, { version: "1.0.0" })(
         );
       }
 
-      process.exitCode =
-        error instanceof SkillUpdatesDeferredError ||
-        error instanceof NetworkUnavailableError
-          ? SKILL_UPDATES_DEFERRED_EXIT_CODE
-          : 1;
+      // Offline is a deferral, not a failure, for callers that retry later
+      process.exitCode = error instanceof NetworkUnavailableError ? 2 : 1;
     }),
   ),
 );
