@@ -172,6 +172,13 @@ skills:
       license: "Apache-2.0"
       localEdits: []
       distribution: external
+  groundwork-themes:
+    import:
+      upstreamSha: a129635d0fe9bb3de93d070d51fba6fa3637d9f6
+      origin: "https://github.com/timmo001/groundwork/tree/main/skills/groundwork-themes"
+      license: "Apache-2.0"
+      localEdits: []
+      distribution: external
   guided-plan:
     import:
       upstreamSha: cf83febdb307f45a4f811fc324bab752b6f0757f
