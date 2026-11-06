@@ -204,12 +204,14 @@ runtime for private content.
 | `winnow:e4b` (recommended with an NVIDIA GPU) | The best accuracy for its speed: 0.722 on typed decisions (Jev: 0.738); calibrated | ~90 ms GPU, ~5 s CPU |
 | `laya` (default when `model` is omitted) | English and 100+ languages, routed automatically; calibrated; the fastest | ~10 ms GPU, ~0.2–0.4 s CPU |
 | `coba` | Ollaya's own: laya's network on Ettin encoders, distilled from `pplx-decider`; English only, states up to 512 tokens; calibrated. `coba:400m` (default) 0.591 on typed decisions, `coba:1b` 0.608; the `-ternary` tags (68m to 400m) also run in a browser | `coba:400m` ~25 ms GPU, ~0.9 s CPU |
+| `sura` | From Ollaya 0.18.0: Ollaya's own Qwen3.5 decoders distilled from `pplx-decider`, `sura:2b` (default) and `sura:0.8b`; every question in one pass; calibrated. Below `decider` on the same bases, so prefer `decider` unless you need one pass | not published |
 | `kev` | Qwen3.5 decoder with a pointer head, 0.8b to 9b (`kev:9b` 0.722); calibrated | `kev:4b` ~0.35 s GPU |
 | `decider` | Qwen3.5 decoders, 0.8b to 4b (`decider:4b` 0.680). From Ollaya 0.18.0 `decider:2b` and `decider:4b` answer yes/no at temperature 0.05, so `noul` answers are sharp and rarely land between 0.2 and 0.8 | ~0.2–0.5 s GPU, ~1 s CPU |
 | `decider:2b-vision` | Questions about an image as well as the state: one PNG in `images` (base64) on `/api/decide`, `--image` in the CLI | ~0.2 s GPU for a small image |
 | `clm` | Contrastive: embeds the state and each option (Qwen3-8B); questions and options are cached; for agent, game and tool-calling states | ~0.15 s GPU with cached questions |
 | `nli` | Zero-shot, good at yes/no with clear statements | ~20 ms GPU |
 | `gliclass` | Zero-shot, many options in one pass | ~15 ms GPU |
+| `gliclass-v4` | From Ollaya 0.18.0: Knowledgator's GLiClass v4 (Qwen3.5 decoder with a label scorer), `gliclass-v4:2b` (default) and `:9b`; a score per label, calibrated; text only; states up to 8,192 tokens. Unrelated to `gliclass` beyond the name | not published |
 | `decision` | Decision 1.0 Eos: fully fine-tuned Qwen3.5-0.8B with an endpoint head; rows up to 16k tokens; calibrated | ~0.2 s GPU, ~0.85 s CPU |
 | `qwen3guard` | Safety guard; answers only its built-in questions (send no `questions`) | ~40 ms GPU, ~2 s CPU |
 | `von` | ModernBERT-large, every option scored at its own marker; states up to 8k tokens; calibrated | ~25 ms GPU, ~0.8 s CPU |
