@@ -25,6 +25,13 @@ skills:
     tools:
       - repo: github/gh-aw
         reviewed: "v1.0.1"
+  android-cli:
+    import:
+      upstreamSha: bf68e2d66a992a1e6aeb7e9263293cc23fcbf475
+      origin: "https://github.com/android/skills/tree/main/devtools/android-cli"
+      license: "Apache-2.0"
+      localEdits: []
+      distribution: external
   asking-questions:
     tools:
       - repo: backnotprop/plannotator

@@ -28,6 +28,21 @@
       }
     },
     {
+      "name": "timmo-android-cli",
+      "description": "External import from android/skills",
+      "license": "Apache-2.0",
+      "metadata": {
+        "skill": "android-cli"
+      },
+      "skills": "./",
+      "source": {
+        "source": "git-subdir",
+        "url": "android/skills",
+        "path": "devtools/android-cli",
+        "sha": "bf68e2d66a992a1e6aeb7e9263293cc23fcbf475"
+      }
+    },
+    {
       "name": "timmo-cloudflare",
       "description": "External import from cloudflare/skills",
       "license": "Apache-2.0",
