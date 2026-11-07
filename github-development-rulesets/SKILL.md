@@ -7,7 +7,7 @@ compatibility: Requires authenticated GitHub CLI, jq, Bash, and repository rules
 
 # GitHub Development Rulesets
 
-Use [Development JSON](references/development.json) when creating or migrating a ruleset. It bundles the branch rules and role-based bypass policy, with an empty check list to fill from destination CI. Check-only updates preserve the destination's existing policy; migration adopts the bundled policy after reviewing its differences. Read [Commands](references/commands.md) for selection, comparison, CI discovery, payload preparation and verification.
+Use [Development JSON](references/development.json) when creating or migrating a ruleset. It bundles the branch rules and bypass policy (repository roles, plus the Upkeep GitHub App for `timmo001` repositories only), with an empty check list to fill from destination CI. Check-only updates preserve the destination's existing policy; migration adopts the bundled policy after reviewing its differences. Read [Commands](references/commands.md) for selection, comparison, CI discovery, payload preparation and verification.
 
 ## Workflow
 

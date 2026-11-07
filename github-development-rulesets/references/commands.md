@@ -59,7 +59,9 @@ MODE='create'
 cp "$WORK/development.json" "$WORK/source.json"
 ```
 
-The bundled baseline contains writable policy fields and built-in repository-role bypass entries. Its required-check list starts empty. Populate it from destination CI before creating the ruleset.
+The bundled baseline contains writable policy fields, built-in repository-role bypass entries and the Upkeep GitHub App (`Integration` 5655521), which pushes Upkeep's updates straight to the default branch. Its required-check list starts empty. Populate it from destination CI before creating the ruleset.
+
+The App is installed on `timmo001` only. For a repository under another owner, drop its entry from `source.json` before building the payload, and leave it out of the comparison there, since the App can't act on repositories it isn't installed on.
 
 ## 2. Observe checks
 
