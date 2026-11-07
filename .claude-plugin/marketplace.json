@@ -39,7 +39,7 @@
         "source": "git-subdir",
         "url": "android/skills",
         "path": "devtools/android-cli",
-        "sha": "bf68e2d66a992a1e6aeb7e9263293cc23fcbf475"
+        "sha": "253e63c608eb08265577684b38c19b0373869031"
       }
     },
     {
