@@ -1,5 +1,6 @@
-import { Effect, Option } from "effect";
+import { Console, Effect, Option, Stdio, Stream } from "effect";
 import { Argument, Command, Flag } from "effect/cli";
+import * as Agent from "../agent/Agent.js";
 import { homedir } from "node:os";
 import { join } from "node:path";
 import { resolveSkillsRoot } from "../lib/root.js";
@@ -264,6 +265,43 @@ export const consumersCommand = Command.make(
   Command.withSubcommands([consumersAddCommand, consumersRemoveCommand]),
 );
 
+export const agentToolsCommand = Command.make(
+  "tools",
+  { json: bool("json", "Print JSON (the only format)") },
+  () => Console.log(JSON.stringify(Agent.manifest(), null, 2)),
+).pipe(Command.withDescription("Print the Code Mode tools as JSON"));
+
+export const agentCallCommand = Command.make(
+  "call",
+  {
+    tool: Argument.Literals("tool", Agent.toolNames).pipe(
+      Argument.withDescription(
+        "The tool to run, from skill-maintenance agent tools",
+      ),
+    ),
+  },
+  ({ tool }) =>
+    Effect.gen(function* () {
+      const stdio = yield* Stdio.Stdio;
+
+      const text = yield* stdio.stdin.pipe(
+        Stream.decodeText(),
+        Stream.mkString,
+      );
+
+      yield* Console.log(yield* Agent.call(tool, text));
+    }),
+).pipe(
+  Command.withDescription(
+    "Run a Code Mode tool with its input as JSON on stdin and print its result as JSON",
+  ),
+);
+
+export const agentCommand = Command.make("agent").pipe(
+  Command.withDescription("The Code Mode tools the OpenCode plugin registers"),
+  Command.withSubcommands([agentToolsCommand, agentCallCommand]),
+);
+
 export const skillMaintenanceCommand = Command.make("skill-maintenance").pipe(
   Command.withSubcommands([
     validateCommand,
@@ -274,6 +312,7 @@ export const skillMaintenanceCommand = Command.make("skill-maintenance").pipe(
     skillReviewsCommand,
     checkCommand,
     consumersCommand,
+    agentCommand,
   ]),
   Command.withDescription("Maintain the Agent Skills repository"),
 );
