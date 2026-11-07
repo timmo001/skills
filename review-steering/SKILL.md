@@ -22,4 +22,4 @@ Push whenever the branch is at a working point, as the loop describes. With each
 
 ## Steering
 
-A steer can arrive at any point, about the current item or work already pushed. Track it as the loop describes: insert it into the todo list at the next good stopping point, keep going with the current focus until it reaches a working point, then pick the steer up. Note it on the issue when it outlasts the session, and don't wait for confirmation. Fix pushed work in new commits rather than rewriting history.
+A steer can arrive at any point, about the current item or work already pushed. Track it as the loop describes: insert it into the checklist at the next good stopping point, keep going with the current focus until it reaches a working point, then pick the steer up. Note it on the issue when it outlasts the session, and don't wait for confirmation. Fix pushed work in new commits rather than rewriting history.

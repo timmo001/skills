@@ -19,7 +19,7 @@ A stage is one coherent change the user can review on its own: an issue, a check
 1. Finish the stage, run the checks it needs and commit it. Don't push yet.
 2. Open a gated Plannotator code review of the stage (`review` with `gate: true`, based on the last pushed commit) and link it from the Inbox thread with a `Holds up:` line naming the stage. Say what the stage does and anything the user should look at by eye as well.
 3. While it waits, carry on with the next item only if it doesn't build on the unreviewed stage; otherwise work on independent items. If none are left, end the turn and let the review arrive.
-4. On feedback, fix it in new commits, queue any wider steer in the todo list for after this stage, and open the review again for the same stage.
+4. On feedback, fix it in new commits, queue any wider steer in the checklist for after this stage, and open the review again for the same stage.
 5. On approval, push, then tick the tracker and move on as the loop describes.
 
 Never push a stage that hasn't been approved, and don't fold an unrelated change into a stage that is already up for review.

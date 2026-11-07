@@ -51,7 +51,7 @@ These are agent-agnostic in format, but their workflows or specific branches dep
 | `github-repository-setup` | Authenticated GitHub CLI, Git, jq, and repository creation/settings write access. Encodes preferred personal repository defaults, discovers workflow examples from the authenticated account, and uses the owner-selected shared source, including `timmo001/workflows` for the personal Renovate caller. Delegates reusable workflows and post-push rulesets to `shared-workflows` and `github-development-rulesets`. |
 | `herdr-workflows` | Herdr, its CLI environment, and the external `herdr` skill. |
 | `inbox-reporting` | Plannotator Inbox and review tools; designed for OpenCode 2 `/goal` alongside a loop skill. |
-| `issue-loop` | Git, authenticated GitHub CLI; designed for OpenCode 2 `/goal` with background shells; the Plannotator Board when available. |
+| `issue-loop` | Git, authenticated GitHub CLI; designed for OpenCode 2 `/goal` with background shells; the Plannotator Inbox checklist and Board when available. |
 | `home-assistant-frontend` | Home Assistant frontend checkout, or a custom card or dashboard repository with the frontend's `ha-frontend-*` skills linked from a submodule. |
 | `home-assistant-lit-rendering` | Home Assistant frontend checkout, or a custom card or dashboard repository, with Lit. |
 | `npm-jsr-first-publish` | npm 11.15 or later, jq, curl, Git, npm and JSR accounts, and a GitHub Actions release workflow that publishes with OIDC. The bundled script needs an interactive terminal for npm and JSR sign-in. |

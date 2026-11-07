@@ -12,7 +12,7 @@ The user follows and steers from the Inbox and chat while the work runs; the ter
 
 ## Thread
 
-Use one Inbox thread for the goal, named after the work, and keep every update, review link and question in it. Where the Board is on, link the thread from the goal's card.
+Use one Inbox thread for the goal, named after the work, and keep every update, review link and question in it. Keep the loop's remaining steps as the thread's checklist (`steps`, or `steps` sent with the update), changed when a step starts, ends or waits on the user. Where the Board is on, link the thread from the goal's card.
 
 ## Status updates
 
@@ -30,7 +30,7 @@ The loaded review mode can narrow this: under `review-steering` nothing is put u
 
 ## Acknowledging steering
 
-When a steer, answer or review decision arrives in chat, an Inbox reply or review feedback, reply in the thread first: a line on what was decided, where it went in the todo list (usually after the current item) and what happens now, with any question it settles in `supersedes`. A request made in chat counts the same as one in the Inbox.
+When a steer, answer or review decision arrives in chat, an Inbox reply or review feedback, reply in the thread first: a line on what was decided, where it went in the checklist (usually after the current item) and what happens now, with any question it settles in `supersedes`. A request made in chat counts the same as one in the Inbox.
 
 ## Ending
 

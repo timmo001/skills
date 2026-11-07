@@ -1,8 +1,8 @@
 ---
 name: issue-loop
 license: Apache-2.0
-description: Work through a GitHub issue and every issue related to it until they are done, committing each change and pushing at each working point, with the issue tracker, any project board and the todo list kept current and the user's steering folded in as it arrives. Use ONLY as an explicitly invoked OpenCode `/goal` objective naming the issue, such as `/goal @issue-loop` followed by its number, usually alongside `inbox-reporting` and one review mode (`review-stages` or `review-steering`).
-compatibility: Requires Git and an authenticated GitHub CLI. Designed for OpenCode 2 `/goal` with background shells; uses the Plannotator Board when available.
+description: Work through a GitHub issue and every issue related to it until they are done, committing each change and pushing at each working point, with the issue tracker, any project board and the Plannotator Inbox checklist kept current and the user's steering folded in as it arrives. Use ONLY as an explicitly invoked OpenCode `/goal` objective naming the issue, such as `/goal @issue-loop` followed by its number, usually alongside `inbox-reporting` and one review mode (`review-stages` or `review-steering`).
+compatibility: Requires Git and an authenticated GitHub CLI. Designed for OpenCode 2 `/goal` with background shells; uses the Plannotator Inbox checklist and Board when available.
 disable-model-invocation: true
 ---
 
@@ -32,22 +32,22 @@ Keep three places in step, updating each as soon as something changes rather tha
 
 - **Issue tracker:** re-read an issue before editing it so concurrent edits aren't lost. Tick items and close issues only once their change is pushed.
 - **Board:** where the Plannotator Board is available, one card for the goal, moved and given a `say` line as the work moves (`building` while working, `your_look` or `your_review` while something waits on the user, `shipped` when done).
-- **Todo list:** one item per remaining issue or step, in the order you'll do them. Never leave work only in the conversation.
+- **Checklist:** the Plannotator Inbox checklist on the goal's thread (`steps`), one step per remaining issue or step in the order you'll do them, marked `doing`, `done` or `waiting` as each moves. It holds at most 12 steps, so fold later items into one step when there are more. Where the Inbox has no checklist, keep the list on the tracking issue. Never leave work only in the conversation; OpenCode's own todo list is off.
 
 ## Steering
 
 The user steers while the loop runs, through chat, Inbox replies, review feedback and issue edits. Treat each steer as work, not as a pause:
 
 1. Acknowledge it where it came from (the Inbox thread where `inbox-reporting` is loaded).
-2. Insert it into the todo list at the next good stopping point: straight after the current item when it corrects work already done or changes what comes next, otherwise in order with the rest. Record it on the issue or as a new in-scope issue when it outlasts the session.
+2. Insert it into the checklist at the next good stopping point: straight after the current item when it corrects work already done or changes what comes next, otherwise in order with the rest. Record it on the issue or as a new in-scope issue when it outlasts the session.
 3. Carry on with the current focus first. Don't drop or rework the item in hand mid-way; finish it to its next working point, then take the steer from the updated list. Don't stop to confirm a clear steer; ask only when it's ambiguous or conflicts with an earlier one. The exception is a steer that says the current item is wrong or should stop: act on that at once.
 
 ## Each round
 
-1. Re-read the issues in scope, take any steering queued at this point, and pick the next item nothing blocks. Mark it in progress.
+1. Re-read the issues in scope, take any steering queued at this point, and pick the next item nothing blocks. Mark it `doing` in the checklist.
 2. Do it, following the repository's instructions and owning skills. Run the checks it needs.
 3. Commit it. Push when the branch is at a working point, unless the review mode holds it. If the push runs CI, watch it in a background shell as `ci-loop` describes, and fix what it finds before moving on.
-4. Update the tracker, Board and todo list, then go straight on to the next item. Don't stop to ask whether to continue.
+4. Update the tracker, Board and checklist, then go straight on to the next item. Don't stop to ask whether to continue.
 
 When an item needs the user, send what it needs and carry on with any item that doesn't depend on the answer.
 
