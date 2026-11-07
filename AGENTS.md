@@ -7,6 +7,7 @@
 - Preserve imported history, provenance records in `skills.yml`, and upstream licence material.
 - Do not create checked-in copies under `.agents/`, `.claude/`, `.cursor/`, or `.opencode/`.
 - Keep agent-specific packaging as metadata around the canonical skills, not forks of their content.
+- `opencode-plugin/` is the OpenCode plugin for `skill-maintenance`, loaded from this repository. It registers the `skill-maintenance` Code Mode namespace from `skill-maintenance agent tools --json` (`src/agent/Agent.ts`), so a new tool there needs no plugin change. It has its own `bun.lock` and pins OpenCode's `@opencode/plugin` and Effect versions; `typecheck` installs and checks it.
 
 ## Tool-Owned Skills
 
