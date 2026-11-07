@@ -170,7 +170,7 @@ skills:
       distribution: external
   groundwork-themes:
     import:
-      upstreamSha: 1c52fb97d34a97025d42726dc53b597866704fdc
+      upstreamSha: 38ca56938cf02e68f5481fa5d1362b8477420e4f
       origin: "https://github.com/timmo001/groundwork/tree/main/skills/groundwork-themes"
       license: "Apache-2.0"
       localEdits: []
