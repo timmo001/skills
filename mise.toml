@@ -17,14 +17,22 @@ npm.package_manager = "aube"
 [env]
 _.path = ["{{config_root}}/node_modules/.bin"]
 
+# Tasks that use node_modules depend on this, so they also run in a fresh
+# clone, such as Upkeep's when the hk pre-push hook runs validate.
+[tasks.install]
+description = "Install dependencies"
+run = "bun install --frozen-lockfile"
+
 [tasks.build]
 description = "Compile the skill-maintenance CLI"
+depends = ["install"]
 run = "bun build src/index.ts --compile --outfile dist/skill-maintenance"
 sources = ["src/**/*.ts", "package.json", "bun.lock", "tsconfig.json"]
 outputs = ["dist/skill-maintenance"]
 
 [tasks.lint]
 description = "Lint TypeScript with Oxlint"
+depends = ["install"]
 run = "oxlint"
 
 [tasks."lint:yaml"]
@@ -33,6 +41,7 @@ run = "yamllint ."
 
 [tasks.typecheck]
 description = "Type-check the CLI source"
+depends = ["install"]
 run = "tsc --noEmit"
 
 [tasks.test]
@@ -42,10 +51,12 @@ run = "vitest run"
 
 [tasks.format]
 description = "Format the CLI source and Markdown with Prettier"
+depends = ["install"]
 run = "bun run format"
 
 [tasks."format:check"]
 description = "Check formatting without writing"
+depends = ["install"]
 run = "bun run format:check"
 
 [tasks.catalogue]
@@ -60,10 +71,12 @@ run = "./dist/skill-maintenance validate"
 
 [tasks.schema]
 description = "Generate skills.schema.json from the skills.yml schema"
+depends = ["install"]
 run = "bun src/generateSkillsSchema.ts"
 
 [tasks."schema:check"]
 description = "Check skills.schema.json matches the skills.yml schema"
+depends = ["install"]
 run = "bun src/generateSkillsSchema.ts --check"
 
 [tasks.validate]
