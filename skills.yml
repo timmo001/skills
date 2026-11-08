@@ -285,7 +285,7 @@ skills:
   remote-change-diff:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.54"
+        reviewed: "v0.28.55"
   research:
     tools:
       - repo: backnotprop/plannotator
