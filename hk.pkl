@@ -1,7 +1,7 @@
 // Pre-push checks: the shared base from timmo001/workflows, plus the full
 // validate suite that catches catalogue and schema drift. Run them by hand with
 // `hk check`.
-amends "package://github.com/timmo001/workflows/releases/download/20261027.0/hk-base@20261027.0.0#/base.pkl"
+amends "package://github.com/timmo001/workflows/releases/download/20261108.2/hk-base@20261108.2.0#/base.pkl"
 
 hooks {
   ["pre-push"] {
