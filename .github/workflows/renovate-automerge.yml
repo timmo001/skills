@@ -11,4 +11,4 @@ permissions:
 
 jobs:
   renovate-automerge:
-    uses: timmo001/workflows/.github/workflows/renovate-automerge.yml@de4221cd9b24ad3d61aa1db87b6e4864cf56d5a1 # 20261027.0
+    uses: timmo001/workflows/.github/workflows/renovate-automerge.yml@056c2aa0b36cbd28bfa721b936589a369b1331bd # 20261108.1
