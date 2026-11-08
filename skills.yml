@@ -312,7 +312,7 @@ skills:
   review-stages:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.53"
+        reviewed: "v0.28.54"
   session-coordination:
     tools:
       - repo: herdrdev/herdr
