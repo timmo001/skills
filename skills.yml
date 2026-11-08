@@ -53,7 +53,7 @@ skills:
   change-review-handoff:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.51"
+        reviewed: "v0.28.53"
   cloudflare:
     import:
       upstreamSha: 6eb6c781aa9b6438e0c7307bd102788a75fe1a6d
