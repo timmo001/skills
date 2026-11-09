@@ -349,7 +349,7 @@ skills:
   testing:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.56"
+        reviewed: "v0.28.57"
   to-questionnaire:
     import:
       upstreamSha: 321658273cb1d20b76026717d027d505790106d4
