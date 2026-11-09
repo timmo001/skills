@@ -84,7 +84,7 @@
         "source": "git-subdir",
         "url": "timmo001/groundwork",
         "path": "skills/docs-kit",
-        "sha": "08b3bea7254654f2b94f7fc0d2515de7f7458ca8"
+        "sha": "4a03af8fa023acbb2393583a776bbc76cf9fbbe1"
       }
     },
     {
@@ -163,6 +163,21 @@
       }
     },
     {
+      "name": "timmo-groundwork-changes",
+      "description": "External import from timmo001/groundwork",
+      "license": "Apache-2.0",
+      "metadata": {
+        "skill": "groundwork-changes"
+      },
+      "skills": "./",
+      "source": {
+        "source": "git-subdir",
+        "url": "timmo001/groundwork",
+        "path": "skills/groundwork-changes",
+        "sha": "4a03af8fa023acbb2393583a776bbc76cf9fbbe1"
+      }
+    },
+    {
       "name": "timmo-groundwork-conventions",
       "description": "External import from timmo001/groundwork",
       "license": "Apache-2.0",
@@ -189,7 +204,7 @@
         "source": "git-subdir",
         "url": "timmo001/groundwork",
         "path": "skills/groundwork-setup",
-        "sha": "e70335bc31638507a881d8c96025b8929ec0006e"
+        "sha": "4a03af8fa023acbb2393583a776bbc76cf9fbbe1"
       }
     },
     {
@@ -204,7 +219,7 @@
         "source": "git-subdir",
         "url": "timmo001/groundwork",
         "path": "skills/groundwork-themes",
-        "sha": "cbfa852d60dd7a7a3e3ceccf51a0a737fc053caf"
+        "sha": "4a03af8fa023acbb2393583a776bbc76cf9fbbe1"
       }
     },
     {

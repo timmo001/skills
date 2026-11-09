@@ -110,7 +110,7 @@ skills:
         - "point fixed unit, crash, OOM and journal failures to triage-resolve"
   docs-kit:
     import:
-      upstreamSha: 08b3bea7254654f2b94f7fc0d2515de7f7458ca8
+      upstreamSha: 4a03af8fa023acbb2393583a776bbc76cf9fbbe1
       origin: "https://github.com/timmo001/groundwork/tree/main/skills/docs-kit"
       license: "Apache-2.0"
       localEdits: []
@@ -161,6 +161,13 @@ skills:
         - "cap rounds at five questions"
         - "present each round in chat first and keep questions concise via asking-questions"
         - "limit the upstream yes-accepts-recommendation rule to yes/no questions"
+  groundwork-changes:
+    import:
+      upstreamSha: 4a03af8fa023acbb2393583a776bbc76cf9fbbe1
+      origin: "https://github.com/timmo001/groundwork/tree/main/skills/groundwork-changes"
+      license: "Apache-2.0"
+      localEdits: []
+      distribution: external
   groundwork-conventions:
     import:
       upstreamSha: 8040415648a30e64d4aff859fe5fa6c78d13a40f
@@ -170,14 +177,14 @@ skills:
       distribution: external
   groundwork-setup:
     import:
-      upstreamSha: e70335bc31638507a881d8c96025b8929ec0006e
+      upstreamSha: 4a03af8fa023acbb2393583a776bbc76cf9fbbe1
       origin: "https://github.com/timmo001/groundwork/tree/main/skills/groundwork-setup"
       license: "Apache-2.0"
       localEdits: []
       distribution: external
   groundwork-themes:
     import:
-      upstreamSha: cbfa852d60dd7a7a3e3ceccf51a0a737fc053caf
+      upstreamSha: 4a03af8fa023acbb2393583a776bbc76cf9fbbe1
       origin: "https://github.com/timmo001/groundwork/tree/main/skills/groundwork-themes"
       license: "Apache-2.0"
       localEdits: []
