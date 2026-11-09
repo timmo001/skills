@@ -163,7 +163,7 @@ skills:
         - "limit the upstream yes-accepts-recommendation rule to yes/no questions"
   groundwork-changes:
     import:
-      upstreamSha: 4a03af8fa023acbb2393583a776bbc76cf9fbbe1
+      upstreamSha: 55e960e573a310215c053fa225f594a599a2d913
       origin: "https://github.com/timmo001/groundwork/tree/main/skills/groundwork-changes"
       license: "Apache-2.0"
       localEdits: []
