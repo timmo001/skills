@@ -27,6 +27,8 @@ Approving with no comments sends nothing back, so once the reviews are open, sen
 3. The next steps as a `:::question-multi` block, so the user can tick several (options in step 4). Word the question to fit the change and make clear it is for when they have no notes.
 4. For a large change (several repositories, many files or hundreds of changed lines, or parts that need explaining in order), a separate `:::question` offering a guided review as well, recommended when the change spans repositories or needs explaining in order. Sizes are a judgement call, not a threshold.
 
+Send it into the work stream's existing thread: set `reply_to` to a message already in it, or repeat the thread's `thread` name. A message that names neither starts a new thread, so the handoff would land apart from the work it belongs to.
+
 Put any question of the thread this change settles, such as the plan review question, in `supersedes`. When the work has a Board card, move it to `in_review` with `you:` naming the tick and `thread_id` this thread.
 
 When the user wants a guided review, send it into the same thread (`get_guide_brief`, then `submit_guide` with `reply_to` set to this message, covering every repository), or use the `plannotator-guide` skill when they want an exported file. The diff review stays open alongside it, and the next-steps question still stands.
@@ -52,7 +54,7 @@ Recommended: Commit, push and create the pull request
 
 ## 3. Act On What Arrives
 
-- **Feedback** (review comments, guide comments, which arrive as a reply in the guide's thread, comments on the words of the handoff message, such as its `diff` block, or notes asking for changes): if the question is still open, replace it first with `supersedes: ["<old message id>"]` so a tick on the old diff can't be sent. Then make each change, rerun the checks, reopen the review, and send a new question with it.
+- **Feedback** (review comments, guide comments, which arrive as a reply in the guide's thread, comments on the words of the handoff message, such as its `diff` block, or notes asking for changes): if the question is still open, replace it first with `supersedes: ["<old message id>"]` so a tick on the old diff can't be sent. Then make each change, rerun the checks, reopen the review, and send a new question with it, in the same thread (`reply_to` or `thread`, as in step 2).
 - **Approved with notes:** notes are guidance, not change requests. Make the small, clear ones and say how you handled each. Replace the question only if that changed the diff or which steps fit.
 - **Ticked steps:** treat as approval with no notes and run them (step 4).
 - **A reply that ticked nothing,** or a review closed without a decision: the question stays open. Don't ask again or reopen the review; if the user says "approved" without ticking anything, point to the question or ask it in chat.
