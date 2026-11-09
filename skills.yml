@@ -49,7 +49,7 @@ skills:
   browser-access:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.54"
+        reviewed: "v0.28.55"
   change-review-handoff:
     tools:
       - repo: backnotprop/plannotator
