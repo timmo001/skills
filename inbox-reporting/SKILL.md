@@ -12,7 +12,7 @@ The user follows and steers from the Inbox and chat while the work runs; the ter
 
 ## Thread
 
-Use one Inbox thread for the goal, named after the work, and keep every update, review link and question in it. Keep the loop's remaining steps as the thread's checklist (`steps`, or `steps` sent with the update), changed when a step starts, ends or waits on the user. Keep it to a few high-level steps in plain words, never your own to-do list; the Inbox shows it as a button in the thread's bottom bar. Where the Board is on, link the thread from the goal's card.
+Use one Inbox thread for the goal, named after the work, and keep every update, review link and question in it. A message that names no thread starts a new one, so give every message the same `thread` name, or `reply_to` a message in the thread. Keep the loop's remaining steps as the thread's checklist (`steps`, or `steps` sent with the update), changed when a step starts, ends or waits on the user. Keep it to a few high-level steps in plain words, never your own to-do list; the Inbox shows it as a button in the thread's bottom bar. Where the Board is on, link the thread from the goal's card.
 
 ## Status updates
 
