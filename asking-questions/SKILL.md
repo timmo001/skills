@@ -56,6 +56,7 @@ Each question must make sense from the chat directly above it. If the thing bein
 - Ask in chat alone only when the user says to, or when the Inbox is unavailable.
 - Never use a blocking structured question tool (OpenCode's `question`, Claude Code's `AskUserQuestion`), even if the client offers one: it holds the turn open, so an Inbox reply can't arrive and the session stalls until someone answers at the terminal.
 - Prefer concrete options over open prompts. Keep them in their natural order and mark the recommended one, never moving it first; in a `:::question` block only the `Recommended:` line marks it.
+- When options have real trade-offs, add `Pros:` and `Cons:` lines under each option in the `:::question` block rather than lengthening its label or description; the card shows them side by side. When trying something would settle the choice, add a `Prototype:` line (an HTML file attached to the same message, or a running local app) under one option, or at the block's level for all of them. The Inbox refuses the send if the file isn't attached HTML or the app doesn't answer.
 
 ## Wording
 
