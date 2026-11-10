@@ -13,7 +13,7 @@ skills:
       distribution: external
   agentic-workflows:
     import:
-      upstreamSha: 2b8cc9628b86962ea90991d8e21f15f4df25a780
+      upstreamSha: de60c900fa96bed62c2573aea87c7155bbbeaa4b
       origin: "https://github.com/github/gh-aw/tree/main/.github/skills/agentic-workflows"
       license: "MIT"
       localEdits:
@@ -24,7 +24,7 @@ skills:
         - "tests/: omitted (upstream repository guidance contract tests)"
     tools:
       - repo: github/gh-aw
-        reviewed: "v1.0.1"
+        reviewed: "v1.2.2"
   android-cli:
     import:
       upstreamSha: 253e63c608eb08265577684b38c19b0373869031

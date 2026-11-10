@@ -1,7 +1,7 @@
 ---
 name: agentic-workflows
 compatibility: Requires GitHub CLI with the gh aw extension and network access to the official Agentic Workflows documentation.
-description: Design, create, update, debug, audit, or upgrade GitHub Agentic Workflows with the `gh aw` extension. Use when work involves workflow Markdown, compiled `.lock.yml` files, agent engines, MCP tools, safe outputs, work queues, or `gh aw` commands.
+description: Design, create, update, debug, audit, or upgrade GitHub Agentic Workflows with the `gh aw` extension. Use when work involves workflow Markdown, compiled `.lock.yml` files, agent engines, MCP tools, safe outputs, work queues, scheduled memory consolidation, local SDLC issue bootstrap, or `gh aw` commands.
 license: MIT
 ---
 
@@ -22,6 +22,10 @@ compiled to GitHub Actions lock files.
    `.github/aw/` guidance for the task type instead of guessing syntax:
    - design: `designer.md`
    - create: `create-agentic-workflow.md`
+   - scheduled dreaming or consolidating persistent memory:
+     `create-agentic-workflow.md`, then the scheduled dreaming section of
+     `memory.md`; load `dreaming.md` only when the decision and input scope
+     justify implementation
    - campaign workflows: `campaign.md`
    - update: `update-agentic-workflow.md`
    - optimise: `optimize-agentic-workflow.md`
@@ -51,7 +55,10 @@ compiled to GitHub Actions lock files.
    - release workflows: `release-workflow.md`
    - drive-backed workflow memory: `drive-memory.md`
    - experimental append-only event history (`tools.ledger`): `ledger.md`
-   - declarative skills or agent plugins: `skills.md`
+   - declarative skills or agent plugins requested by the user (`skills:` or
+     `plugins:` frontmatter, never on-the-fly installs): `skills.md`
+   - local SDLC issue bootstrap: preparing a substantial issue for a local,
+     self-contained SDLC: `squad.md`
    - report generation: `report.md`
    - Dependabot manifest updates: `dependabot.md`
    - test coverage analysis: `test-coverage.md`
