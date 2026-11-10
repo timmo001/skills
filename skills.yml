@@ -90,7 +90,7 @@ skills:
         - "listed Ollaya 0.18.0's sura and gliclass-v4 models in the model table"
     tools:
       - repo: ollama/ollama
-        reviewed: "v0.40.15"
+        reviewed: "v0.40.16"
       - repo: ollaya-dev/ollaya
         reviewed: "v0.18.0"
   diagnose:
