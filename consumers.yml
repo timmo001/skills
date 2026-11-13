@@ -378,3 +378,15 @@ repositories:
       - testing
       - types-enforce-ts
       - writing-style
+  timmo001/kestrel:
+    skills:
+      - changeset-scope
+      - code-review
+      - docs-kit
+      - effect
+      - effect-service-design
+      - skill-prefixes
+      - task-runners
+      - testing
+      - types-enforce-ts
+      - writing-style
