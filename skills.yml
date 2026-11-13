@@ -177,7 +177,7 @@ skills:
       distribution: external
   groundwork-setup:
     import:
-      upstreamSha: 4a03af8fa023acbb2393583a776bbc76cf9fbbe1
+      upstreamSha: a29625303e848ea740c4c8b80a1bfd15f9df9a34
       origin: "https://github.com/timmo001/groundwork/tree/main/skills/groundwork-setup"
       license: "Apache-2.0"
       localEdits: []
