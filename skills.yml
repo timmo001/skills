@@ -314,7 +314,7 @@ skills:
         - "agents/openai.yaml: omitted"
     tools:
       - repo: anomalyco/opencode
-        reviewed: "v2.2.7"
+        reviewed: "v2.3.0"
         tags: "^v2\\."
   review-stages:
     tools:
