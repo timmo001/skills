@@ -193,6 +193,21 @@
       }
     },
     {
+      "name": "timmo-groundwork-interfaces",
+      "description": "External import from timmo001/groundwork",
+      "license": "Apache-2.0",
+      "metadata": {
+        "skill": "groundwork-interfaces"
+      },
+      "skills": "./",
+      "source": {
+        "source": "git-subdir",
+        "url": "timmo001/groundwork",
+        "path": "skills/groundwork-interfaces",
+        "sha": "4c9509ec3c777623517044eaa2516754138cc172"
+      }
+    },
+    {
       "name": "timmo-groundwork-setup",
       "description": "External import from timmo001/groundwork",
       "license": "Apache-2.0",
