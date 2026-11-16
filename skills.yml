@@ -35,7 +35,7 @@ skills:
   asking-questions:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.28.65"
+        reviewed: "v0.28.66"
   bro:
     import:
       upstreamSha: cbd1929589267453029859a43d2ecf411c865b54
