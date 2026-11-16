@@ -37,8 +37,9 @@ Follow the project's own declared workflow first, then pitchfork, then a framewo
 3. If there is no wrapper task but `pitchfork.toml` exists, run pitchfork directly from the repo directory.
 4. Typical operations are `pitchfork start <daemon>`, `pitchfork status`, `pitchfork logs -t <daemon>`, `pitchfork restart <daemon>`, and `pitchfork stop <daemon>`.
 5. Start every server a task needs in one call (`pitchfork start api worker`, or `--group <name>`) rather than one at a time. Each returns once ready; prefer the daemon's `--port`, `--http` or `--output` readiness check over a fixed `--delay`.
-6. Treat `serve:*` as a common local convention, not a requirement.
-7. Find a running server's address with `pitchfork proxy status` rather than guessing a port. When the proxy is enabled, use the `https://<daemon>.<project>.localhost` address without a port. If it only works with the proxy's own port, run `pitchfork proxy doctor` and report the result rather than switching to the raw port.
+6. Stop daemons by name, `--group` or `--local`, not `pitchfork stop --all`. Since 2.35 it lists daemons from other projects and refuses without a terminal, which is how an agent runs it. Use `--all --force` only when the user asks to stop every project's daemons.
+7. Treat `serve:*` as a common local convention, not a requirement.
+8. Find a running server's address with `pitchfork proxy status` rather than guessing a port. When the proxy is enabled, use the `https://<daemon>.<project>.localhost` address without a port. If it only works with the proxy's own port, run `pitchfork proxy doctor` and report the result rather than switching to the raw port.
 
 ## Notes
 
