@@ -65,7 +65,6 @@ Details, reasoning, and trade-offs go in the chat above. The question and its op
 
 - One question, one decision. Write it as a direct, short sentence that names the concrete thing being decided.
 - Option labels name the choice in a few words; option descriptions add only the key consequence in one short sentence.
-- Say who acts only where either of you could plausibly do it, such as adding a device in a UI, and add the role in brackets: "I (the agent) add the laptop" and "You (the user) add it in the UI". A bare "I'll add it" reads as the user's own voice. Where it's obvious who acts, such as the agent committing, pushing or editing, leave it out: "Commit and push both now", "Leave uncommitted".
 - Use the concrete facts: file paths, names, commands, and values, not vague terms like "the approach" or "this change".
 - No filler, hedging, preamble, restated context, jargon, or process terms.
 - Do not repeat the explainer inside the question or its options.
