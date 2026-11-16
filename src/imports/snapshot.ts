@@ -11,7 +11,11 @@ import { DeletedOriginError, parseOrigin } from "./upstream.js";
 
 export class SnapshotError extends Schema.TaggedError<SnapshotError>()(
   "SnapshotError",
-  { operation: Schema.String, message: Schema.String },
+  {
+    operation: Schema.String,
+    message: Schema.String,
+    cause: Schema.optional(Schema.Defect()),
+  },
 ) {}
 
 const GitSha = Schema.String.check(Schema.isPattern(/^[0-9a-f]{40}$/));
@@ -187,10 +191,11 @@ export const withFetched = Effect.fn("Snapshot.withFetched")(function* <
 
   const origin = yield* parseOrigin(metadata.origin).pipe(
     Effect.mapError(
-      () =>
+      (cause) =>
         new SnapshotError({
           operation: "origin",
           message: `${name}: unsupported origin URL`,
+          cause,
         }),
     ),
   );

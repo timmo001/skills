@@ -13,7 +13,10 @@ const MARKETPLACE_PLUGIN = "timmo";
 
 export class CatalogueError extends Schema.TaggedError<CatalogueError>()(
   "CatalogueError",
-  { failures: Schema.Array(Schema.String) },
+  {
+    failures: Schema.Array(Schema.String),
+    cause: Schema.optional(Schema.Defect()),
+  },
 ) {}
 
 const CatalogFile = Schema.Struct({
@@ -184,9 +187,10 @@ export const renderMarketplace = Effect.fn("Catalogue.renderMarketplace")(
     for (const [name, metadata] of external) {
       const origin = yield* parseOrigin(metadata.origin).pipe(
         Effect.mapError(
-          () =>
+          (cause) =>
             new CatalogueError({
               failures: [`${name}: unsupported origin URL`],
+              cause,
             }),
         ),
       );
