@@ -339,7 +339,7 @@
         "source": "git-subdir",
         "url": "anomalyco/opentui",
         "path": "packages/web/src/content",
-        "sha": "c3a007e0dad54ef5495b580d8ca0eb56d6f1b2cb"
+        "sha": "a865cdc28617234da656725c539cb0356df2b41d"
       }
     },
     {
