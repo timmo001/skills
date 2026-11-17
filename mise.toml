@@ -1,7 +1,7 @@
 [tools]
 bun = "1.4.4"
 node = "26.13.1"
-"npm:skills" = "1.8.1"
+"npm:skills" = "1.9.0"
 uv = "0.13.8"
 # yamllint's PyYAML has no wheels for newer Pythons, and mise won't build it from source.
 python = "3.14.10"

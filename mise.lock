@@ -178,10 +178,10 @@ backend = "npm:markdownlint-cli2"
 specifiers = ["0.24.1"]
 
 [[tools."npm:skills"]]
-version = "1.8.1"
-aube = { path = ".mise/locks/npm-skills/1.8.1", digest = "sha256:8cc8488459e28a18f72b480875c70b328a398f69b99df4773bbffeb3c1de96f0" }
+version = "1.9.0"
+aube = { path = ".mise/locks/npm-skills/1.9.0", digest = "sha256:7986f7572c57b5b5ca6407f53294cd4f7cda8fa5c8b052c82b24cc2a492c01ac" }
 backend = "npm:skills"
-specifiers = ["1.8.1"]
+specifiers = ["1.9.0"]
 
 [[tools."pipx:yamllint"]]
 version = "1.38.0"
