@@ -249,7 +249,7 @@ skills:
   opencode-effect:
     tools:
       - repo: anomalyco/opencode
-        reviewed: "v2.3.2"
+        reviewed: "v2.4.0"
         tags: "^v2\\."
   opentui:
     import:

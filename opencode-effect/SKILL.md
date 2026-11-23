@@ -28,6 +28,7 @@ Use OpenCode V2 and its Effect-native APIs unless the user explicitly asks for a
 - Embed OpenCode with `@opencode/sdk/effect`. Own the host with `Effect.scoped` or provide it through `OpenCode.layer()`.
 - Use the generated client instead of hand-written HTTP calls when an endpoint is available. For direct API work, verify the operation and schema in the V2 API reference or the running server's `/openapi.json`, use Effect's `HttpClient`, and decode request and response boundaries with `Schema`.
 - Keep decoded branded values such as `AbsolutePath`, `Location.Ref`, and resource IDs. Do not cast plain strings or untrusted responses into them.
+- Expect partial results right after server startup: plugins load in the background and the model, provider, `generate.*`, `voice.*` and `websearch.query` endpoints answer with whatever has loaded, without waiting or returning 503. Long-lived clients should refresh on the matching `*.updated` event, such as `model.updated`. One-shot scripts should poll `plugin.list`, or the endpoint, until the entry they need appears.
 - Keep expected client failures in the Effect error channel. Use `Effect.orDie` only when the surrounding application deliberately treats that failure as a defect.
 
 ## Plugin Example
@@ -100,4 +101,4 @@ const session = await Effect.runPromise(program)
 
 ## Verification
 
-Typecheck examples against the target project's exact locked package set after verifying every imported subpath in published and installed package metadata. Exercise plugin load and cleanup, and run one real client or SDK operation. For direct HTTP work, verify the same operation with `opencode2 api` or the Effect-native generated client.
+Typecheck examples against the target project's exact locked package set after verifying every imported subpath in published and installed package metadata. Exercise plugin load and cleanup, and run one real client or SDK operation, allowing for plugins that are still loading. For direct HTTP work, verify the same operation with `opencode2 api` or the Effect-native generated client.
