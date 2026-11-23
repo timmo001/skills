@@ -1,7 +1,7 @@
 ---
 name: browser-access
 license: Apache-2.0
-description: Decide whether browser access is needed and keep authorised checks narrow. Use for frontend or UI diagnosis, before proposing or using Playwright, Chrome DevTools or other browser automation, and when the user explicitly requests browser interaction.
+description: Decide whether browser access is needed and keep authorised checks narrow. Use for frontend or UI diagnosis, before proposing or using browse, OpenCode's built-in browser or other browser automation, and when the user explicitly requests browser interaction.
 ---
 
 # Browser Access
@@ -31,8 +31,10 @@ When the check would show something the user may want to see or keep, ask it as 
 
 ## 3. Run Only The Agreed Check
 
-- Use whichever browser MCP is loaded, such as Playwright or Chrome DevTools, and apply its skill or current documentation for tool mechanics. Neither is preferred, so don't stop to ask for the other one. Use the one the user names when they name one.
-- If no browser MCP is loaded, ask the user to enable one and wait. Do not work around it with a hand-written headless browser or scripted CDP access.
+- Use the browse MCP first: the `browse` Code Mode namespace, available in the OpenCode TUI and any other harness that loads the browse server. It drives the user's own Chrome-family browser through the browse extension, with their logins and tabs: work only in tabs you opened, never close or navigate theirs, and reset or delete your session when the check is done.
+- In the OpenCode desktop app, OpenCode's built-in browser is also available as the `browser` Code Mode namespace. Use it there when browse is missing or the user asks for it; the TUI doesn't have it.
+- Apply the tool's own instructions or current documentation for its mechanics. Use the one the user names when they name one.
+- If neither namespace is available, ask the user to enable one and wait. Do not work around it with the Playwright MCP, a hand-written headless browser or scripted CDP access.
 - Keep work on the agreed task and target. Reuse gathered evidence rather than repeating navigation, snapshots, polling, or broad audits.
 - Gather only the page state, console messages, or network requests needed for the specific issue. When reloading, bypass the cache unless the user explicitly wants cached behaviour.
 - Use Lighthouse or performance traces only when needed for the authorised audit or performance investigation.
