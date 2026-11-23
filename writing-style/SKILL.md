@@ -137,6 +137,7 @@ Longer examples:
 
 - Direct and friendly, first person where it fits. Emoji is fine where the existing doc already uses it; keep it out of commit messages and serious error copy.
 - Describe how things work now and explain why where useful. Put comparisons with previous behaviour in changelogs, release notes, migration guides, or other documents about change.
+- No licence section, line or badge in a README, including package READMEs. The `LICENSE` file and the package metadata are the record, and GitHub, npm and JSR show them already. Leave one an upstream or vendored README already has.
 
 ## User-facing strings (notifications, UI, errors)
 
