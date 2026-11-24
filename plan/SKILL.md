@@ -15,7 +15,7 @@ Produce a plain, implementation-ready plan that shows what code will change and 
 3. Resolve facts available in the repository before asking the user. Do not submit a plan while paths, symbols, or behaviour remain generic placeholders.
 4. Load `staged-implementation` only when repository inspection finds separate, independently reviewable changes. Otherwise write one dependency-ordered implementation sequence. Do not introduce stages, handoffs, checkpoints, or phase artefacts for a small change.
 5. Load `writing-style` as the prose reference for the visible plan. Apply its plain, concise, concrete, human voice, UK English, and no-em-dash rules. Do not apply its commit-message, pull-request, issue, or action-authorisation instructions to plan structure.
-6. Ask only the minimum necessary follow-up questions through the `question` tool when a requirement or trade-off cannot be inferred and would materially alter the implementation. Resolve those decisions before submitting the plan. Leave an open question in the submitted plan only when execution can safely proceed without resolving it. Do not run a grilling session while planning.
+6. Ask only the minimum necessary follow-up questions, as `asking-questions` describes, when a requirement or trade-off cannot be inferred and would materially alter the implementation. Resolve those decisions before submitting the plan. Leave an open question in the submitted plan only when execution can safely proceed without resolving it. Do not run a grilling session while planning.
 7. Do not propose parallel workers during planning unless the user asks for them. When the user does, follow `session-coordination`; planning workers remain read-only, and any agreed implementation split is recorded in the plan and launched only once execution is authorised.
 
 ## Prepare Privately
@@ -48,7 +48,6 @@ Pseudocode earns its place when it exposes changed code flow more clearly than p
 ## Keep It Direct
 
 - Prefer a small direct implementation over speculative abstractions, compatibility layers, helpers, migrations, or phases.
-- Follow the loaded `writing-style` skill for the plan's prose. Write in the maintainer's direct, practical voice. Avoid generic AI prose: no formal padding, flattering agreement, marketing language, repeated summaries, or long transitions that delay the implementation. Use short sentences and say exactly what the code will do and why.
 - Do not use jargon when ordinary language or a code symbol is clearer. Explain an unavoidable technical term once in plain English.
 - Do not use verbs such as "update", "wire", "handle", "support", "integrate", or "refactor" instead of saying what the code will do.
 - Discuss architecture only where it causes a specific code change. Follow architecture statements immediately with the files, symbols, and pseudocode that implement them.
@@ -75,9 +74,8 @@ When the user changes a decision after a plan is drafted, perform a contradictio
 
 ## Finish Planning
 
-Keep the output planning-focused and make no implementation edits while planning. Approval goes through a Plannotator review, which has Approve and Send feedback, never an Inbox question:
+Keep the output planning-focused and make no implementation edits while planning. Approval goes through a gated Plannotator review, which has Approve and Send feedback:
 
-- When the client's plan mode hands the plan to a review on exit, end by leaving plan mode.
-- Otherwise save the plan to a file and open it with the `plannotator` tool's `annotate` action and `gate: true` (or `plannotator annotate <file> --gate --json` without the tool).
-- When the `plannotator_inbox` tool is available, also send an Inbox status update in the same turn with the plan in short and a link to the open review. End it with a `:::question-text` block whose prompt sends the user to the review (for example "Approve or send feedback in the plan review" with the review URL linked) and a `Stopped:` line, so the thread shows it is waiting. Treat a text answer there as plan feedback; the review stays the place to approve.
-- When the review's decision arrives (approved, approved with notes, or feedback), reply in that thread before any edit: put the review question in `supersedes`, say in a line that the plan was approved (or what the feedback changes) and that implementation starts now, and move the Board card to `in_progress` when there is one. The `Stopped:` question must not stand through the implementation.
+- When the client's plan mode hands the plan to a review on exit, that review holds the turn, so an Inbox answer can't reach it. When the `plannotator_inbox` tool is available, first send an Inbox update with the plan in short and a `Stopped:` line saying the plan review is opening, with no question, then leave plan mode.
+- Otherwise save the plan to a file and open it with the `plannotator` tool's `annotate` action and `gate: true` (or `plannotator annotate <file> --gate --json` without the tool). That returns at once, so when the `plannotator_inbox` tool is available, send one Inbox message with the plan in short, the review link and a `:::question` (Approve, or Send feedback with a note). The first answer counts: if the Inbox answer comes first, close the review and act on it; if the review decision comes first, put the question in `supersedes`.
+- When the decision arrives, reply in that thread before any edit: say in a line that the plan was approved (or what the feedback changes) and that implementation starts now, and move the Board card to `in_progress` when there is one.

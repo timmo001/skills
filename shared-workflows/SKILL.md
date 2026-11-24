@@ -30,7 +30,7 @@ Prefer an existing production shared workflow over duplicating CI logic. Keep re
 4. Create shared behaviour only when justified.
    - A candidate must be production behaviour with plausible reuse across repositories and a stable caller-facing contract. Otherwise keep it local.
    - Define the final interface before implementation: typed inputs and defaults, required secrets, outputs, permissions, supported events, artifacts, failure behaviour, and compatibility expectations.
-   - For a missing personal workflow, recommend a separate numbered handoff named `handoff-{workflow-name}-01-create-shared-workflow.md`. Write directly to `@workflows` only when the user's requested scope explicitly includes that repository.
+   - For a missing personal workflow, recommend a separate handoff (see `handoff`) for creating it. Write directly to `@workflows` only when the user's requested scope explicitly includes that repository.
    - For a missing organisation workflow, use the organisation's planning and contribution process rather than creating a personal substitute.
 5. Protect consumers when changing a contract.
    - Discover consumers across repositories owned by the relevant user or organisation; the local `dot` inventory is research context, not the boundary.

@@ -31,7 +31,7 @@ It doesn't cover new branches, worktrees or pull requests unless the repository'
 Keep three places in step, updating each as soon as something changes rather than at the end:
 
 - **Issue tracker:** re-read an issue before editing it so concurrent edits aren't lost. Tick items and close issues only once their change is pushed.
-- **Board:** where the Plannotator Board is available, one card for the goal, moved and given a `say` line as the work moves (`building` while working, `your_look` or `your_review` while something waits on the user, `shipped` when done).
+- **Board:** where the Plannotator Board is available, one card for the goal, moved and given a `say` line as the work moves (`in_progress` while working, `in_review` with a `you` line while something waits on the user, `done` when finished).
 - **Checklist:** the Plannotator Inbox checklist on the goal's thread (`steps`), one step per remaining issue or step in the order you'll do them, marked `doing`, `done` or `waiting` as each moves. It holds at most 12 steps, so fold later items into one step when there are more. Where the Inbox has no checklist, keep the list on the tracking issue. Never leave work only in the conversation; OpenCode's own todo list is off.
 
 ## Steering

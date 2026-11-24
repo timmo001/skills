@@ -15,7 +15,7 @@
 - Import only `context-cli` and `notes-cli` here, as `external` imports with no local content edits. Do not import either MCP skill. `git-context` and `handoff` own the surrounding Git and handoff workflows and route CLI operations to those imports.
 - `skills.yml` records each origin and reviewed source commit; imported `SKILL.md` files carry no provenance comments.
 - Update order: source repository commit and push -> `./dist/skill-maintenance import <name> --apply` here -> catalogue regeneration and validation -> skills commit and push. Machines pick up the new `main` on their next `dot up skills`.
-- New imports need a published source revision containing the skill. Do not invent a revision or point at a commit that predates the skill. Commit and push steps require explicit user authorisation.
+- New imports need a published source revision containing the skill. Do not invent a revision or point at a commit that predates the skill.
 
 ## Skill Changes
 
@@ -44,7 +44,7 @@ mise exec npm:skills -- skills add . --list
 
 `mise run validate` runs the checks in parallel. For a narrow change, run only the tasks it touches, for example `mise run validate:skills` after editing a skill.
 
-`hk.pkl` runs the shared lint from `timmo001/workflows` (Oxlint, markdownlint, yamllint, actionlint, ShellCheck) on the files a push changes, then `mise run validate`, before every push. Run them by hand with `hk check`.
+`hk.pkl` runs the shared lint from `timmo001/workflows` (Oxlint, markdownlint, yamllint, actionlint, ShellCheck) on the files a push changes, then `mise run validate`, before every push. `hk check` runs only the lint; run `mise run validate` separately.
 
 ## After Committing
 

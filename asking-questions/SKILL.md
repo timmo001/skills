@@ -22,11 +22,11 @@ Ask only when the answer changes the work, and never ask cold. The user reads th
 - The step is routine and safe; do not ask permission for it.
 - The user has made a clear choice or set a limit; follow it rather than confirming it.
 - The turn's job is to present something: research findings, an explanation, a diagnosis, or a review. Present it first and don't open with a question. A closing offer or question is fine, but it still needs an answer, so it follows How to Ask below.
-- The user wants light or full grilling or plan stress-testing; use `grilling` or `/grill`.
+- The user wants light or full grilling or plan stress-testing; use the `grilling` skill.
 
 ## Divert to Grilling
 
-Clarification is for a few independent blockers. Recommend `/grill` instead of asking when:
+Clarification is for a few independent blockers. Recommend the `grilling` skill instead of asking when:
 
 - more than three material decisions are open;
 - the decisions depend on each other, so answers would reshape the next questions;
@@ -51,14 +51,11 @@ Each question must make sense from the chat directly above it. If the thing bein
 - When the `plannotator_inbox` tool is available, send every question that needs an answer to the Plannotator Inbox, as `:::question` blocks, even if the user never mentioned it. This applies whether or not the work has started and whether or not the answer blocks anything. The user may read it away from the terminal, so the message carries its own short explainer and recommendation. Also ask the same question in plain chat at the end of the response, so the user can answer in either place.
 - An offer that ends a turn ("Want me to...?", "Shall I...?", "Do you want me to fix this now?") is a question the user has to answer, so it goes to the Inbox and chat the same way.
 - A turn that stops with work left ends with that kind of question. Never close a stop with "next I'll..." in prose; it can't be answered and reads as a promise that won't run. A turn that has fully finished needs no next step. Mid-work status updates are different: they say what comes next because the work carries on.
-- Never offer a single yes/no. Ask it as a multi-select (`:::question-multi` in the Inbox), since the user may want several: continuing with what's left (named), and every other reasonable next action, such as commit, push, a check or a deploy, plus the steps the user might take themselves, such as reviewing or testing it first (mark who acts as Wording describes). Don't add a catch-all Other; the Inbox already offers one.
+- Never offer a single yes/no. Ask it as a multi-select (`:::question-multi` in the Inbox), since the user may want several: continuing with what's left (named), and every other reasonable next action, such as commit, push, a check or a deploy, plus the steps the user might take themselves, such as reviewing or testing it first (mark who acts as Wording describes).
 - When the turn also reports an outcome (findings, a plan, a review, a result, or where work stopped), send the report itself in that Inbox message, never a pointer such as "ready in chat", and put the question in the same message. Anything that waits on the user, including "I'll edit once you approve", is a `:::question` block, not prose, so the thread shows it needs a reply. Sign-off on a plan, document or diff is the exception: it goes through a gated Plannotator review, and the Inbox message links to it (see `plan`).
 - Ask in chat alone only when the user says to, or when the Inbox is unavailable.
 - Never use a blocking structured question tool (OpenCode's `question`, Claude Code's `AskUserQuestion`), even if the client offers one: it holds the turn open, so an Inbox reply can't arrive and the session stalls until someone answers at the terminal.
-- Prefer concrete options over open prompts. Keep them in their natural order and mark the recommended one, never moving it first; in a `:::question` block only the `Recommended:` line marks it.
-- When options have real trade-offs, add `Pros:` and `Cons:` lines under each option in the `:::question` block rather than lengthening its label or description; the card shows them side by side. When trying something would settle the choice, add a `Prototype:` line (an HTML file attached to the same message, a public `https://` page, or a running local app) under one option, or at the block's level for all of them. Open it and click through it yourself before sending. The Inbox refuses the send if the file isn't attached HTML, the app doesn't answer, or the address is plain `http://` on another host.
-- When the user picks between looks (designs, variants, a screen against its redesign), make each option a picture choice inside the question: `- [ ] A · Label — ![alt](path) what it means`, with a plain text choice for an option that has nothing to show. Don't put the pictures above the question.
-- When a question proposes a change (words, a screen, code, a setting), show it in the `:::question` block: `Where: <what it is and where the user sees it>`, then `Before:` and `After:`, each the whole sentence, paragraph or screenshot it sits in. The card marks the change; write `Before: none` when nothing is there yet. Repeat the three lines for each place, and give a choice that is its own version its own `After:` (and `Before:`) under it. Skip them for a new feature, a prototype (send pictures instead) and a choice the user never sees, such as a library. `plannotator inbox --help before-after` covers several places, pictures and a version per choice. Plan review, annotate and older Inboxes show these lines as plain text.
+- Prefer concrete options over open prompts. Format `:::question` blocks as the `plannotator_inbox` tool describes.
 
 ## Wording
 

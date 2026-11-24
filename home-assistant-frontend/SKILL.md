@@ -81,4 +81,4 @@ The Home Assistant core, documentation, custom cards, custom dashboards, and cor
 - The blog at `/blog/` announces frontend and Core API changes. Use it to find what changed, then confirm in the frontend and Core source, which win where they differ.
 - Pages live in `src/content/docs/<area>/` and blog posts in `src/content/blog/`. Read them in the sibling checkout, or in `home-assistant/contributors.home-assistant.io` on GitHub when there is none. For the published site as an agent, start at `https://contributors.home-assistant.io/llms.txt` or `/<area>/llms.txt`, and add `index.md` to a page URL for its Markdown.
 - When creating or updating contributor documentation for custom card APIs, dashboard strategies, frontend development guides or design components, work in this repo.
-- Discover and follow that repository's `AGENTS.md` and repo-local skills (`.claude/skills/`) before making changes.
+- Discover and follow that repository's `AGENTS.md` and repo-local skills (`.github/skills/`) before making changes.

@@ -19,7 +19,7 @@ Import skills from external repositories into top-level `<name>/` directories, p
 
 External skill repos are often written for a specific agent framework (e.g. Claude Code, Codex, Cursor). This repository distributes an import only when it needs substantive local adaptation:
 
-- Keep only Agent Skills frontmatter fields. `allowed-tools` is portable; remove framework-specific fields such as `disable-model-invocation` and `argument-hint`.
+- Keep only Agent Skills frontmatter fields. `allowed-tools` is portable; remove framework-specific fields such as `argument-hint`. Keep `disable-model-invocation` only when hiding the skill from automatic selection is deliberate, and record that in its `localEdits`.
 - Replace framework-specific tool names, hook mechanisms, or subagent patterns with capability-based instructions when that preserves the workflow.
 - Keep an intentional environment dependency when abstraction would make the instructions less truthful, then classify it in `PORTABILITY.md`.
 - If the skill is useful as-is, add a `skills.yml` entry with `distribution: external`, `localEdits: []`, and the reviewed SHA. Do not commit its content; `./dist/skill-maintenance install` installs it at the pinned SHA.
@@ -46,7 +46,7 @@ license: MIT
 ---
 ```
 
-Portable frontmatter fields are `name`, `description`, `license`, `compatibility`, `metadata`, and `allowed-tools`. Do not rely on one client's tolerance for unknown fields, and add no provenance comments: `validate` rejects them.
+Portable frontmatter fields are `name`, `description`, `license`, `compatibility`, `metadata`, and `allowed-tools`, plus a deliberate, recorded `disable-model-invocation`. Do not rely on one client's tolerance for unknown fields, and add no provenance comments: `validate` rejects them.
 
 ## Import Record
 
@@ -99,5 +99,4 @@ When given a repo URL without a specific skill path, review the full skill set:
 
 - Do not modify existing skills during a direct import.
 - Do not import without diffing against the upstream original.
-- Do not commit without explicit user request.
 - Ensure imported scripts are executable (`chmod +x`) after writing them to disk.

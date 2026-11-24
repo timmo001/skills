@@ -108,6 +108,7 @@ skills:
         - "route browser tools through browser-access"
         - "adapted the forced-failure safeguard to proportionate verification without test-first requirements"
         - "point fixed unit, crash, OOM and journal failures to triage-resolve"
+        - "inspect the harness's saved output for huge repro output instead of redirecting to a file"
   docs-kit:
     import:
       upstreamSha: 5731709248bbf8f765fe1bbbd98350ac9abddafa
