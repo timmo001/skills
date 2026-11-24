@@ -2,7 +2,7 @@
 name: task-focus
 license: Apache-2.0
 compatibility: Separate-session workflows need a client that can start fresh agent sessions. The preferred separate-implementation path uses Herdr workspaces/worktrees and the herdr skill.
-description: Keep the original task on track when the user raises a side thought, side question, tentative branch idea, or explicit change of task. Use before diverting work, switching branches, or choosing between a BTW session, a fresh session, and the current conversation, especially with a large context window.
+description: Keep the original task on track when the user raises a side thought, side question, tentative branch idea, or explicit change of task. Use before diverting work, switching branches, or choosing between a BTW session, a fresh session, and the current conversation.
 ---
 
 # Task Focus
@@ -17,7 +17,7 @@ Stay on the original task unless the user explicitly redirects it. Corrections a
 
 ## 2. Choose The Session
 
-- Follow an explicit redirect in the current session unless the user chose otherwise. At around 200k tokens of accumulated context or more, recommend a fresh session with a concise handoff in a sentence, without blocking on it. Read context usage with `dot-session-status`, never an invented count.
+- Follow an explicit redirect in the current session unless the user chose otherwise.
 - When the user wants separate work, prefer a BTW ("by the way") session for side questions, or a dedicated Herdr workspace with a Herdr-managed worktree and a fresh agent session for separate implementation. Apply `herdr` for creation and launch, preserving the current workspace and focus.
 - If Herdr is unavailable, say so rather than switching the current checkout or silently substituting a raw Git worktree.
 

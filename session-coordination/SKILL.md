@@ -66,7 +66,7 @@ For an alternate runtime, verify the configured exact launcher in the coordinato
 
 ## Finish Or Continue
 
-- Before context runs out, send a successor the current scope, decisions, changed paths, checks, blockers, and exact session references directly. Use `handoff` only when work needs durable project notes beyond the live sessions.
+- When work moves to a successor session, send it the current scope, decisions, changed paths, checks, blockers, and exact session references directly. Use `handoff` only when work needs durable project notes beyond the live sessions.
 - Before closing an owned pane, capture its useful result in the conversation and check its current identity, state, and outstanding work. Close only settled topology created by this run, unless the user asks to keep it. Leave blocked, ambiguous, or still-needed sessions open and report why. Verify closure through Herdr; no lifecycle-file write/read/delete cycle is required.
 - Use `herdr-workflows` for recovery and worktree transfers. Pane cleanup is not permission to remove a checkout or discard uncommitted work.
 - Keep consequential actions within the user's explicit authorisation, including commits and pushes. Resolve conflicting findings and verify changed behaviour before reporting accepted results, remaining blockers, and retained sessions.
