@@ -50,7 +50,7 @@ Recommended: Commit, push and create the pull request
 :::
 ```
 
-`Recommended:` names the option you recommend, or several separated by `;`. Keep the options in their natural order rather than moving the recommended one first. Never use `- [x]`: it marks a question as already answered. Note the message id and ask the same question in chat as `asking-questions` says. In chat, say in one line what opened, with the same review links, and that the user can send notes from the review or answer in the Inbox or chat. Then end the turn. Don't poll, rerun or reopen the review.
+`Recommended:` names the option you recommend, or several separated by `;`. Never use `- [x]`: it marks a question as already answered. Note the message id and ask the same question in chat as `asking-questions` says. In chat, say in one line what opened, with the same review links, and that the user can send notes from the review or answer in the Inbox or chat. Then end the turn. Don't poll, rerun or reopen the review.
 
 ## 3. Act On What Arrives
 
@@ -75,7 +75,7 @@ Offer only the steps that fit when the question is sent. Run the ticked ones in 
 
 For several repositories, say which repositories each option covers, or ask per repository when they need different steps.
 
-A tick allows those steps once, not later changes. Run them through the usual workflows (for example the commit skill), and reply in the thread as each lands (the commit, the push, the pull request, the release, a check they asked for), not once at the end. Steps that finish together share one reply; a step that found something they need to know (a bug, a failed check) gets its own. Move the card with them: link the pull request, `ship` when merged or released.
+A tick allows those steps once, not later changes. Run them through the usual workflows (for example the commit skill); a step that found something the user needs to know (a bug, a failed check) gets its own reply. Move the card with them: link the pull request, `ship` when merged or released.
 
 ### Releases
 

@@ -19,7 +19,7 @@ The script publishes a `0.0.0` placeholder instead of the real version. The shar
    - JSR resolves bare imports from `dependencies` and `devDependencies`, not `peerDependencies`. List every peer in `devDependencies` as well, or JSR's server rejects the publish even though `jsr publish --dry-run` passes locally.
    - Dependencies between packages in the same repository use exact versions, not `workspace:`.
    - The repository's checks, `npm pack --dry-run` and `jsr publish --dry-run` pass, and the changes are pushed.
-2. **Prepare the script in tmp.** Copy [first-publish.sh](scripts/first-publish.sh) to `/tmp/opencode/<repository>/first-publish.sh`, keep it executable, and run it yourself with `--dry-run` and the real arguments. Package directories go in dependency order. Fix anything the dry run reports.
+2. **Prepare the script in tmp.** Copy [first-publish.sh](scripts/first-publish.sh) to the task's scratch directory (such as `/tmp/opencode/<owner>-<repo>-<branch>/`), keep it executable, and run it yourself with `--dry-run` and the real arguments. Package directories go in dependency order. Fix anything the dry run reports.
 3. **Hand it to the user.** Give the exact command without `--dry-run`, to run in their own terminal. Don't run it for them: `npm login`, npm's browser 2FA, and creating and linking on jsr.io are human-only. The script:
    - signs in to npm if needed;
    - packs each package (running its own build), rewrites the copy to `0.0.0` without pack scripts or provenance (provenance only works in CI), points sibling dependencies at `0.0.0`, and publishes it;

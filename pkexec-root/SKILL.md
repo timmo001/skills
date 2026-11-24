@@ -6,9 +6,7 @@ description: >
   Use pkexec first for commands that need root directly or indirectly.
 ---
 
-Use this skill when a command needs root directly or uses sudo internally.
-
-Prefer `pkexec` first.
+Use `pkexec` first for any command that needs root, directly or through sudo inside a tool.
 
 ### Default Pattern
 
@@ -26,8 +24,6 @@ pkexec pacman -S <pkg>
 pkexec pacman -U "/path/to/package.pkg.tar.zst"
 pkexec pacman -R <pkg>
 ```
-
-For commands that invoke sudo internally, prefer `pkexec` first when practical.
 
 ### Fallback Order
 

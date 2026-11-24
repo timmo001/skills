@@ -9,12 +9,6 @@ description: Import skills from external repositories into this Agent Skills rep
 
 Import skills from external repositories into top-level `<name>/` directories, preserving source provenance and keeping the result valid across Agent Skills clients.
 
-## When to Use
-
-- Pulling in a specific skill from a public repo URL
-- Reviewing an external skill repository for useful additions
-- Adapting external skill content to improve existing local skills
-
 ## Agent-Specific Repos
 
 External skill repos are often written for a specific agent framework (e.g. Claude Code, Codex, Cursor). This repository distributes an import only when it needs substantive local adaptation:
@@ -50,7 +44,7 @@ Portable frontmatter fields are `name`, `description`, `license`, `compatibility
 
 ## Import Record
 
-`skills.yml` is the single maintenance source for an import's origin, reviewed SHA, licence, local edits, and distribution. `skills.schema.json` specifies it, and `validate` requires the canonical form that `./dist/skill-maintenance import <name> --metadata-only` writes. That command also copies the local `name` and licence into `SKILL.md`.
+`skills.yml` is the single maintenance record for an import; the repository AGENTS.md covers its canonical form and `--metadata-only`.
 
 When the import adapts content, list what differs from upstream in `localEdits`. This prevents a later review from treating intentional adaptations as drift. List what differs, not a changelog. An entry describes `SKILL.md` unless it names another file, so prefix only edits to references, scripts or other files:
 

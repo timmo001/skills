@@ -25,7 +25,5 @@ Check uncertain claims. Follow clear choices.
 ## Evidence Rules
 
 - Do not treat the user's memory, the agent's memory, supplied context, common practice, or repeated prior use as proof.
-- Do not browse when local evidence owns and answers the question.
 - Do not substitute local configuration or observed usage for external product contracts, defaults, or supported behaviour.
 - Do not use secondary commentary when a trusted primary source is available.
-- Do not argue with a clear preference merely because another option is more common or the agent prefers it.

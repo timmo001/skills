@@ -141,7 +141,7 @@ Longer examples:
 
 ## User-facing strings (notifications, UI, errors)
 
-- Short, plain, and natural. Say the thing. No filler, no em-dash.
+- Short, plain, and natural. Say the thing.
 - Match the tone of the app's existing messages and labels.
 - For errors, state what failed and a known recovery step when available. Keep essential conditions and placeholders even when space is tight.
 
@@ -151,7 +151,6 @@ Longer examples:
 
 ## Examples
 
-- Jargon: "Align the register with the target venue." Prefer: "Match the tone to where the text will appear".
 - Inflated: "Seamlessly notify users when a clean session resumes." Prefer: "Notify on resume if clean".
 - Vague single word: "Upd". Prefer: "Keep origin/HEAD fresh for default-branch detection".
 - Marketing tagline: "A powerful, robust utility that effortlessly runs your tasks." Prefer: "A utility to run common tasks".

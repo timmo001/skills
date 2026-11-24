@@ -15,7 +15,6 @@ Prefer an existing production shared workflow over duplicating CI logic. Keep re
    - Resolve the authenticated GitHub user and the active repository owner rather than assuming either from a local path.
    - For a repository owned by the authenticated user, use that user's shared-workflows repository. In this setup, the personal reference is `@workflows` (`timmo001/workflows`).
    - For an organisation repository, inspect and follow that organisation's shared-workflow repository and conventions. Never fall back to the personal repository automatically.
-   - Follow repository-local instructions when they are stricter than this skill.
 2. Search existing contracts first.
    - Inspect the shared repository's current reusable workflows and the active repository's existing callers.
    - Select by behaviour and prerequisites, not by filename alone.
