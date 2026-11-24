@@ -43,8 +43,6 @@ Use this order:
 3. **Validation:** Give only the smallest targeted commands or end-to-end observations needed to prove the implementation works. Do not repeat test-file edits already described in the implementation.
 4. **Files:** Include every anticipated changed, added, deleted, generated, or migration file as a directory tree, split by repository or workspace root. Mark generated files with their source of truth. Every file in the tree must appear in an implementation step.
 
-Pseudocode earns its place when it exposes changed code flow more clearly than prose. It must trace inspected project symbols rather than inventing a generic example or placeholder API.
-
 ## Keep It Direct
 
 - Prefer a small direct implementation over speculative abstractions, compatibility layers, helpers, migrations, or phases.
@@ -61,12 +59,10 @@ Pseudocode earns its place when it exposes changed code flow more clearly than p
 Before submission, verify that:
 
 - Every acceptance criterion maps to an implementation step and a targeted or final check.
-- Every entry in `Files` appears in a step, and every generated file names its source of truth.
 - No requested area disappeared from scope and no settled decision is contradicted.
 - No core mechanic remains an unbounded assumption or execution-time decision.
 - Every numbered step describes an edit rather than analysis, and every non-obvious reason follows the edit it justifies.
 - Pseudocode uses symbols confirmed during repository inspection, and no unresolved choice has been made for the user.
-- Before-and-after code examples use fenced `diff` blocks; wholly new pseudocode uses its language fence.
 - Safeguards, compatibility layers, abstractions, and migrations address an observed contract or regression risk rather than speculative hardening. Test edits satisfy `testing`; a generic regression risk is not enough.
 - The visible plan begins with the plain explainer, contains pseudocode where logic changes, and gives implementation more space than validation.
 

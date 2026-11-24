@@ -13,7 +13,6 @@ Use this workflow when finishing the whole request in one uninterrupted change w
 - Keep exactly one active stage. Record dependent or unrelated work as deferred stages instead of editing towards all of them at once.
 - Keep every checkpoint usable and independently verifiable. Do not leave an intermediate stage knowingly broken.
 - A stage checkpoint pauses implementation; it does not mark a wider requested outcome complete while requested stages remain.
-- Do not turn a small, single-purpose change into artificial phases.
 - Reuse specialised skills for diagnosis, review, commits, handoffs, documentation, and framework work. This skill owns sequencing, not their domain rules.
 
 ## Plan The Work
@@ -43,7 +42,6 @@ Use this workflow when finishing the whole request in one uninterrupted change w
 - For parallel work within a stage, use `session-coordination`.
 - Parallelise independent discovery, tests, or disjoint implementation only. Keep ordered reasoning and shared mutable files with one integrator.
 - Define shared contracts before delegation. Workers consume them; they do not independently redesign them.
-- Give each worker a bounded brief: objective, authoritative inputs, exact file scope, prohibited shared files, expected output, verification, and required concise summary.
 - Do not duplicate delegated work. Reconcile worker results through the contract owner before integration.
 
 ## Implement And Verify
@@ -55,8 +53,7 @@ Use this workflow when finishing the whole request in one uninterrupted change w
 5. During final verification, freeze scope. Make only fixes for failures attributable to the active stage or unresolved blocking findings. Report pre-existing or unrelated failures separately. Record new hardening or cleanup ideas for a later stage.
 6. If final-gate fixes were needed, confirm those fixes and their affected risk area rather than reopening the entire diff.
 7. Do not repeat an unchanged fix-and-check cycle. If the same failure persists and another attempt has no new hypothesis or evidence, stop as blocked.
-8. When blocked work moves to another session, prepare a compact handoff containing the active contract, current diff state, validation evidence, and unresolved findings.
-9. When the active stage completes all work tracked by a loaded handoff or plan, perform its planned retirement step last. Obtain explicit confirmation immediately before deleting a note, as required by `notes-cli`.
+8. When the active stage completes all work tracked by a loaded handoff or plan, perform its planned retirement step last. Obtain explicit confirmation immediately before deleting a note, as required by `notes-cli`.
 
 ## Checkpoint
 
