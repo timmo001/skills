@@ -52,7 +52,9 @@ When the check would show something the user may want to see or keep, ask it as 
 
 When screenshots or recordings need a set page size, such as 1400 × 800 for pull requests, or a phone width:
 
-- Set it on your tab with browse's `emulate` (`viewport: { width, height }`, with `mobile` and `touch` for a phone). It stays until you reset it, and screenshots and `recording` use it. Reset it (`viewport: "reset"`) before you close the tab. Check the size of the first capture.
+- Set it on your tab with browse's `emulate` (`viewport: { width, height }`, with `mobile` and `touch` for a phone). It stays until you reset it, and screenshots and `recording` use it. Reset it (`viewport: "reset"`) before you close the tab.
+- Check the size the page really has, not only the capture: read `[innerWidth, innerHeight]` with `eval` after `emulate`, and adjust until it matches. The same `emulate` values can give a different page size on another desk or scale, and a capture scaled to the right size can hide a page laid out wider.
+- Change nothing about the tab's size or rendering while a `recording` runs: no `screenshot`, `emulate` or zoom. Each one redraws the page at another size for a moment, and the video shows it as the page jumping. Take stills before you start, after you stop, or from the recording's own frames.
 - Don't resize or move browser windows to get a size, and never loop screenshots under a forced size to fake a bigger capture: a visible window redraws between the sizes and flickers.
 - Chrome only draws a window that is on screen. On a hidden workspace or behind a minimised window, a recording gets a frame every few seconds. An agent screen's desks always draw.
 - Scripts added with CDP's `Page.addScriptToEvaluateOnNewDocument` stay on the tab after the `execute` that added them, and run again on every load, so stacked copies pile up. Keep the `identifier` it returns and remove the script with `Page.removeScriptToEvaluateOnNewDocument` in a `finally`, in the same call.
