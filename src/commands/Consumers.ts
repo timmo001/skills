@@ -47,6 +47,7 @@ export interface ConsumersFile extends Schema.Schema.Type<
 > {}
 
 const SkillsLock = Schema.Struct({
+  version: Schema.optionalKey(Schema.Number),
   skills: Schema.Record(
     Schema.String,
     Schema.Struct({
@@ -199,50 +200,138 @@ export const planConsumer = (
 };
 
 /**
- * The skills CLI's folder hash: every file's relative path and contents,
- * sorted by path, skipping `.git`, `node_modules` and symlinks.
+ * The `skills-lock.json` version whose `computedHash` format to match. The
+ * skills CLI wrote version 1 hashes before 1.9.0 and rewrites a lock as
+ * version 2 the next time it installs into it.
+ */
+export type LockVersion = 1 | 2;
+
+/** Version 1 skips these directories and every symlink. */
+const V1_EXCLUDED_DIRECTORIES = new Set([".git", "node_modules"]);
+
+/** Version 2 skips these files and directories wherever they appear. */
+const V2_EXCLUDED_FILES = new Set(["metadata.json"]);
+
+const V2_EXCLUDED_DIRECTORIES = new Set([
+  ".git",
+  "__pycache__",
+  "__pypackages__",
+]);
+
+/** Version 2 hashes text with LF line endings; content with a NUL byte is binary and left alone. */
+const normaliseLineEndings = (content: Uint8Array): Uint8Array => {
+  const buffer = Buffer.from(content);
+
+  return buffer.includes(0) || !buffer.includes("\r\n")
+    ? buffer
+    : Buffer.from(buffer.toString("latin1").replaceAll("\r\n", "\n"), "latin1");
+};
+
+/**
+ * The skills CLI's folder hash for a lock version.
+ *
+ * Version 1: every file's relative path then contents, sorted by path,
+ * skipping `.git`, `node_modules` and symlinks.
+ *
+ * Version 2 (skills CLI 1.9.0 `hashSkillFiles`): every file's relative path,
+ * a NUL, the content length, a NUL, then the contents with CRLF normalised,
+ * sorted by the path's UTF-8 bytes. It skips `metadata.json`, `.git`,
+ * `__pycache__` and `__pypackages__`, and follows symlinks that stay inside
+ * the skill folder.
  */
 export const skillFolderHash = Effect.fn("Consumers.skillFolderHash")(
-  function* (directory: string) {
+  function* (directory: string, version: LockVersion = 2) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
     const files: { relativePath: string; content: Uint8Array }[] = [];
 
+    const root = yield* fs
+      .realPath(directory)
+      .pipe(consumersError("skill.hash"));
+
     const collect = (
       current: string,
+      prefix: string,
+      ancestors: ReadonlySet<string>,
     ): Effect.Effect<void, PlatformError.PlatformError> =>
       Effect.gen(function* () {
+        const real = yield* fs.realPath(current);
+
+        if (ancestors.has(real)) return;
+
+        const branch = new Set(ancestors).add(real);
+
         for (const name of yield* fs.readDirectory(current)) {
           const full = path.join(current, name);
+          const relativePath = `${prefix}${name}`;
 
-          if (Result.isSuccess(yield* Effect.result(fs.readLink(full))))
+          const isLink = Result.isSuccess(
+            yield* Effect.result(fs.readLink(full)),
+          );
+
+          if (version === 1) {
+            if (isLink) continue;
+
+            const info = yield* fs.stat(full);
+
+            if (info.type === "Directory") {
+              if (!V1_EXCLUDED_DIRECTORIES.has(name))
+                yield* collect(full, `${relativePath}/`, branch);
+            } else if (info.type === "File")
+              files.push({ relativePath, content: yield* fs.readFile(full) });
+
             continue;
+          }
+
+          if (isLink) {
+            const target = yield* Effect.result(fs.realPath(full));
+
+            if (
+              Result.isFailure(target) ||
+              (target.success !== root &&
+                !target.success.startsWith(root + path.sep))
+            )
+              continue;
+          }
 
           const info = yield* fs.stat(full);
 
           if (info.type === "Directory") {
-            if (name !== ".git" && name !== "node_modules")
-              yield* collect(full);
-          } else if (info.type === "File") {
-            files.push({
-              relativePath: path
-                .relative(directory, full)
-                .split("\\")
-                .join("/"),
-              content: yield* fs.readFile(full),
-            });
-          }
+            if (!V2_EXCLUDED_DIRECTORIES.has(name))
+              yield* collect(full, `${relativePath}/`, branch);
+          } else if (info.type === "File" && !V2_EXCLUDED_FILES.has(name))
+            files.push({ relativePath, content: yield* fs.readFile(full) });
         }
       });
 
-    yield* collect(directory).pipe(consumersError("skill.hash"));
-    files.sort((a, b) => a.relativePath.localeCompare(b.relativePath));
+    yield* collect(directory, "", new Set()).pipe(consumersError("skill.hash"));
 
     const hash = createHash("sha256");
 
-    for (const file of files) {
-      hash.update(file.relativePath);
-      hash.update(file.content);
+    if (version === 1) {
+      files.sort((a, b) => a.relativePath.localeCompare(b.relativePath));
+
+      for (const file of files) {
+        hash.update(file.relativePath);
+        hash.update(file.content);
+      }
+
+      return hash.digest("hex");
+    }
+
+    const entries = files
+      .map((file) => ({
+        path: Buffer.from(file.relativePath, "utf-8"),
+        content: normaliseLineEndings(file.content),
+      }))
+      .sort((a, b) => Buffer.compare(a.path, b.path));
+
+    for (const { path: filePath, content } of entries) {
+      hash.update(filePath);
+      hash.update("\0");
+      hash.update(String(content.length));
+      hash.update("\0");
+      hash.update(content);
     }
 
     return hash.digest("hex");
@@ -292,12 +381,25 @@ export const readConsumers = Effect.fn("Consumers.read")(function* (
   return config;
 });
 
-const readLock = Effect.fn("Consumers.readLock")(function* (checkout: string) {
+/** A consumer's lock: its hash format and the skills it records. */
+interface ConsumerLock {
+  readonly version: LockVersion;
+  readonly skills: Readonly<Record<string, LockEntry>>;
+}
+
+const readLock = Effect.fn("Consumers.readLock")(function* (
+  checkout: string,
+): Effect.fn.Return<
+  ConsumerLock,
+  ConsumersError,
+  FileSystem.FileSystem | Path.Path
+> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const file = path.join(checkout, LOCK_FILE);
 
-  if (!(yield* fs.exists(file))) return {};
+  if (!(yield* fs.exists(file).pipe(consumersError("lock.read"))))
+    return { version: 2, skills: {} };
 
   const lock = yield* fs.readFileString(file).pipe(
     Effect.flatMap((text) =>
@@ -307,7 +409,10 @@ const readLock = Effect.fn("Consumers.readLock")(function* (checkout: string) {
     consumersError("lock.decode"),
   );
 
-  return lock.skills;
+  // Locks before version 2 recorded no version or version 1.
+  const version: LockVersion = (lock.version ?? 1) >= 2 ? 2 : 1;
+
+  return { version, skills: lock.skills };
 });
 
 /** Everything a sync needs to know about the shared skills on offer. */
@@ -316,8 +421,8 @@ interface Catalogue {
   /** Published commit of the source repository that committed skills install from. */
   readonly commit: string;
   readonly origin: (name: string) => SkillOrigin | undefined;
-  /** Folder hash of each committed skill at `commit`. */
-  readonly hash: (name: string) => string | undefined;
+  /** Folder hash of each committed skill at `commit`, in a lock version's format. */
+  readonly hash: (name: string, version: LockVersion) => string | undefined;
 }
 
 /**
@@ -350,7 +455,7 @@ const loadCatalogue = Effect.fn("Consumers.loadCatalogue")(function* (
   ];
 
   const origins = new Map<string, SkillOrigin>();
-  const hashes = new Map<string, string>();
+  const hashes = new Map<string, Record<LockVersion, string>>();
 
   for (const name of new Set(candidates)) {
     const origin = yield* Effect.result(
@@ -362,7 +467,10 @@ const loadCatalogue = Effect.fn("Consumers.loadCatalogue")(function* (
     origins.set(name, origin.success);
 
     if (origin.success.kind === "committed")
-      hashes.set(name, yield* skillFolderHash(path.join(root, name)));
+      hashes.set(name, {
+        1: yield* skillFolderHash(path.join(root, name), 1),
+        2: yield* skillFolderHash(path.join(root, name), 2),
+      });
   }
 
   if (installs.length > 0) {
@@ -391,7 +499,7 @@ const loadCatalogue = Effect.fn("Consumers.loadCatalogue")(function* (
     source,
     commit,
     origin: (name) => origins.get(name),
-    hash: (name) => hashes.get(name),
+    hash: (name, version) => hashes.get(name)?.[version],
   } satisfies Catalogue;
 });
 
@@ -435,7 +543,7 @@ const syncRepository = Effect.fn("Consumers.syncRepository")(function* (
   );
 
   const branch = (yield* git("rev-parse", "--abbrev-ref", "HEAD")).trim();
-  const locked = yield* readLock(checkout);
+  const { version: lockVersion, skills: locked } = yield* readLock(checkout);
   const unedited = new Set<string>();
 
   for (const [name, entry] of Object.entries(locked)) {
@@ -443,7 +551,7 @@ const syncRepository = Effect.fn("Consumers.syncRepository")(function* (
 
     if (
       (yield* fs.exists(directory)) &&
-      (yield* skillFolderHash(directory)) === entry.computedHash
+      (yield* skillFolderHash(directory, lockVersion)) === entry.computedHash
     )
       unedited.add(name);
   }
@@ -469,7 +577,7 @@ const syncRepository = Effect.fn("Consumers.syncRepository")(function* (
 
       return origin?.kind === "external"
         ? entry.ref === origin.ref
-        : entry.computedHash === catalogue.hash(name);
+        : entry.computedHash === catalogue.hash(name, lockVersion);
     },
   );
 
