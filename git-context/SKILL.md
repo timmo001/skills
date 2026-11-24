@@ -28,30 +28,16 @@ These commands are stowed from `scripts/.local/bin/`; the aliases are defined in
 
 ## Rebases and Interactive Editor Operations
 
-Git opens an interactive editor for many operations. Since the agent runs in a non-interactive shell, bypass the editor with `GIT_EDITOR=true` (which makes the "editor" succeed immediately, accepting defaults).
-
-### Commands that need `GIT_EDITOR=true`
-
-```bash
-GIT_EDITOR=true git rebase --continue   # After resolving conflicts
-GIT_EDITOR=true git merge --continue    # After resolving merge conflicts
-GIT_EDITOR=true git revert --continue   # After resolving revert conflicts
-```
+Continue, abort or skip a rebase, merge or cherry-pick with the `git` Code Mode tools when the agent has them. In a shell, prefix a continue with `GIT_EDITOR=true` (for example `GIT_EDITOR=true git rebase --continue`) so the editor accepts the default message; abort and skip open no editor.
 
 For any requested commit amendment, load `dot-git-commit` and use its `dot git commit --amend` gateway flow instead of raw `git commit --amend`.
 
 ### Resolving rebase conflicts
 
-1. Read each conflicted file and understand both sides.
-2. When both sides are additive (independent features touching the same location), keep both.
-3. After replacing conflict markers, verify full method/function bodies are intact. Shared code between conflict markers is easily lost if not carefully included in the resolution.
-4. Stage resolved files with `git add`.
-5. Continue with `GIT_EDITOR=true git rebase --continue`.
-
-### Operations that do NOT need the editor bypass
-
-- `git rebase --abort` / `git merge --abort` (no editor involved)
-- `git rebase --skip` (no editor involved)
+1. When both sides are additive (independent features touching the same location), keep both.
+2. After replacing conflict markers, verify full method/function bodies are intact. Shared code between conflict markers is easily lost if not carefully included in the resolution.
+3. Stage resolved files with `git add`.
+4. Continue the rebase as above.
 
 Ordinary commits are outside this skill. Load `dot-git-commit` after an explicit commit request and use its gateway.
 

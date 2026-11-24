@@ -15,7 +15,7 @@ Follow the project's own declared workflow first, then pitchfork, then a framewo
 
 1. Check for a `## Background Dev Servers` section in the local `AGENTS.md`.
 2. Check for repo-provided pitchfork wrappers: `mise tasks`, `pitchfork.toml`, or project-specific task names such as `serve:*`, `dev:*`, `background:*`, or aliases documented locally.
-3. Check whether pitchfork tools are available for observation and control: the `pitchfork` Code Mode namespace (list, logs, start, stop, restart), or pitchfork's MCP tools (`pitchfork_status`, `pitchfork_logs`, `pitchfork_stop`, `pitchfork_restart`, `pitchfork_start`).
+3. Check whether the `pitchfork` Code Mode namespace (list, logs, start, stop, restart) or pitchfork's MCP tools are available for observation and control.
 4. Check whether the `pitchfork` CLI is installed before falling back to raw foreground server commands.
 5. Only when the repo has no pitchfork config, check for a framework-native background mode (for example Astro 7+, which self-detaches `astro dev` under an agent).
 
@@ -32,15 +32,12 @@ Follow the project's own declared workflow first, then pitchfork, then a framewo
 
 ## Command Discovery
 
-1. Use `mise tasks` when the command name is not obvious.
-2. If there is no wrapper task but `pitchfork.toml` exists, run pitchfork directly from the repo directory.
-3. Typical operations are `pitchfork start <daemon>`, `pitchfork status`, `pitchfork logs -t <daemon>`, `pitchfork restart <daemon>`, and `pitchfork stop <daemon>`.
-4. Start every server a task needs in one call (`pitchfork start api worker`, or `--group <name>`) rather than one at a time. Each returns once ready; prefer the daemon's `--port`, `--http` or `--output` readiness check over a fixed `--delay`.
-5. Stop daemons by name, `--group` or `--local`, not `pitchfork stop --all`. Since 2.35 it lists daemons from other projects and refuses without a terminal, which is how an agent runs it. Use `--all --force` only when the user asks to stop every project's daemons.
-6. Treat `serve:*` as a common local convention, not a requirement.
-7. Find a running server's address with `pitchfork proxy status` rather than guessing a port. When the proxy is enabled, use the `https://<daemon>.<project>.localhost` address without a port. If it only works with the proxy's own port, run `pitchfork proxy doctor` and report the result rather than switching to the raw port.
+1. Typical operations are `pitchfork start <daemon>`, `pitchfork status`, `pitchfork logs -t <daemon>`, `pitchfork restart <daemon>`, and `pitchfork stop <daemon>`.
+2. Start every server a task needs in one call (`pitchfork start api worker`, or `--group <name>`) rather than one at a time. Each returns once ready; prefer the daemon's `--port`, `--http` or `--output` readiness check over a fixed `--delay`.
+3. Stop daemons by name, `--group` or `--local`, not `pitchfork stop --all`. Since 2.35 it lists daemons from other projects and refuses without a terminal, which is how an agent runs it. Use `--all --force` only when the user asks to stop every project's daemons.
+4. Treat `serve:*` as a common local convention, not a requirement.
+5. Find a running server's address with `pitchfork proxy status` rather than guessing a port. When the proxy is enabled, use the `https://<daemon>.<project>.localhost` address without a port. If it only works with the proxy's own port, run `pitchfork proxy doctor` and report the result rather than switching to the raw port.
 
 ## Notes
 
 - Some repos use pitchfork wrappers to stop production services or resource owners before starting dev servers, then restore production when dev exits. Preserve that behaviour.
-- Pitchfork is intended to keep agents from blocking on foreground servers. Prefer background start plus logs and status checks over running a server in the agent shell.

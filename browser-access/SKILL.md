@@ -13,7 +13,6 @@ Browser tools require an explicit user request or agreement to a specific check.
 - If the user explicitly requested browser interaction, proceed within that request. Do not ask them to authorise the same action again.
 - For ordinary investigations, start with focused source and configuration reads, logs, existing tests, configured CLI/API access, or existing SSH routes. Choose the tool from the requested action and the evidence needed.
 - A frontend or service mention does not imply opening its web UI. Use the existing non-browser access when it answers the question.
-- Do not ask to use the browser at the start of an ordinary investigation.
 
 Continue without browser access when the gathered evidence is sufficient.
 
@@ -43,9 +42,7 @@ When the check would show something the user may want to see or keep, ask it as 
 - In the OpenCode desktop app, OpenCode's built-in browser is also available as the `browser` Code Mode namespace. Use it there when browse is missing or the user asks for it; the TUI doesn't have it.
 - Apply the tool's own instructions or current documentation for its mechanics. Use the one the user names when they name one.
 - If neither namespace is available, ask the user to enable one and wait. Do not work around it with the Playwright MCP, a hand-written headless browser or scripted CDP access.
-- Keep work on the agreed task and target. Reuse gathered evidence rather than repeating navigation, snapshots, polling, or broad audits.
-- Gather only the page state, console messages, or network requests needed for the specific issue. When reloading, bypass the cache unless the user explicitly wants cached behaviour.
-- Use Lighthouse or performance traces only when needed for the authorised audit or performance investigation.
+- Keep to the agreed task and target: gather only the page state, console messages or network requests it needs, and reuse what you have rather than repeating navigation or snapshots. When reloading, bypass the cache unless the user explicitly wants cached behaviour.
 - If a materially different check becomes necessary, explain it and obtain agreement before widening the browser work.
 
 ## 4. Capture At A Fixed Size
