@@ -36,10 +36,10 @@ If `pkexec` fails, use the first working alternative below and note which path w
 1. Retry with the same command and confirm the exact package path/arguments are valid.
 2. For `yay`, fall back to:
 
-```bash
-yay -S <pkg> --sudo sudo --sudoflags ""
-yay -U "/path/to/package.pkg.tar.zst" --sudo sudo --sudoflags ""
-```
+   ```bash
+   yay -S <pkg> --sudo sudo --sudoflags ""
+   yay -U "/path/to/package.pkg.tar.zst" --sudo sudo --sudoflags ""
+   ```
 
 3. If `yay` itself is the problem and the package is local, install with `pkexec pacman -U ...`.
 4. If PolicyKit is unavailable or broken and the user asked you to continue, use `sudo` directly.
