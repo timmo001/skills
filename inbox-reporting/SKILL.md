@@ -30,7 +30,7 @@ The loaded review mode can narrow this: under `review-steering` nothing is put u
 
 ## Acknowledging steering
 
-When a steer, answer or review decision arrives in chat, an Inbox reply or review feedback, reply in the thread first: a line on what was decided, where it went in the checklist (usually after the current item) and what happens now, with any question it settles in `supersedes`. A request made in chat counts the same as one in the Inbox.
+When a steer, answer or review decision arrives in chat, an Inbox reply or review feedback, reply in the thread first: a line on where it went in the checklist (usually after the current item) and what happens now, with any question it settles in `supersedes`. Don't repeat back what the user said; it already sits above in the thread. Only spell out your reading of it when it was ambiguous. A request made in chat counts the same as one in the Inbox.
 
 ## Ending
 
