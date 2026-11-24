@@ -14,13 +14,11 @@ The user follows and steers from the Inbox and chat while the work runs; the ter
 
 Use one Inbox thread for the goal, named after the work, and keep every update, review link and question in it. A message that names no thread starts a new one, so give every message the same `thread` name, or `reply_to` a message in the thread. Keep the loop's remaining steps as the thread's checklist (`steps`, or `steps` sent with the update), changed when a step starts, ends or waits on the user. Keep it to a few high-level steps in plain words, never your own to-do list; the Inbox shows it as a button in the thread's bottom bar. Where the Board is on, link the thread from the goal's card.
 
-Add each pull request the work opens or takes on to the thread with `pulls` on the message that announces it (full `owner/repo#123` or URL; a bare `#123` is refused). The Inbox then shows its state on the thread. Take one off with the `thread_pulls` action only when it leaves the work; merged ones stay.
+Add each pull request the work opens to the thread with `pulls`.
 
 ## Status updates
 
 Send a short update after every step, straight away rather than batched: an item started, a commit, a push, an issue ticked or closed, a CI result, a steer picked up, a blocker. Each says what happened, links the commit, issue or run, and says what comes next. Keep them to a few lines.
-
-Write every issue and pull request as `owner/repo#123` or its full URL, never a bare `#123`, in updates, questions, choices and card lines alike: the Inbox resolves a bare number against the checkout's `origin`, which may be a fork.
 
 ## Directions and questions
 

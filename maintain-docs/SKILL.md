@@ -15,7 +15,6 @@ Keep documentation current and accurate as the codebase evolves. Cover recently 
 - Prefer updating existing docs over adding redundant pages.
 - Conform to the user's established writing style and voice: concise, human, house style, no robotic or marketing tone. Defer to any repo house style.
 - Keep the change documentation-only and focused. Do not mix in unrelated code changes.
-- Do not commit, push, or open a pull request.
 
 ## Quality checks
 

@@ -40,9 +40,8 @@ Use this workflow when finishing the whole request in one uninterrupted change w
 
 ## Delegate Safely
 
-- For substantial independent work within the active stage, load `session-coordination` to propose a Herdr split and obtain agreement before launching workers. Coordinate from the current agent; keep small or tightly coupled work direct. Use native subagents only when explicitly requested.
+- For parallel work within a stage, use `session-coordination`.
 - Parallelise independent discovery, tests, or disjoint implementation only. Keep ordered reasoning and shared mutable files with one integrator.
-- Use `session-coordination` to choose each worker's model and effort for its assignment. Propose useful Herdr splits instead of keeping independent work on the coordinator's model by default; keep routine check execution distinct from test design, diagnosis and reasoning-heavy review.
 - Define shared contracts before delegation. Workers consume them; they do not independently redesign them.
 - Give each worker a bounded brief: objective, authoritative inputs, exact file scope, prohibited shared files, expected output, verification, and required concise summary.
 - Do not duplicate delegated work. Reconcile worker results through the contract owner before integration.
@@ -55,7 +54,7 @@ Use this workflow when finishing the whole request in one uninterrupted change w
 4. Fix blocking findings, then run the relevant existing checks and repository-required validation. Reuse passing results for unchanged code; a stage boundary alone does not require another full suite.
 5. During final verification, freeze scope. Make only fixes for failures attributable to the active stage or unresolved blocking findings. Report pre-existing or unrelated failures separately. Record new hardening or cleanup ideas for a later stage.
 6. If final-gate fixes were needed, confirm those fixes and their affected risk area rather than reopening the entire diff.
-7. Do not repeat an unchanged fix-and-check cycle. Repeated rereads, duplicate edits, unchanged validation retries, stale review findings, scope drift, or loss of the stage acceptance criteria are context-pressure signals. If the same failure persists and another attempt has no new hypothesis or evidence, stop as blocked.
+7. Do not repeat an unchanged fix-and-check cycle. If the same failure persists and another attempt has no new hypothesis or evidence, stop as blocked.
 8. When blocked work moves to another session, prepare a compact handoff containing the active contract, current diff state, validation evidence, and unresolved findings.
 9. When the active stage completes all work tracked by a loaded handoff or plan, perform its planned retirement step last. Obtain explicit confirmation immediately before deleting a note, as required by `notes-cli`.
 

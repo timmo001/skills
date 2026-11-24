@@ -77,4 +77,3 @@ Add a `tools` entry when a skill starts depending on a tool's behaviour, and run
 - Never commit an unchanged upstream skill. Mark it `external` in `skills.yml`; updating it only moves the pinned SHA.
 - Never infer that an absent upstream file should be deleted when the entry's `localEdits` identifies local-only material.
 - Treat imported scripts as executable code: review changes before running them.
-- Do not commit or push without explicit user authorisation.

@@ -9,7 +9,7 @@ description: Prepare a concise guide when progress is blocked by a genuinely hum
 Use this skill only at a real human boundary. Work the agent can do remains agent work.
 
 1. Confirm the blocker cannot be completed with the available tools and permissions.
-2. Give the user one staged handoff containing:
+2. Give the user one staged handoff, as a `:::action` block when the `plannotator_inbox` tool is available, containing:
    - the exact URL, application, device, or location
    - the exact action to take
    - the expected visible result
