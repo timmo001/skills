@@ -224,7 +224,7 @@ skills:
         reviewed: "v0.9.5"
   home-assistant:
     import:
-      upstreamSha: d9a1ace8a7e803d9bc2179d61c8c8e0ac7053720
+      upstreamSha: 25eaccd3458f8f3061d30df0908ec26d06b545d8
       origin: "https://github.com/timmo001/ha-bridge/tree/main/skills/home-assistant"
       license: "Apache-2.0"
       localEdits: []
