@@ -47,9 +47,12 @@ When the check would show something the user may want to see or keep, ask it as 
 
 ## 4. Capture At A Fixed Size
 
-When screenshots or recordings need a set page size, such as 1400 × 800 for pull requests, or a phone width:
+When screenshots or recordings need a set page size, use real devices rather than one fixed number:
 
-- Set it on your tab with browse's `emulate` (`viewport: { width, height }`, with `mobile` and `touch` for a phone). It stays until you reset it, and screenshots and `recording` use it. Reset it (`viewport: "reset"`) before you close the tab.
+- Pick the devices the change affects, such as a phone, a tablet in both orientations, a laptop and a large desktop monitor. Look up each one's current viewport in CSS pixels, pixel ratio and touch support from a maintained list rather than from memory: Chrome DevTools [device mode](https://developer.chrome.com/docs/devtools/device-mode) (presets in [`EmulatedDevices.ts`](https://github.com/ChromeDevTools/devtools-frontend/blob/main/front_end/models/emulation/EmulatedDevices.ts)), Playwright's [devices](https://playwright.dev/docs/emulation#devices) or Firefox's [Responsive Design Mode](https://firefox-source-docs.mozilla.org/devtools-user/responsive_design_mode/index.html). The narrowest width that must still work is 320 CSS pixels, from the WCAG [Reflow](https://www.w3.org/TR/WCAG22/#reflow) criterion.
+- Name the device next to each capture, and use the same device for a before and after pair.
+- Follow the project's own guidance for checks and captures when it has some.
+- Set the size on your tab with browse's `emulate` (`viewport: { width, height, deviceScaleFactor, mobile }`, plus `touch` for a phone or tablet). It stays until you reset it, and screenshots and `recording` use it. Reset it (`viewport: "reset"`) before you close the tab.
 - Check the size the page really has, not only the capture: read `[innerWidth, innerHeight]` with `eval` after `emulate`, and adjust until it matches. The same `emulate` values can give a different page size on another desk or scale, and a capture scaled to the right size can hide a page laid out wider.
 - Change nothing about the tab's size or rendering while a `recording` runs: no `screenshot`, `emulate` or zoom. Each one redraws the page at another size for a moment, and the video shows it as the page jumping. Take stills before you start, after you stop, or from the recording's own frames.
 - Don't resize or move browser windows to get a size, and never loop screenshots under a forced size to fake a bigger capture: a visible window redraws between the sizes and flickers.
