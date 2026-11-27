@@ -343,6 +343,13 @@ skills:
         - "added an Avoid section"
         - "capitalised section headings"
         - "agents/openai.yaml: omitted"
+  system-bridge-services:
+    import:
+      upstreamSha: a70e29066f28a1e39a41fa1ea4eb6e5408cacc2b
+      origin: "https://github.com/timmo001/system-bridge/tree/dev/skills/system-bridge-services"
+      license: "Apache-2.0"
+      localEdits: []
+      distribution: external
   task-focus:
     tools:
       - repo: herdrdev/herdr

@@ -388,6 +388,21 @@
       }
     },
     {
+      "name": "timmo-system-bridge-services",
+      "description": "External import from timmo001/system-bridge",
+      "license": "Apache-2.0",
+      "metadata": {
+        "skill": "system-bridge-services"
+      },
+      "skills": "./",
+      "source": {
+        "source": "git-subdir",
+        "url": "timmo001/system-bridge",
+        "path": "skills/system-bridge-services",
+        "sha": "a70e29066f28a1e39a41fa1ea4eb6e5408cacc2b"
+      }
+    },
+    {
       "name": "timmo-terminal-control",
       "description": "External import from anomalyco/terminal-control",
       "license": "MIT",
