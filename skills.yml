@@ -266,7 +266,7 @@ skills:
   plan:
     tools:
       - repo: backnotprop/plannotator
-        reviewed: "v0.29.5"
+        reviewed: "v0.29.6"
   plannotator:
     import:
       upstreamSha: 5fba00d281780d0f82a797bb2ec961b1daa162e4
