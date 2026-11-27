@@ -1,18 +1,17 @@
 ---
 name: inbox-reporting
 license: Apache-2.0
-description: Keep the user in the loop through the Plannotator Inbox during long autonomous work, with a status update for every step, directions as gated Plannotator reviews and questions as Inbox questions, so they can follow and steer without the terminal. Use ONLY as an explicitly invoked OpenCode `/goal` objective alongside a loop skill and a review mode, such as `/goal @issue-loop @inbox-reporting @review-steering`.
-compatibility: Requires the Plannotator Inbox and Plannotator review tools, and the asking-questions skill. Designed for OpenCode 2 `/goal`.
-disable-model-invocation: true
+description: Keep the user in the loop through the Plannotator Inbox while work with several steps runs, with a status update for every step, directions as gated Plannotator reviews and questions as Inbox questions, so they can follow and steer without the terminal. Use whenever the `plannotator_inbox` tool is available and the work spans more than one reply or several steps, whether or not the user mentions the Inbox, and as an OpenCode `/goal` objective alongside a loop skill and a review mode, such as `/goal @issue-loop @inbox-reporting @review-steering`.
+compatibility: Requires the Plannotator Inbox and Plannotator review tools, and the asking-questions skill. Works in any session with those tools, and with OpenCode 2 `/goal`.
 ---
 
 # Inbox Reporting
 
-The user follows and steers from the Inbox and chat while the work runs; the terminal is not where they look. Everything they need to follow, review or answer goes to the Inbox. How changes get reviewed is up to the review mode loaded alongside (`review-stages` or `review-steering`).
+The user follows and steers from the Inbox and chat while the work runs; the terminal is not where they look, and they won't remind you to use the Inbox. Everything they need to follow, review or answer goes to the Inbox. Under `/goal`, the review mode loaded alongside (`review-stages` or `review-steering`) decides how changes get reviewed; otherwise a finished change goes through `change-review-handoff`.
 
 ## Thread
 
-Use one Inbox thread for the goal, named after the work, and keep every update, review link and question in it. A message that names no thread starts a new one, so give every message the same `thread` name, or `reply_to` a message in the thread. Keep the loop's remaining steps as the thread's checklist (`steps`, or `steps` sent with the update), changed when a step starts, ends or waits on the user. Keep it to a few high-level steps in plain words, never your own to-do list; the Inbox shows it as a button in the thread's bottom bar. Where the Board is on, link the thread from the goal's card.
+Use one Inbox thread for the work, named after it, and start it when the work starts rather than at the end. Keep every update, review link and question in it. A message that names no thread starts a new one, so give every message the same `thread` name, or `reply_to` a message in the thread. Keep the remaining steps as the thread's checklist (`steps`, or `steps` sent with the update), changed when a step starts, ends or waits on the user. Keep it to a few high-level steps in plain words, never your own to-do list; the Inbox shows it as a button in the thread's bottom bar. Where the Board is on, link the thread from the work's card.
 
 Add each pull request the work opens to the thread with `pulls`.
 
@@ -22,7 +21,7 @@ Send a short update after every step, straight away rather than batched: an item
 
 ## Directions and questions
 
-The loaded review mode can narrow this: under `review-steering` nothing is put up for sign-off and design questions aren't asked.
+A loaded review mode can narrow this: under `review-steering` nothing is put up for sign-off and design questions aren't asked.
 
 - A direction the user has to set (a design choice, a plan, a document to sign off) goes in a gated Plannotator review (`gate: true`, or the plan review for a plan, as `plan` describes). Link it from the thread with a `Holds up:` line, or `Stopped:` only if nothing else can move.
 - Any other question goes in the thread as a `:::question` block, as `asking-questions` describes.
