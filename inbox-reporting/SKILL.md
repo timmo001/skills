@@ -9,6 +9,8 @@ compatibility: Requires the Plannotator Inbox and Plannotator review tools, and 
 
 The user follows and steers from the Inbox and chat while the work runs; the terminal is not where they look, and they won't remind you to use the Inbox. Everything they need to follow, review or answer goes to the Inbox. Under `/goal`, the review mode loaded alongside (`review-stages` or `review-steering`) decides how changes get reviewed; otherwise a finished change goes through `change-review-handoff`.
 
+If the Inbox's own instructions say it is for code review only (started with `plannotator inbox --review`, with Full Inbox off), use it only for reviews and replies in a review's thread, and send updates and questions in the chat instead.
+
 ## Thread
 
 Use one Inbox thread for the work, named after it, and start it when the work starts rather than at the end. Keep every update, review link and question in it. A message that names no thread starts a new one, so give every message the same `thread` name, or `reply_to` a message in the thread. Keep the remaining steps as the thread's checklist (`steps`, or `steps` sent with the update), changed when a step starts, ends or waits on the user. Keep it to a few high-level steps in plain words, never your own to-do list; the Inbox shows it as a button in the thread's bottom bar. Where the Board is on, link the thread from the work's card.
